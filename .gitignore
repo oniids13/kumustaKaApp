@@ -1,0 +1,70 @@
+# ========================
+# Root-Level Ignores
+# ========================
+.DS_Store
+*.log
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+
+# Dependency directories (both frontend/backend)
+**/node_modules/
+
+# Lockfiles (root or subdirectories)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ========================
+# Backend-Specific (Node.js)
+# ========================
+# Environment
+backend/.env
+backend/.env.*
+backend/.npmrc
+
+# Runtime data
+backend/.pnp
+backend/.pnp.js
+
+# Build outputs
+backend/dist/
+backend/coverage/
+
+# Database files
+backend/*.db
+backend/*.sqlite
+
+# Logs
+backend/npm-debug.log*
+backend/yarn-debug.log*
+backend/yarn-error.log*
+
+# ========================
+# Frontend-Specific (React)
+# ========================
+# Build
+frontend/build/
+frontend/.next/
+frontend/out/
+
+# Cache
+frontend/.cache/
+frontend/.eslintcache
+
+# Environment
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Debug
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Testing
+frontend/coverage/
