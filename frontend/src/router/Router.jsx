@@ -5,7 +5,7 @@ import MainContent from '../component/MainContent'
 import Index from '../pages/Index'
 import Login from '../pages/Login'
 import Signup from '../pages/Signup'
-
+import ErrorPage from '../pages/ErrorPage'
 
 
 const router = createBrowserRouter(
@@ -13,7 +13,7 @@ const router = createBrowserRouter(
         <Route
             path='/'
             element={<MainContent />}
-            errorElement={<h1>Page not found</h1>}
+            errorElement={<ErrorPage />}
         >
             <Route index element={<Index />} />
             <Route path='login' element={<Login />} />
