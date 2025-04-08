@@ -5,8 +5,12 @@ const jwtStrategy = require('./config/jwtStrategy');
 
 const app = express();
 
+// Routers
+const userRouter = require('./router/userRouter');
+const loginRouter = require('./router/loginRouter');
+
 app.use(cors({
-    origin: 'http://localhost:5173', // Replace with your frontend URL
+    origin: 'http://localhost:5173',
     credentials: true,
 }));
 
@@ -16,10 +20,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 passport.use(jwtStrategy);
 
-app.get('/', (req, res) => {
-    res.send('Hello, world!');
-}
-);
+// Routes
+app.use('/api/user', userRouter);
+app.use('/api', loginRouter);
 
 
 app.listen(3000, () => {

@@ -10,16 +10,38 @@ const {validPassword} = require('../utils/passwordUtil');
 const createUser = async (userData) => {
     const { email, salt, hash, role, firstName, lastName, phone } = userData;
     try {
+
+        const userData = {
+            email,
+            salt,
+            hash,
+            role,
+            firstName,
+            lastName,
+            phone
+        };
+
+        switch (role) {
+            case 'ADMIN':
+                userData.admin = { create: {} };
+                break;
+            case 'TEACHER':
+                userData.teacher = { create: {} };
+                break;
+            case 'COUNSELOR':
+                userData.counselor = { create: {} };
+                break;
+            case 'STUDENT':
+                userData.student = { create: {} };
+                break;
+            default:
+                throw new Error('Invalid role');
+        }
+
+
         const user = await prisma.user.create({
-            data: {
-                email,
-                salt,
-                hash,
-                role,
-                firstName,
-                lastName,
-                phone
-            }, select: {
+            data: userData, 
+            select: {
                 id: true,
                 email: true,
                 salt: true,
@@ -27,7 +49,11 @@ const createUser = async (userData) => {
                 firstName: true,
                 lastName: true,
                 phone: true,
-                role: true
+                role: true,
+                ...(role === 'ADMIN' && { admin: true }),
+                ...(role === 'TEACHER' && { teacher: true }),
+                ...(role === 'STUDENT' && { student: true }),
+                ...(role === 'COUNSELOR' && { counselor: true })
             }
         });
         return user;
@@ -58,7 +84,7 @@ const getUserLogin = async (email, password) => {
             return {message: "User not found"};
         }
 
-        const isValid = validPassword(password, user.salt, user.hash);
+        const isValid = validPassword(password, user.hash, user.salt);
 
         if (isValid) {
             return user;
