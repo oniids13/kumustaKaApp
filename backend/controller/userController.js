@@ -1,6 +1,6 @@
 const { body, validationResult } = require('express-validator');
 const { genPassword } = require('../utils/passwordUtil');
-const { createUser, getUserLogin, getUserById } = require('../model/userQueries');
+const { createUser, getUserById } = require('../model/userQueries');
 
 const validateUser = [
     body('email').isEmail().withMessage('Invalid email format'),
@@ -29,7 +29,20 @@ const createUserController = [validateUser, async (req, res) => {
     }
 }];
 
+const getUserByIdController = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const user = await getUserById(id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        return res.status(200).json(user);
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+}
 
 
-
-module.exports = { createUserController}
+module.exports = { createUserController, getUserByIdController}
