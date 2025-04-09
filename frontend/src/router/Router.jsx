@@ -4,9 +4,9 @@ import { createBrowserRouter, createRoutesFromElements, Route } from 'react-rout
 import MainContent from '../component/MainContent'
 import Index from '../pages/Index'
 import Login from '../pages/Login'
-import Signup from '../pages/Signup'
-import ErrorPage from '../pages/ErrorPage'
-
+import RegisterPage from '../pages/Register'
+import ErrorPage from '../pages/ErrorPage'  
+import HomePage from '../pages/HomePage'
 
 const router = createBrowserRouter(
     createRoutesFromElements(
@@ -17,7 +17,8 @@ const router = createBrowserRouter(
         >
             <Route index element={<Index />} />
             <Route path='login' element={<Login />} />
-            <Route path='signup' element={<Signup />} />
+            <Route path='register' element={<RegisterPage />} />
+            <Route path='home' element={<HomePage />} />
         </Route>
     )
 )

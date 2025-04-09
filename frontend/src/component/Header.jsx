@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import LogOutButton from "./LogoutButton";
 
 
 const Header = ({token, setToken}) => {
@@ -12,13 +13,11 @@ const Header = ({token, setToken}) => {
         {!token ? (
             ''
         ) : (
-            <ul className="nav nav-pills">
-                <li class="nav-item"><a href="#" class="nav-link active" aria-current="page">Home</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">Features</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">Pricing</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">FAQs</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">About</a></li>
-            </ul>
+            <div className="d-flex flex-row align-items-center justify-content-center gap-3">
+                <Link to={'/home'}><button className="btn btn-primary nav-item">Home</button></Link>
+                <LogOutButton setToken={setToken} />
+
+            </div>
         )}
             
     </header>

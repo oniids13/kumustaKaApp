@@ -14,7 +14,7 @@ const Index = () => {
 
   const handleVerifyCode = () => {
     if (code === CORRECT_CODE) {
-      navigate('/signup');
+      navigate('/register');
     } else {
       setError('Incorrect code. Contact your admin.');
     }
@@ -30,7 +30,7 @@ const Index = () => {
             <button className="btn btn-success" onClick={() => navigate('/login')}>Login</button>
             <span>or</span>
             <Button variant="primary" onClick={() => setShowModal(true)}>
-              Sign-up
+              Register
             </Button>
           </div>
         </div>
