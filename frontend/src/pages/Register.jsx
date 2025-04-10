@@ -41,6 +41,7 @@ const RegisterPage = () => {
                 <div className="col-md-6">
                     <h2 className="mb-4">Create Account</h2>
                     <RegistrationForm onSubmit={handleRegistration} loading={loading} />
+                    <button className="btn btn-primary mt-3" onClick={() => navigate('/')}>⬅</button>
                 </div>
             </div>
         </div>
@@ -246,7 +247,7 @@ const RegistrationForm = ({ onSubmit, loading }) => {
                 </select>
             </div>
 
-            <button type="submit" className="btn btn-primary w-100 py-2" disabled={loading}>
+            <button type="submit" className="btn btn-success w-100 py-2" disabled={loading}>
                 {loading ? 'Registering...' : 'Register'}
             </button>   
         </form>

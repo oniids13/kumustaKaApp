@@ -1,27 +1,58 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import { useEffect, useState } from "react";
 
 const MainContent = () => {
-    
-    const userData = JSON.parse(localStorage.getItem("userData")) || '{}';
-
-    const [token, setToken] = useState(userData.token);
+    const navigate = useNavigate();
+    const [token, setToken] = useState(() => {
+        const userData = JSON.parse(localStorage.getItem("userData")) || {};
+        return userData.token || null;
+    });
 
     useEffect(() => {
-        const updateToken = () => setToken(localStorage.getItem("token"));
-        window.addEventListener("storage", updateToken);
-        return () => window.removeEventListener("storage", updateToken);
-    }, []);
+        const handleStorageChange = () => {
+            const userData = JSON.parse(localStorage.getItem("userData")) || {};
+            setToken(userData.token || null);
+            
+            if (userData.token) {
+                // Redirect to appropriate dashboard (using uppercase)
+                switch(userData.role) {
+                    case 'STUDENT': navigate("/student"); break;
+                    case 'COUNSELOR': navigate("/counselor"); break;
+                    case 'TEACHER': navigate("/teacher"); break;
+                    case 'ADMIN': navigate("/admin"); break;
+                    default: navigate("/");
+                }
+            } else {
+                navigate("/");
+            }
+        };
 
-    return(
+        window.addEventListener('storage', handleStorageChange);
+        
+        // Initial load redirect (using uppercase)
+        const userData = JSON.parse(localStorage.getItem("userData")) || {};
+        if (userData.token) {
+            switch(userData.role) {
+                case 'STUDENT': navigate("/student"); break;
+                case 'COUNSELOR': navigate("/counselor"); break;
+                case 'TEACHER': navigate("/teacher"); break;
+                case 'ADMIN': navigate("/admin"); break;
+                default: navigate("/");
+            }
+        }
+
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, [navigate]);
+
+    return (
         <>
-        <Header token={token} setToken={setToken}/>
-        <Outlet context={{setToken}} />
-        <Footer/>
+            <Header token={token} setToken={setToken} />
+            <Outlet context={{ token, setToken }} />
+            <Footer />
         </>
-    )
-}
+    );
+};
 
 export default MainContent;
