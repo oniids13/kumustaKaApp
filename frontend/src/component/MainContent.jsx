@@ -16,7 +16,7 @@ const MainContent = () => {
             setToken(userData.token || null);
             
             if (userData.token) {
-                // Redirect to appropriate dashboard (using uppercase)
+           
                 switch(userData.role) {
                     case 'STUDENT': navigate("/student"); break;
                     case 'COUNSELOR': navigate("/counselor"); break;
@@ -31,7 +31,7 @@ const MainContent = () => {
 
         window.addEventListener('storage', handleStorageChange);
         
-        // Initial load redirect (using uppercase)
+      
         const userData = JSON.parse(localStorage.getItem("userData")) || {};
         if (userData.token) {
             switch(userData.role) {

@@ -1,4 +1,4 @@
-import { Navigate, useOutletContext } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import UnauthorizedPage from '../pages/UnauthorizedPage';
 
 const ProtectedRoute = ({ children, roles = [] }) => {
@@ -9,11 +9,11 @@ const ProtectedRoute = ({ children, roles = [] }) => {
         return <Navigate to="/login" replace />;
     }
 
+    // Convert input roles to uppercase for comparison
+    const requiredRoles = roles.map(role => role.toUpperCase());
     
-    const upperCaseRoles = roles.map(role => role.toUpperCase());
-    
-    if (upperCaseRoles.length > 0 && !upperCaseRoles.includes(userData.role)) {
-        return <UnauthorizedPage />;
+    if (requiredRoles.length > 0 && !requiredRoles.includes(userData.role)) {
+        return <UnauthorizedPage />; 
     }
 
     return children;
