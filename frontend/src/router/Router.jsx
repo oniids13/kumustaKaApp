@@ -10,10 +10,10 @@ import ErrorPage from '../pages/ErrorPage'
 import UnauthorizedPage from '../pages/UnauthorizedPage'
 
 // Dashboard Pages
-import StudentDashboard from '../pages/StudentDashboard'
-import CounselorDashboard from '../pages/CounselorDashboard'
-import TeacherDashboard from '../pages/TeacherDashboard'
-import AdminDashboard from '../pages/AdminDashboard'
+import StudentDashboard from '../modules/student/StudentDashboard'
+import CounselorDashboard from '../modules/counselor/CounselorDashboard'
+import TeacherDashboard from '../modules/teacher/TeacherDashboard'
+import AdminDashboard from '../modules/admin/AdminDashboard'
 
 const router = createBrowserRouter(
     createRoutesFromElements(
