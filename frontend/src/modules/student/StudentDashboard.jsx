@@ -1,3 +1,5 @@
+import ForumPostForm from "../../component/CreatePostForm";
+
 const StudentDashboard = () => {
   const user = JSON.parse(localStorage.getItem("userData"));
   console.log(user);
@@ -15,6 +17,7 @@ const StudentDashboard = () => {
         <p>How are you today?</p>
       </div>
       <div className="col-9">Posts</div>
+      <ForumPostForm />
     </div>
   );
 };
