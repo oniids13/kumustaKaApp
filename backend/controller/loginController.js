@@ -18,6 +18,7 @@ const loginController = async (req, res) => {
     email: user.email,
     role: user.role,
     fullName: `${user.firstName} ${user.lastName}`,
+    avatar: user.avatar,
   };
 
   const token = jwt.sign(tokenPayload, secretKey, { expiresIn: "1d" });
@@ -31,6 +32,7 @@ const loginController = async (req, res) => {
       email: user.email,
       role: user.role,
       fullName: `${user.firstName} ${user.lastName}`,
+      avatar: user.avatar,
     },
   });
 };

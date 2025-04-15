@@ -40,7 +40,6 @@ const getAllPosts = async (status) => {
           },
         },
         comments: {
-          // Now properly nested under ForumPost
           select: {
             id: true,
             content: true,

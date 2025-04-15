@@ -21,6 +21,7 @@ model User {
   firstName String
   lastName  String
   phone     String
+  avatar String @default("https://www.gravatar.com/avatar/default?d=identicon")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -193,7 +194,7 @@ model ForumPost {
   id        String   @id @default(uuid())
   title     String
   content    String
-  author    User     @relation(fields: [authorId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId  String
   comments Comment[]
   isPublished Boolean @default(false)
@@ -206,7 +207,7 @@ model ForumPost {
 model Comment {
   id        String   @id @default(uuid())
   content    String
-  post      ForumPost @relation(fields: [postId], references: [id])
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    String
   author    User     @relation(fields: [authorId], references: [id])
   authorId  String
