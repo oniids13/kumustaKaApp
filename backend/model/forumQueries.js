@@ -1,18 +1,20 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const createNewPost = async (title, content, authorId) => {
+const createNewPost = async (title, content, imageUrls, authorId) => {
   try {
     const newPost = await prisma.forumPost.create({
       data: {
         title,
         content,
+        images: imageUrls,
         author: { connect: { id: authorId } },
       },
       select: {
         id: true,
         title: true,
         content: true,
+        images: true,
         author: { select: { firstName: true, lastName: true } },
         authorId: true,
         isPublished: true,
@@ -37,6 +39,7 @@ const getAllPosts = async (status) => {
             id: true,
             firstName: true,
             lastName: true,
+            avatar: true,
           },
         },
         comments: {
