@@ -1,71 +1,40 @@
-import TextEditor from "../../component/TextEditor";
-import { useState, useRef } from "react";
-import axios from "axios";
+// src/components/CreatePostForm.jsx
+import { useState } from "react";
+import RichTextEditor from "./RichTextEditor";
 
-const ForumPostForm = () => {
+const CreatePostForm = ({ onSubmit }) => {
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
-  const [images, setImages] = useState([]);
-  const fileInputRef = useRef();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("content", content);
-    images.forEach((img) => formData.append("images", img));
-
-    try {
-      await axios.post("/api/forum/posts", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      setContent("");
-      setTitle("");
-      setImages([]);
-    } catch (err) {
-      console.error(err);
-    }
+    onSubmit({ title, content });
+    setContent("");
+    setTitle("");
   };
 
   return (
-    <div className="forum-post-form">
-      <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="post-form">
+      <div className="mb-3">
         <input
           type="text"
+          className="form-control"
           placeholder="Post title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
         />
+      </div>
 
-        <TextEditor value={content} onChange={setContent} />
+      <div className="mb-3">
+        <RichTextEditor content={content} onChange={setContent} />
+      </div>
 
-        <div className="image-preview">
-          {images.map((img, i) => (
-            <img key={i} src={URL.createObjectURL(img)} alt="Preview" />
-          ))}
-        </div>
-
-        <button type="button" onClick={() => fileInputRef.current.click()}>
-          Add Images
-        </button>
-
-        <input
-          type="file"
-          ref={fileInputRef}
-          multiple
-          accept="image/*"
-          onChange={(e) => setImages([...e.target.files])}
-          hidden
-        />
-
-        <button type="submit">Post</button>
-      </form>
-    </div>
+      <button type="submit" className="btn btn-primary">
+        Create Post
+      </button>
+    </form>
   );
 };
 
-export default ForumPostForm;
+export default CreatePostForm;
