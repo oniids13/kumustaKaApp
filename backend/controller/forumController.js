@@ -74,8 +74,8 @@ const getAllForumPostsController = async (req, res) => {
 
 const editForumPostController = async (req, res) => {
   try {
-    const { title, content } = req.body;
-    const postId = req.params;
+    const { title, content, deletedImages = [] } = req.body;
+    const postId = req.params.postId;
     const authorId = req.user.id;
     const newImages = req.files || [];
 
@@ -87,31 +87,45 @@ const editForumPostController = async (req, res) => {
 
     let currentImages = existingPost.images || [];
 
-    if (deleteImages) {
+    if (deletedImages && deletedImages.length > 0) {
       currentImages = currentImages.filter(
-        (img) => !deleteImages.includes(img.public_id)
+        (img) => !deletedImages.includes(img.publicId)
       );
       await Promise.all(
-        deletedImages.map((public_id) => cloudinary.uploader.destroy(public_id))
+        deletedImages.map((publicId) => cloudinary.uploader.destroy(publicId))
       );
     }
 
     const uploadedImages = await Promise.all(
-      newImages.map(async (file) => uploadToCloudinary(file.path, authorId))
+      newImages.map(async (file) => {
+        const result = await uploadImage(file.path, authorId);
+        fs.unlinkSync(file.path);
+        return result;
+      })
     );
 
     const updatedPost = await editForumPost(
       postId,
       title,
       content,
-      currentImages,
-      uploadedImages,
+      [...currentImages, ...uploadedImages],
       authorId
     );
     return res.status(201).json(updatedPost);
   } catch (error) {
     console.error("Error updating post:", error);
-    return res.status(500).json({ message: "Internal server error" });
+
+    if (req.files) {
+      req.files.forEach((file) => {
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+      });
+    }
+
+    return res
+      .status(500)
+      .json({ message: error.message || "Internal server error" });
   }
 };
 

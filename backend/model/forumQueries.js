@@ -68,27 +68,25 @@ const getAllPosts = async (status) => {
   }
 };
 
-const editForumPost = async (
-  postId,
-  title,
-  content,
-  currentImages,
-  uploadedImages,
-  authorId
-) => {
+const editForumPost = async (postId, title, content, images, authorId) => {
   try {
     const updatedPost = await prisma.forumPost.update({
       where: { id: postId, authorId: authorId },
       data: {
         title,
         content,
-        images: [...currentImages, ...uploadedImages],
+        images,
       },
-      select: {
-        id: true,
-        title: true,
-        content: true,
-        images: true,
+      include: {
+        // Changed from 'select' to 'include' for relationships
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
       },
     });
     return updatedPost;

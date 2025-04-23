@@ -1,6 +1,14 @@
 const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 
+if (
+  !process.env.CLOUDINARY_NAME ||
+  !process.env.CLOUDINARY_KEY ||
+  !process.env.CLOUDINARY_SECRET
+) {
+  throw new Error("Missing Cloudinary configuration in environment variables");
+}
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
   api_key: process.env.CLOUDINARY_KEY,
@@ -20,7 +28,7 @@ const uploadImage = async (filePath, userId) => {
     });
 
     console.log("Upload successful:", result.public_id);
-    return result.secure_url;
+    return { url: result.secure_url, publicId: result.public_id };
   } catch (error) {
     console.error("Cloudinary upload error:", error);
     throw new Error("Failed to upload image");

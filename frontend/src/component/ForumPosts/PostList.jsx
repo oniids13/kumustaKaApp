@@ -21,6 +21,7 @@ const PostList = () => {
             },
           }
         );
+
         setPosts(response.data.publishedPosts || []);
       } catch (error) {
         console.error("Error fetching posts:", error);
@@ -96,7 +97,8 @@ const PostList = () => {
                     </small>
                   </div>
                 </div>
-                {user.id === post.authorId && !editingPostId && (
+
+                {user.userId === post.authorId && !editingPostId && (
                   <button
                     onClick={() => setEditingPostId(post.id)}
                     className="btn btn-sm btn-outline-primary"

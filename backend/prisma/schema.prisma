@@ -194,7 +194,7 @@ model ForumPost {
   id        String   @id @default(uuid())
   title     String
   content    String
-  images    String[]
+  images    Json
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId  String
   comments Comment[]
