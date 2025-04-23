@@ -1,4 +1,10 @@
-const { createNewPost, getAllPosts } = require("../model/forumQueries");
+const {
+  createNewPost,
+  getAllPosts,
+  getForumPost,
+  editForumPost,
+  deleteForumPost,
+} = require("../model/forumQueries");
 const { uploadImage } = require("../services/cloudinary.service");
 const fs = require("fs");
 
@@ -66,7 +72,51 @@ const getAllForumPostsController = async (req, res) => {
   }
 };
 
+const editForumPostController = async (req, res) => {
+  try {
+    const { title, content } = req.body;
+    const postId = req.params;
+    const authorId = req.user.id;
+    const newImages = req.files || [];
+
+    const existingPost = await getForumPost(postId);
+
+    if (!existingPost || existingPost.authorId !== authorId) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    let currentImages = existingPost.images || [];
+
+    if (deleteImages) {
+      currentImages = currentImages.filter(
+        (img) => !deleteImages.includes(img.public_id)
+      );
+      await Promise.all(
+        deletedImages.map((public_id) => cloudinary.uploader.destroy(public_id))
+      );
+    }
+
+    const uploadedImages = await Promise.all(
+      newImages.map(async (file) => uploadToCloudinary(file.path, authorId))
+    );
+
+    const updatedPost = await editForumPost(
+      postId,
+      title,
+      content,
+      currentImages,
+      uploadedImages,
+      authorId
+    );
+    return res.status(201).json(updatedPost);
+  } catch (error) {
+    console.error("Error updating post:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   createForumPostController,
   getAllForumPostsController,
+  editForumPostController,
 };

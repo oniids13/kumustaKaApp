@@ -1,6 +1,6 @@
 import { useState } from "react";
-import CreatePostForm from "../../component/CreatePostForm";
-import PostList from "../../component/PostList";
+import CreatePostForm from "../../component/ForumPosts/CreatePostForm";
+import PostList from "../../component/ForumPosts/PostList";
 
 const StudentDashboard = () => {
   const user = JSON.parse(localStorage.getItem("userData"));

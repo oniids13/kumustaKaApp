@@ -1,6 +1,7 @@
 const {
   createForumPostController,
   getAllForumPostsController,
+  editForumPostController,
 } = require("../controller/forumController");
 const { Router } = require("express");
 const forumPostRouter = Router();
@@ -17,6 +18,13 @@ forumPostRouter.get(
   "/allPosts",
   passport.authenticate("jwt", { session: false }),
   getAllForumPostsController
+);
+
+forumPostRouter.put(
+  "/editPost/:postId",
+  passport.authenticate("jwt", { session: false }),
+  upload.array("images", 5),
+  editForumPostController
 );
 
 module.exports = forumPostRouter;

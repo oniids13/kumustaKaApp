@@ -68,14 +68,21 @@ const getAllPosts = async (status) => {
   }
 };
 
-const editForumPost = async (postId, title, content, imageUrls) => {
+const editForumPost = async (
+  postId,
+  title,
+  content,
+  currentImages,
+  uploadedImages,
+  authorId
+) => {
   try {
     const updatedPost = await prisma.forumPost.update({
-      where: { id: postId },
+      where: { id: postId, authorId: authorId },
       data: {
         title,
         content,
-        images: imageUrls,
+        images: [...currentImages, ...uploadedImages],
       },
       select: {
         id: true,
@@ -109,7 +116,34 @@ const deleteForumPost = async (postId) => {
   }
 };
 
+const publishForumPost = async (postId) => {
+  try {
+    await prisma.forumPost.update({
+      where: { id: postId },
+      data: { isPublished: true },
+    });
+  } catch (error) {
+    console.error("Error publishing post:", error);
+    throw new Error("Error publishing post: " + error.message);
+  }
+};
+
+const getForumPost = async (postId) => {
+  try {
+    const post = await prisma.forumPost.findUnique({
+      where: { id: postId },
+    });
+    return post;
+  } catch (error) {
+    console.error("Error retrieving post:", error);
+    throw new Error("Error retrieving post: " + error.message);
+  }
+};
+
 module.exports = {
   createNewPost,
   getAllPosts,
+  getForumPost,
+  editForumPost,
+  deleteForumPost,
 };
