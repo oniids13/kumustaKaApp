@@ -25,12 +25,21 @@ const StudentDashboard = () => {
             <h4>Hello, {user.name}!</h4>
             <p className="text-muted">Student Dashboard</p>
           </div>
+          <div className="student-buttons">
+            <button className="btn btn-primary mb-2 w-100">
+              My Wellness Journal
+            </button>
+            <button className="btn btn-secondary mb-2 w-100">
+              Mood Tracker
+            </button>
+            <button className="btn btn-success w-100">Resource Library</button>
+          </div>
         </div>
 
         {/* Main Content */}
         <div className="col-md-9">
           <CreatePostForm onPostCreated={handlePostCreated} />
-          <PostList key={refreshPosts} /> {/* Key change forces remount */}
+          <PostList key={refreshPosts} />
         </div>
       </div>
     </div>

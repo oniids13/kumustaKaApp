@@ -68,6 +68,47 @@ const getAllPosts = async (status) => {
   }
 };
 
+const editForumPost = async (postId, title, content, imageUrls) => {
+  try {
+    const updatedPost = await prisma.forumPost.update({
+      where: { id: postId },
+      data: {
+        title,
+        content,
+        images: imageUrls,
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        images: true,
+      },
+    });
+    return updatedPost;
+  } catch (error) {
+    console.error("Error updating post:", error);
+    throw new Error("Error updating post: " + error.message);
+  }
+};
+
+const deleteForumPost = async (postId) => {
+  try {
+    const deletedPost = await prisma.forumPost.delete({
+      where: { id: postId },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        images: true,
+      },
+    });
+    return deletedPost;
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    throw new Error("Error deleting post: " + error.message);
+  }
+};
+
 module.exports = {
   createNewPost,
   getAllPosts,
