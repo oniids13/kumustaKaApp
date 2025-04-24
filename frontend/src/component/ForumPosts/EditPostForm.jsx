@@ -1,96 +1,121 @@
 import { useState, useRef } from "react";
 import TextEditor from "./TextEditor";
+import axios from "axios";
 
 const EditPostForm = ({ post, onUpdate, onCancel }) => {
   const [title, setTitle] = useState(post.title);
   const [content, setContent] = useState(post.content);
-  const [images, setImages] = useState(post.images || []);
+  const [currentImages, setCurrentImages] = useState(
+    Array.isArray(post?.images) ? post.images : []
+  );
+  const [newImages, setNewImages] = useState([]);
+  const [deletedImages, setDeletedImages] = useState([]);
   const fileInputRef = useRef();
 
-  const handleSubmit = (e) => {
+  const user = JSON.parse(localStorage.getItem("userData"));
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onUpdate({
-      ...post,
-      title,
-      content,
-      images,
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("content", content);
+    formData.append("deletedImages", JSON.stringify(deletedImages));
+
+    newImages.forEach((file) => {
+      formData.append("images", file);
     });
+
+    try {
+      const response = await axios.put(
+        `http://localhost:3000/api/forum/editPost/${post.id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+      onUpdate(response.data);
+    } catch (error) {
+      console.error("Error updating post:", error);
+      alert("Failed to update post. Please try again.");
+    }
   };
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    const newImages = files.map((file) => ({
-      url: URL.createObjectURL(file),
-      file, // Store the actual file for upload
-    }));
-    setImages([...images, ...newImages]);
+  const handleImageDelete = (index) => {
+    const isCurrentImage = index < currentImages.length;
+
+    if (isCurrentImage) {
+      const img = currentImages[index];
+      const publicId = typeof img === "string" ? img : img.publicId;
+      setDeletedImages([...deletedImages, publicId]);
+      setCurrentImages(currentImages.filter((_, i) => i !== index));
+    } else {
+      setNewImages(
+        newImages.filter((_, i) => i !== index - currentImages.length)
+      );
+    }
   };
 
-  const removeImage = (index) => {
-    setImages(images.filter((_, i) => i !== index));
+  const handleNewImages = (e) => {
+    setNewImages([...newImages, ...Array.from(e.target.files)]);
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="mb-3">
-        <input
-          type="text"
-          className="form-control"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-      </div>
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        required
+        className="form-control mb-3"
+      />
 
-      <div className="mb-3">
-        <TextEditor content={content} onUpdate={setContent} />
-      </div>
+      <TextEditor content={content} onUpdate={setContent} />
 
-      <div className="mb-3">
-        <input
-          type="file"
-          ref={fileInputRef}
-          multiple
-          onChange={handleImageChange}
-          style={{ display: "none" }}
-          accept="image/*"
-        />
-        <button
-          type="button"
-          className="btn btn-sm btn-outline-secondary me-2"
-          onClick={() => fileInputRef.current.click()}
-        >
-          Add Images
-        </button>
-      </div>
-
-      {images.length > 0 && (
-        <div className="mb-3 d-flex flex-wrap gap-2">
-          {images.map((img, index) => (
-            <div key={index} className="position-relative">
-              <img
-                src={img.url}
-                alt={`Preview ${index}`}
-                className="img-thumbnail"
-                style={{ height: "100px" }}
-              />
-              <button
-                type="button"
-                className="btn btn-danger btn-sm position-absolute top-0 end-0"
-                onClick={() => removeImage(index)}
-              >
-                ×
+      {/* Image display */}
+      <div className="image-grid">
+        {(currentImages || []).concat(newImages || []).map((img, index) => {
+          const src =
+            typeof img === "string" ? img : img.url || URL.createObjectURL(img);
+          return (
+            <div key={index} className="image-preview">
+              <img src={src} alt={`Preview ${index}`} />
+              <button type="button" onClick={() => handleImageDelete(index)}>
+                Delete
               </button>
             </div>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
 
-      <div className="d-flex justify-content-end gap-2">
-        <button type="button" className="btn btn-secondary" onClick={onCancel}>
+      <input
+        type="file"
+        ref={fileInputRef}
+        multiple
+        accept="image/*"
+        onChange={handleNewImages}
+        style={{ display: "none" }}
+      />
+      <button
+        type="button"
+        className="btn btn-sm btn-primary"
+        onClick={() => fileInputRef.current.click()}
+      >
+        Add Images
+      </button>
+
+      <div className="form-actions">
+        <button
+          type="button"
+          className="btn btn-sm btn-danger"
+          onClick={onCancel}
+        >
           Cancel
         </button>
-        <button type="submit" className="btn btn-primary">
+        <button type="submit" className="btn btn-sm btn-success">
           Save Changes
         </button>
       </div>

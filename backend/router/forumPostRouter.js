@@ -2,6 +2,7 @@ const {
   createForumPostController,
   getAllForumPostsController,
   editForumPostController,
+  deleteForumPostController,
 } = require("../controller/forumController");
 const { Router } = require("express");
 const forumPostRouter = Router();
@@ -25,6 +26,12 @@ forumPostRouter.put(
   passport.authenticate("jwt", { session: false }),
   upload.array("images", 5),
   editForumPostController
+);
+
+forumPostRouter.delete(
+  "/deletePost/:postId",
+  passport.authenticate("jwt", { session: false }),
+  deleteForumPostController
 );
 
 module.exports = forumPostRouter;

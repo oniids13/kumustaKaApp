@@ -74,46 +74,50 @@ const getAllForumPostsController = async (req, res) => {
 
 const editForumPostController = async (req, res) => {
   try {
-    const { title, content, deletedImages = [] } = req.body;
+    const { title, content, deletedImages } = req.body;
     const postId = req.params.postId;
     const authorId = req.user.id;
     const newImages = req.files || [];
 
-    const existingPost = await getForumPost(postId);
-
-    if (!existingPost || existingPost.authorId !== authorId) {
-      return res.status(403).json({ error: "Unauthorized" });
-    }
-
-    let currentImages = existingPost.images || [];
-
-    if (deletedImages && deletedImages.length > 0) {
-      currentImages = currentImages.filter(
-        (img) => !deletedImages.includes(img.publicId)
-      );
-      await Promise.all(
-        deletedImages.map((publicId) => cloudinary.uploader.destroy(publicId))
-      );
-    }
+    const deletedImagesIds = deletedImages ? JSON.parse(deletedImages) : [];
 
     const uploadedImages = await Promise.all(
       newImages.map(async (file) => {
-        const result = await uploadImage(file.path, authorId);
-        fs.unlinkSync(file.path);
-        return result;
+        try {
+          const result = await uploadImage(file.path, authorId);
+          return result;
+        } finally {
+          fs.unlinkSync(file.path);
+        }
       })
     );
+
+    const currentPost = await getForumPost(postId);
+
+    const currentImages = Array.isArray(currentPost?.images)
+      ? currentPost.images
+      : [];
+
+    const updatedImages = [
+      ...currentImages.filter((img) => {
+        const publicId = typeof img === "string" ? img : img.publicId;
+        return !deletedImagesIds.includes(publicId);
+      }),
+      ...uploadedImages,
+    ];
 
     const updatedPost = await editForumPost(
       postId,
       title,
       content,
-      [...currentImages, ...uploadedImages],
-      authorId
+      updatedImages,
+      authorId,
+      deletedImagesIds
     );
-    return res.status(201).json(updatedPost);
+
+    res.status(201).json(updatedPost);
   } catch (error) {
-    console.error("Error updating post:", error);
+    console.error("Error in controller:", error);
 
     if (req.files) {
       req.files.forEach((file) => {
@@ -123,9 +127,28 @@ const editForumPostController = async (req, res) => {
       });
     }
 
-    return res
-      .status(500)
-      .json({ message: error.message || "Internal server error" });
+    res.status(500).json({ message: error.message || "Internal server error" });
+  }
+};
+
+const deleteForumPostController = async (req, res) => {
+  try {
+    const postId = req.params.postId;
+    const userId = req.user.id;
+    const post = await getForumPost(postId);
+
+    if (!post || post.authorId !== userId) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    await deleteForumPost(postId);
+
+    res.status(200).json({ message: "Post deleted successfully" });
+  } catch (error) {
+    console.error("Error in delete controller:", error);
+    res.status(500).json({
+      message: error.message || "Failed to delete post",
+    });
   }
 };
 
@@ -133,4 +156,5 @@ module.exports = {
   createForumPostController,
   getAllForumPostsController,
   editForumPostController,
+  deleteForumPostController,
 };

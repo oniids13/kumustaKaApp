@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { cloudinary } = require("../services/cloudinary.service");
 
 const createNewPost = async (title, content, imageUrls, authorId) => {
   try {
@@ -68,8 +69,31 @@ const getAllPosts = async (status) => {
   }
 };
 
-const editForumPost = async (postId, title, content, images, authorId) => {
+const editForumPost = async (
+  postId,
+  title,
+  content,
+  images,
+  authorId,
+  deletedImagePublicIds = []
+) => {
   try {
+    const idsToDelete = Array.isArray(deletedImagePublicIds)
+      ? deletedImagePublicIds
+      : [deletedImagePublicIds].filter(Boolean);
+
+    if (idsToDelete.length > 0) {
+      await Promise.all(
+        idsToDelete.map((publicId) =>
+          cloudinary.uploader
+            .destroy(publicId)
+            .catch((e) =>
+              console.error(`Failed to delete image ${publicId}:`, e)
+            )
+        )
+      );
+    }
+
     const updatedPost = await prisma.forumPost.update({
       where: { id: postId, authorId: authorId },
       data: {
@@ -78,7 +102,6 @@ const editForumPost = async (postId, title, content, images, authorId) => {
         images,
       },
       include: {
-        // Changed from 'select' to 'include' for relationships
         author: {
           select: {
             id: true,
@@ -89,6 +112,7 @@ const editForumPost = async (postId, title, content, images, authorId) => {
         },
       },
     });
+
     return updatedPost;
   } catch (error) {
     console.error("Error updating post:", error);
@@ -98,6 +122,36 @@ const editForumPost = async (postId, title, content, images, authorId) => {
 
 const deleteForumPost = async (postId) => {
   try {
+    const post = await prisma.forumPost.findUnique({
+      where: { id: postId },
+      select: {
+        images: true,
+      },
+    });
+
+    if (!post) {
+      throw new Error("Post not found");
+    }
+
+    const images = post.images;
+
+    await Promise.all(
+      images.map(async (img) => {
+        try {
+          const publicId =
+            typeof img === "string"
+              ? img.split("/").pop().split(".")[0]
+              : img.publicId;
+
+          if (publicId) {
+            await cloudinary.uploader.destroy(publicId);
+          }
+        } catch (error) {
+          console.error(`Error deleting image:`, error);
+        }
+      })
+    );
+
     const deletedPost = await prisma.forumPost.delete({
       where: { id: postId },
       select: {
