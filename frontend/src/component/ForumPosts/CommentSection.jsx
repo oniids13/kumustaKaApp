@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 const CommentSection = ({ postId }) => {
@@ -8,22 +8,35 @@ const CommentSection = ({ postId }) => {
 
   const fetchComments = async () => {
     try {
-      const response = await axios.get(`/api/forum/posts/${postId}/comments`);
-      setComments(response.data);
+      const response = await axios.get(
+        `http://localhost:3000/api/forum/${postId}/allComments`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+
+      setComments(response.data.comments);
     } catch (error) {
       console.error("Error fetching comments:", error);
     }
   };
 
+  useEffect(() => {
+    fetchComments();
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await axios.post(
-        `/api/forum/posts/${postId}/comments`,
+        `http://localhost:3000/api/forum/${postId}/comment`,
         { content: newComment },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
           },
         }
       );

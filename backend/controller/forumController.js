@@ -4,9 +4,13 @@ const {
   getForumPost,
   editForumPost,
   deleteForumPost,
+  createComment,
+  getAllComments,
 } = require("../model/forumQueries");
 const { uploadImage } = require("../services/cloudinary.service");
 const fs = require("fs");
+
+// Post Related Controller
 
 const createForumPostController = async (req, res) => {
   const { title, content } = req.body;
@@ -152,9 +156,50 @@ const deleteForumPostController = async (req, res) => {
   }
 };
 
+// Comment Related Controller
+
+const createCommentController = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized: No user data found" });
+    }
+
+    const { content } = req.body;
+    const { postId } = req.params;
+    const userId = req.user.id;
+
+    const newComment = await createComment(content, postId, userId);
+    return res.status(201).json(newComment);
+  } catch (error) {
+    console.error("Error in creating comment controller:", error);
+    res.status(500).json({
+      message: error.message || "Error creating comment",
+    });
+  }
+};
+
+const getAllCommentsController = async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    const allComments = await getAllComments(postId);
+
+    return res.status(201).json(allComments);
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+    res.status(500).json({
+      message: error.message || "Error fetching comments",
+    });
+  }
+};
+
 module.exports = {
   createForumPostController,
   getAllForumPostsController,
   editForumPostController,
   deleteForumPostController,
+  createCommentController,
+  getAllCommentsController,
 };

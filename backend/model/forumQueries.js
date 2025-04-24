@@ -2,6 +2,8 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { cloudinary } = require("../services/cloudinary.service");
 
+// Post Related Queries
+
 const createNewPost = async (title, content, imageUrls, authorId) => {
   try {
     const newPost = await prisma.forumPost.create({
@@ -192,10 +194,60 @@ const getForumPost = async (postId) => {
   }
 };
 
+// Comment Related Queries
+
+const createComment = async (content, postId, authorId) => {
+  try {
+    const newComment = await prisma.comment.create({
+      data: {
+        content,
+        author: { connect: { id: authorId } },
+        post: { connect: { id: postId } },
+      },
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        author: { select: { firstName: true, lastName: true, id: true } },
+        post: { select: { title: true } },
+      },
+    });
+    return newComment;
+  } catch (error) {
+    console.error("Error creating comment");
+    throw new Error("Error creating comment: " + error.message);
+  }
+};
+
+const getAllComments = async (postId) => {
+  try {
+    const postComments = await prisma.forumPost.findUnique({
+      where: { id: postId },
+      include: {
+        comments: {
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            author: true,
+          },
+        },
+      },
+    });
+
+    return postComments;
+  } catch (error) {
+    console.error("Error fetching comments");
+    throw new Error("Error fetching comments:" + error.message);
+  }
+};
+
 module.exports = {
   createNewPost,
   getAllPosts,
   getForumPost,
   editForumPost,
   deleteForumPost,
+  createComment,
+  getAllComments,
 };
