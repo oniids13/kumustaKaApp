@@ -10,6 +10,7 @@ const app = express();
 const userRouter = require("./router/userRouter");
 const loginRouter = require("./router/loginRouter");
 const forumPostRouter = require("./router/forumPostRouter");
+const journalRouter = require("./router/journalRouter");
 
 app.use(
   cors({
@@ -29,6 +30,7 @@ passport.use(jwtStrategy);
 app.use("/api/user", userRouter);
 app.use("/api", loginRouter);
 app.use("/api/forum", forumPostRouter);
+app.use("/api/journal", journalRouter);
 
 app.listen(3000, () => {
   console.log("Server is running on http://localhost:3000");

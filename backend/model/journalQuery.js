@@ -1,52 +1,63 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const createJournal = async (studentId, content) => {
+const createJournal = async (userId, content) => {
   try {
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
     const newJournal = await prisma.journal.create({
       data: {
         content,
-        student: { connect: { id: studentId } },
+        student: { connect: { id: student.id } },
+        isPrivate: true,
       },
       select: {
         id: true,
         content: true,
         createdAt: true,
-        student: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
       },
     });
+
     return newJournal;
   } catch (error) {
     throw new Error("Error creating journal entry: " + error.message);
   }
 };
 
-const getAllJournals = async (studentId) => {
+const getAllJournals = async (userId) => {
   try {
-    const allJournals = await prisma.journal.findMany({
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
+    const allJournal = await prisma.journal.findMany({
       where: {
-        studentId: studentId,
+        studentId: student.id,
       },
-      include: {
-        student: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
       },
       orderBy: {
         createdAt: "desc",
       },
     });
-    return allJournals;
+
+    return allJournal;
   } catch (error) {
     throw new Error("Error fetching journals: " + error.message);
   }
@@ -61,13 +72,7 @@ const editJournal = async (journalId, content) => {
         id: true,
         content: true,
         createdAt: true,
-        student: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
+        updatedAt: true,
       },
     });
     return updatedJournal;

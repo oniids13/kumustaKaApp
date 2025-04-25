@@ -4,6 +4,17 @@ const JournalNote = ({ journal, onClick, onEdit, onDelete, isSelected }) => {
   const previewText =
     journal.content.replace(/<[^>]*>/g, "").substring(0, 100) + "...";
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   return (
     <div
       className={`journal-note-card ${isSelected ? "selected" : ""}`}
@@ -13,7 +24,10 @@ const JournalNote = ({ journal, onClick, onEdit, onDelete, isSelected }) => {
         <FaStickyNote />
       </div>
       <div className="note-content">
-        <h6>{new Date(journal.createdAt).toLocaleDateString()}</h6>
+        <h6>{formatDate(journal.createdAt)}</h6>
+        {journal.updatedAt && (
+          <small>Last Update: {formatDate(journal.updatedAt)}</small>
+        )}
         <p>{previewText}</p>
       </div>
       {isSelected && (
