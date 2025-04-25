@@ -1,10 +1,18 @@
 import { useState } from "react";
-import CreatePostForm from "../../component/ForumPosts/CreatePostForm";
-import PostList from "../../component/ForumPosts/PostList";
+
+// Student module components
 import SidePanel from "./component/SidePanel";
 import Journal from "./component/Journal";
+import MoodTracker from "./component/MoodTracker";
+import ResourceLibrary from "./component/ResourceLibrary";
+import PrivacyConsentSection from "./component/ConsentSection";
 
-import "../../styles/StudentModule.css";
+// Forum Post Components
+import CreatePostForm from "../../component/ForumPosts/CreatePostForm";
+import PostList from "../../component/ForumPosts/PostList";
+
+// CSS for student module
+import "./styles/StudentModule.css";
 
 const StudentDashboard = () => {
   const user = JSON.parse(localStorage.getItem("userData"));
@@ -19,6 +27,12 @@ const StudentDashboard = () => {
     switch (activeModule) {
       case "journal":
         return <Journal />;
+      case "moodtracker":
+        return <MoodTracker />;
+      case "resources":
+        return <ResourceLibrary />;
+      case "consent":
+        return <PrivacyConsentSection />;
       case "forum":
       default:
         return (

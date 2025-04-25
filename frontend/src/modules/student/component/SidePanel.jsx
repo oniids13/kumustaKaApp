@@ -1,9 +1,15 @@
-import { FaComments, FaBook, FaChartLine } from "react-icons/fa";
+import {
+  FaComments,
+  FaBook,
+  FaChartLine,
+  FaBookOpen,
+  FaShieldAlt,
+} from "react-icons/fa";
 
 const SidePanel = ({ user, activeModule, setActiveModule }) => {
   return (
     <>
-      <div className="profile-card">
+      <div className="profile-card mb-3">
         <img
           src={user.avatar || "/default-avatar.png"}
           alt={`${user.name}'s avatar`}
@@ -28,10 +34,26 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
           <FaBook /> Wellness Journal
         </button>
         <button
-          className="nav-button"
-          onClick={() => alert("Mood Tracker coming soon!")}
+          className={`nav-button ${
+            activeModule === "moodtracker" ? "active" : ""
+          }`}
+          onClick={() => setActiveModule("moodtracker")}
         >
           <FaChartLine /> Mood Tracker
+        </button>
+        <button
+          className={`nav-button ${
+            activeModule === "resources" ? "active" : ""
+          }`}
+          onClick={() => setActiveModule("resources")}
+        >
+          <FaBookOpen /> Resource Library
+        </button>
+        <button
+          className={`nav-button ${activeModule === "consent" ? "active" : ""}`}
+          onClick={() => setActiveModule("consent")}
+        >
+          <FaShieldAlt /> Privacy and Consent
         </button>
       </div>
     </>

@@ -108,3 +108,39 @@
     padding: 1.5rem;
   }
 }
+
+.privacy-consent-container {
+  max-width: 800px;
+  margin: 0 auto;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.privacy-item {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border-left: 4px solid #0d6efd;
+}
+
+.privacy-item h4 {
+  color: #333;
+  font-weight: 600;
+}
+
+.privacy-item ul {
+  padding-left: 1.5rem;
+}
+
+.privacy-item ul li {
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .privacy-consent-container {
+    padding: 1.5rem;
+  }
+
+  .privacy-item {
+    padding: 1rem;
+  }
+}

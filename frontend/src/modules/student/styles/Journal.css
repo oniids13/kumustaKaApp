@@ -1,0 +1,330 @@
+/* Journal Container */
+.journal-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Header Section */
+.journal-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.journal-header h2 {
+  color: #2c3e50;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.journal-header p {
+  color: #7f8c8d;
+  margin-top: 0.5rem;
+}
+
+/* Editor Section */
+.journal-editor-section {
+  margin-bottom: 2rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Notes Grid Layout */
+.journal-notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Empty State */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.empty-state h4 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: #7f8c8d;
+}
+
+/* Journal Note Cards */
+.journal-note-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-left: 4px solid #3498db;
+}
+
+.journal-note-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.journal-note-card.selected {
+  border-left-color: #e74c3c;
+  background-color: #fef9f9;
+}
+
+.note-date {
+  color: #7f8c8d;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.note-preview {
+  color: #34495e;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Detail View */
+.journal-detail-view {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
+}
+
+.journal-detail-content {
+  padding: 1rem;
+  border: 1px solid #ecf0f1;
+  border-radius: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.journal-detail-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.75rem;
+}
+
+/* Editor Styles */
+/* Editor Container */
+.text-editor-container {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+/* Toolbar Matching Forum Style */
+.editor-toolbar {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  flex-wrap: wrap;
+}
+
+.editor-toolbar button {
+  background: white;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 13px;
+  height: 28px;
+  min-width: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.editor-toolbar button:hover {
+  background: #e9ecef;
+}
+
+.editor-toolbar button.active {
+  background: #e2e6ea;
+  border-color: #adb5bd;
+}
+
+/* Specific button icons */
+.editor-toolbar button.bold {
+  font-weight: bold;
+}
+
+.editor-toolbar button.italic {
+  font-style: italic;
+}
+
+.editor-toolbar button.underline {
+  text-decoration: underline;
+}
+
+/* Button group divider */
+.editor-toolbar .divider {
+  width: 1px;
+  background: #dee2e6;
+  margin: 0 4px;
+}
+
+/* Editor Content Area */
+.editor-content {
+  padding: 16px;
+  min-height: 200px;
+}
+
+/* ProseMirror Styles (Matches Forum) */
+.ProseMirror {
+  min-height: 200px;
+  padding: 8px;
+  outline: none;
+}
+
+.ProseMirror p {
+  margin-bottom: 1em;
+  line-height: 1.6;
+  color: #212529;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 2em;
+  margin-bottom: 1em;
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+}
+
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3 {
+  margin: 1em 0;
+  line-height: 1.3;
+}
+
+.ProseMirror blockquote {
+  padding-left: 1em;
+  border-left: 3px solid #e9ecef;
+  margin: 1em 0;
+  color: #6c757d;
+}
+
+/* Action Buttons Matching Forum */
+.editor-actions {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-top: 1px solid #e2e8f0;
+}
+
+.save-btn {
+  background: #0d6efd;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.save-btn:hover {
+  background: #0b5ed7;
+}
+
+.cancel-btn {
+  background: white;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+/* Placeholder Text */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Focus State */
+.ProseMirror-focused {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .journal-container {
+    padding: 1rem;
+  }
+
+  .journal-notes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .journal-header {
+    padding: 1rem;
+  }
+
+  .journal-editor-section {
+    padding: 1rem;
+  }
+
+  .journal-detail-view {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .editor-toolbar {
+    gap: 0.25rem;
+    padding: 0.5rem;
+  }
+
+  .editor-toolbar button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .journal-detail-actions {
+    flex-direction: column;
+  }
+
+  .journal-detail-actions button {
+    width: 100%;
+  }
+}

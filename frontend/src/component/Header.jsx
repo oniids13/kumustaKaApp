@@ -1,26 +1,25 @@
 import { Link } from "react-router-dom";
 import LogOutButton from "./LogoutButton";
+import "../styles/Header.css";
 
+const Header = ({ token, setToken }) => {
+  return (
+    <header className="header-container">
+      <div className="header-content">
+        <img
+          className="logo"
+          src="/images/kumustaKaLogo.png"
+          alt="kumustaKa Logo"
+        />
 
-const Header = ({token, setToken}) => {
-    
-    return (
-        <header className="d-flex flex-column align-items-center justify-content-center border-bottom p-3">
-                <div><img className="logo" src="images\kumustaKaLogo.png" alt="kumustaKaLogo" /></div>
-        
-
-        {!token ? (
-            ''
-        ) : (
-            <div className="d-flex flex-row align-items-center justify-content-center gap-3">
-                
-                <LogOutButton setToken={setToken} />
-
-            </div>
+        {token && (
+          <div className="nav-actions">
+            <LogOutButton setToken={setToken} />
+          </div>
         )}
-            
+      </div>
     </header>
-    )
-}
+  );
+};
 
 export default Header;
