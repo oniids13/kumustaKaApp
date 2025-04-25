@@ -242,6 +242,40 @@ const getAllComments = async (postId) => {
   }
 };
 
+const editComment = async (commendId, userId, content) => {
+  try {
+    const existingComment = await prisma.comment.findUnique({
+      where: { id: commendId },
+    });
+
+    if (!existingComment) {
+      throw new Error("Comment not found");
+    }
+
+    if (existingComment.authorId !== userId) {
+      throw new Error("Unauthorized: You can only edit your own comments.");
+    }
+
+    const updatedComment = await prisma.comment.update({
+      where: {
+        id: commendId,
+      },
+      data: {
+        content,
+      },
+      select: {
+        id: true,
+        content: true,
+      },
+    });
+
+    return updatedComment;
+  } catch (error) {
+    console.error("Error updating comment");
+    throw new Error("Error updating comment:" + error.message);
+  }
+};
+
 module.exports = {
   createNewPost,
   getAllPosts,
@@ -250,4 +284,5 @@ module.exports = {
   deleteForumPost,
   createComment,
   getAllComments,
+  editComment,
 };

@@ -6,6 +6,7 @@ const {
   deleteForumPost,
   createComment,
   getAllComments,
+  editComment,
 } = require("../model/forumQueries");
 const { uploadImage } = require("../services/cloudinary.service");
 const fs = require("fs");
@@ -195,6 +196,23 @@ const getAllCommentsController = async (req, res) => {
   }
 };
 
+const editCommentControlloer = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const { content } = req.body;
+    const userId = req.user.id;
+
+    const updatedComment = await editComment(commentId, userId, content);
+
+    return res.status(201).json(updatedComment);
+  } catch (error) {
+    console.error("Error creating comment:", err);
+    return res
+      .status(500)
+      .json({ message: error.message || "Error updating comment" });
+  }
+};
+
 module.exports = {
   createForumPostController,
   getAllForumPostsController,
@@ -202,4 +220,5 @@ module.exports = {
   deleteForumPostController,
   createCommentController,
   getAllCommentsController,
+  editCommentControlloer,
 };

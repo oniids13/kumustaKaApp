@@ -5,6 +5,7 @@ const {
   deleteForumPostController,
   createCommentController,
   getAllCommentsController,
+  editCommentControlloer,
 } = require("../controller/forumController");
 const { Router } = require("express");
 const forumPostRouter = Router();
@@ -50,4 +51,9 @@ forumPostRouter.get(
   getAllCommentsController
 );
 
+forumPostRouter.patch(
+  "/:postId/:commentId/editComment",
+  passport.authenticate("jwt", { session: false }),
+  editCommentControlloer
+);
 module.exports = forumPostRouter;
