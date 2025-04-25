@@ -59,7 +59,7 @@ const CreatePostForm = ({ onPostCreated }) => {
 
         <TextEditor content={content} onUpdate={setContent} />
 
-        <div className="image-upload mt-3">
+        <div className="image-upload my-3">
           <input
             type="file"
             ref={fileInputRef}
@@ -78,7 +78,7 @@ const CreatePostForm = ({ onPostCreated }) => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="btn btn-primary"
+            className="btn btn-success"
           >
             {isSubmitting ? "Posting..." : "Post"}
           </button>

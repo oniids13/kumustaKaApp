@@ -59,7 +59,7 @@ const CommentSection = ({ postId }) => {
             className="form-control"
             required
           />
-          <button className="btn btn-primary" type="submit">
+          <button className="btn btn-success" type="submit">
             Comment
           </button>
         </div>
@@ -85,6 +85,12 @@ const CommentSection = ({ postId }) => {
                 <small className="text-muted">
                   {new Date(comment.createdAt).toLocaleString()}
                 </small>
+              </div>
+              <div className="d-flex col align-items-center">
+                <button className="btn btn-sm btn-outline-primary">Edit</button>
+                <button className="btn btn-sm btn-outline-danger">
+                  Delete
+                </button>
               </div>
             </div>
           </div>

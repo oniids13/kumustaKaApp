@@ -163,7 +163,7 @@ const deleteForumPost = async (postId) => {
         images: true,
       },
     });
-    return deletedPost;
+    return { success: true, message: "Comment deleted successfully" };
   } catch (error) {
     console.error("Error deleting post:", error);
     throw new Error("Error deleting post: " + error.message);
@@ -276,6 +276,27 @@ const editComment = async (commendId, userId, content) => {
   }
 };
 
+const deleteComment = async (commendId, userId) => {
+  try {
+    const existingComment = await prisma.comment.findUnique({
+      where: { id: commendId },
+    });
+
+    if (existingComment.authorId !== userId) {
+      throw new Error("Unauthorized: You can only delete your own comments.");
+    }
+
+    await prisma.comment.delete({
+      where: { id: commendId },
+    });
+
+    return { success: true, message: "Comment deleted successfully" };
+  } catch (error) {
+    console.error("Error deleting comment");
+    throw new Error("Error deleting comment:" + error.message);
+  }
+};
+
 module.exports = {
   createNewPost,
   getAllPosts,
@@ -285,4 +306,5 @@ module.exports = {
   createComment,
   getAllComments,
   editComment,
+  deleteComment,
 };

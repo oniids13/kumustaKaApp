@@ -169,10 +169,10 @@ const PostList = () => {
                   </div>
 
                   {user?.userId === post.authorId && !editingPostId && (
-                    <>
+                    <div className="d-flex">
                       <button
                         onClick={() => setEditingPostId(post.id)}
-                        className="btn btn-sm btn-outline-primary"
+                        className="btn btn-sm btn-outline-primary mx-3"
                       >
                         Edit
                       </button>
@@ -182,7 +182,7 @@ const PostList = () => {
                       >
                         Delete
                       </button>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>

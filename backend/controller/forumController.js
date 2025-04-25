@@ -7,6 +7,7 @@ const {
   createComment,
   getAllComments,
   editComment,
+  deleteComment,
 } = require("../model/forumQueries");
 const { uploadImage } = require("../services/cloudinary.service");
 const fs = require("fs");
@@ -66,7 +67,7 @@ const getAllForumPostsController = async (req, res) => {
     const allPosts = publishedPosts.concat(unpublishedPosts);
     if (allPosts.length > 0) {
       return res
-        .status(201)
+        .status(200)
         .json({ success: "All Posts", publishedPosts, unpublishedPosts });
     }
 
@@ -187,7 +188,7 @@ const getAllCommentsController = async (req, res) => {
 
     const allComments = await getAllComments(postId);
 
-    return res.status(201).json(allComments);
+    return res.status(200).json(allComments);
   } catch (error) {
     console.error("Error fetching comments:", error);
     res.status(500).json({
@@ -196,7 +197,7 @@ const getAllCommentsController = async (req, res) => {
   }
 };
 
-const editCommentControlloer = async (req, res) => {
+const editCommentController = async (req, res) => {
   try {
     const { commentId } = req.params;
     const { content } = req.body;
@@ -206,10 +207,25 @@ const editCommentControlloer = async (req, res) => {
 
     return res.status(201).json(updatedComment);
   } catch (error) {
-    console.error("Error creating comment:", err);
+    console.error("Error creating comment:", error);
     return res
       .status(500)
       .json({ message: error.message || "Error updating comment" });
+  }
+};
+
+const deleteCommentController = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+
+    const userId = req.user.id;
+
+    const deletedComment = await deleteComment(commentId, userId);
+
+    return res.status(200).json(deletedComment);
+  } catch (error) {
+    console.error("Error deleting comment: ", error);
+    return res.status(500);
   }
 };
 
@@ -220,5 +236,6 @@ module.exports = {
   deleteForumPostController,
   createCommentController,
   getAllCommentsController,
-  editCommentControlloer,
+  editCommentController,
+  deleteCommentController,
 };
