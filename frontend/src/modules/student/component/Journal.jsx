@@ -1,8 +1,11 @@
 const Journal = () => {
   return (
-    <>
-      <h1>This is the Journal Section</h1>
-    </>
+    <div className="wellness-journal">
+      <h2 className="mb-4">My Wellness Journal</h2>
+      <div className="alert alert-info">
+        Journal entries will appear here. This feature is under development.
+      </div>
+    </div>
   );
 };
 
