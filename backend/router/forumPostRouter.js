@@ -41,25 +41,25 @@ forumPostRouter.delete(
 
 // Comments Router
 forumPostRouter.post(
-  "/:postId/comment",
+  "/comment/:postId",
   passport.authenticate("jwt", { session: false }),
   createCommentController
 );
 
 forumPostRouter.get(
-  "/:postId/allComments",
+  "/allComments/:postId",
   passport.authenticate("jwt", { session: false }),
   getAllCommentsController
 );
 
 forumPostRouter.patch(
-  "/:postId/:commentId/editComment",
+  "/editComment/:commentId/",
   passport.authenticate("jwt", { session: false }),
   editCommentController
 );
 
 forumPostRouter.delete(
-  "/:postId/:commentId/deleteComment",
+  "/deleteComment/:commentId/",
   passport.authenticate("jwt", { session: false }),
   deleteCommentController
 );

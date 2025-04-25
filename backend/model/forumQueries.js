@@ -276,10 +276,10 @@ const editComment = async (commendId, userId, content) => {
   }
 };
 
-const deleteComment = async (commendId, userId) => {
+const deleteComment = async (commentId, userId) => {
   try {
     const existingComment = await prisma.comment.findUnique({
-      where: { id: commendId },
+      where: { id: commentId },
     });
 
     if (existingComment.authorId !== userId) {
@@ -287,7 +287,7 @@ const deleteComment = async (commendId, userId) => {
     }
 
     await prisma.comment.delete({
-      where: { id: commendId },
+      where: { id: commentId },
     });
 
     return { success: true, message: "Comment deleted successfully" };

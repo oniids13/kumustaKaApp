@@ -172,7 +172,7 @@ const PostList = () => {
                     <div className="d-flex">
                       <button
                         onClick={() => setEditingPostId(post.id)}
-                        className="btn btn-sm btn-outline-primary mx-3"
+                        className="btn btn-sm btn-outline-primary"
                       >
                         Edit
                       </button>
@@ -204,13 +204,18 @@ const PostList = () => {
                     {post.images?.length > 0 && (
                       <div className="post-images mt-3">
                         {post.images.map((img, i) => (
-                          <img
+                          <a
                             key={i}
-                            src={typeof img === "string" ? img : img?.url}
-                            alt={`Post ${i}`}
-                            className="img-fluid me-2 mb-2"
-                            style={{ maxHeight: "200px" }}
-                          />
+                            href={typeof img === "string" ? img : img?.url}
+                            target="_blank"
+                          >
+                            <img
+                              src={typeof img === "string" ? img : img?.url}
+                              alt={`Post ${i}`}
+                              className="img-fluid me-2 mb-2"
+                              style={{ maxHeight: "200px" }}
+                            />
+                          </a>
                         ))}
                       </div>
                     )}
