@@ -3,7 +3,7 @@ const {
   getAllJournals,
   editJournal,
   deleteJournal,
-} = require("../model/journalQuery");
+} = require("../model/journalQueries");
 
 const createJournalController = async (req, res) => {
   try {

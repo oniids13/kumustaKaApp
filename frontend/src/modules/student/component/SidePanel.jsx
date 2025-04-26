@@ -4,6 +4,7 @@ import {
   FaChartLine,
   FaBookOpen,
   FaShieldAlt,
+  FaAddressCard,
 } from "react-icons/fa";
 
 const SidePanel = ({ user, activeModule, setActiveModule }) => {
@@ -54,6 +55,14 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
           onClick={() => setActiveModule("consent")}
         >
           <FaShieldAlt /> Privacy and Consent
+        </button>
+        <button
+          className={`nav-button ${
+            activeModule === "emergency" ? "active" : ""
+          }`}
+          onClick={() => setActiveModule("emergency")}
+        >
+          <FaAddressCard /> Emergency Contact
         </button>
       </div>
     </>

@@ -6,6 +6,7 @@ import Journal from "./component/Journal";
 import MoodTracker from "./component/MoodTracker";
 import ResourceLibrary from "./component/ResourceLibrary";
 import PrivacyConsentSection from "./component/ConsentSection";
+import EmergencyContact from "./component/EmergencyContact";
 
 // Forum Post Components
 import CreatePostForm from "../../component/ForumPosts/CreatePostForm";
@@ -33,6 +34,8 @@ const StudentDashboard = () => {
         return <ResourceLibrary />;
       case "consent":
         return <PrivacyConsentSection />;
+      case "emergency":
+        return <EmergencyContact />;
       case "forum":
       default:
         return (
