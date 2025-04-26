@@ -85,7 +85,70 @@ const getAllEmergencyContact = async (userId) => {
   }
 };
 
+const updateEmergencyContact = async (
+  userId,
+  contactId,
+  { name, relationship, phone, isPrimary = false }
+) => {
+  try {
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      include: {
+        emergencyContacts: {
+          where: { id: contactId },
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
+    if (student.emergencyContacts.length === 0) {
+      throw new Error("Emergency contact not found or unauthorized");
+    }
+
+    if (isPrimary) {
+      await prisma.emergencyContact.updateMany({
+        where: {
+          studentId: student.id,
+          isPrimary: true,
+          NOT: { id: contactId },
+        },
+        data: {
+          isPrimary: false,
+        },
+      });
+    }
+
+    const updatedContact = await prisma.emergencyContact.update({
+      where: {
+        id: contactId,
+      },
+      data: {
+        name,
+        relationship,
+        phone,
+        isPrimary,
+      },
+      select: {
+        id: true,
+        name: true,
+        relationship: true,
+        phone: true,
+        isPrimary: true,
+      },
+    });
+
+    return updatedContact;
+  } catch (error) {
+    throw new Error(`Failed to update emergency contact: ${error.message}`);
+  }
+};
+
 module.exports = {
   createEmergencyContact,
   getAllEmergencyContact,
+  updateEmergencyContact,
 };
