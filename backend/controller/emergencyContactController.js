@@ -2,6 +2,7 @@ const {
   createEmergencyContact,
   getAllEmergencyContact,
   updateEmergencyContact,
+  deleteEmergenctContact,
 } = require("../model/emergencyContactQueries");
 
 const createEmergencyContactController = async (req, res) => {
@@ -55,8 +56,23 @@ const updateEmergencyContactController = async (req, res) => {
   }
 };
 
+const deleteEmergenctContactController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { contactId } = req.params;
+
+    const deleteContact = await deleteEmergenctContact(userId, contactId);
+
+    res.status(200).json(deleteContact);
+  } catch (error) {
+    console.error("Failed to delete contact:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createEmergencyContactController,
   getAllEmergencyContactController,
   updateEmergencyContactController,
+  deleteEmergenctContactController,
 };

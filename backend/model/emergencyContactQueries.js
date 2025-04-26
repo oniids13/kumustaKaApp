@@ -147,8 +147,41 @@ const updateEmergencyContact = async (
   }
 };
 
+const deleteEmergenctContact = async (userId, contactId) => {
+  try {
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      include: {
+        emergencyContacts: {
+          where: { id: contactId },
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
+    if (student.emergencyContacts.length === 0) {
+      throw new Error("Emergency contact not found or unauthorized");
+    }
+
+    await prisma.emergencyContact.delete({
+      where: {
+        id: contactId,
+      },
+    });
+
+    return { success: "Contact deleted successfully" };
+  } catch (error) {
+    throw new Error(`Error deleting contact ${error.message}`);
+  }
+};
+
 module.exports = {
   createEmergencyContact,
   getAllEmergencyContact,
   updateEmergencyContact,
+  deleteEmergenctContact,
 };
