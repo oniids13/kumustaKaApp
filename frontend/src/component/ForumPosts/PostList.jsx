@@ -169,7 +169,7 @@ const PostList = () => {
                   </div>
 
                   {user?.userId === post.authorId && !editingPostId && (
-                    <div className="d-flex">
+                    <div className="d-flex gap-3">
                       <button
                         onClick={() => setEditingPostId(post.id)}
                         className="btn btn-sm btn-outline-primary"
