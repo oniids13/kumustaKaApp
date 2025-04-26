@@ -1,4 +1,7 @@
-const { createEmergencyContact } = require("../model/emergencyContactQueries");
+const {
+  createEmergencyContact,
+  getAllEmergencyContact,
+} = require("../model/emergencyContactQueries");
 
 const createEmergencyContactController = async (req, res) => {
   try {
@@ -19,6 +22,19 @@ const createEmergencyContactController = async (req, res) => {
   }
 };
 
+const getAllEmergencyContactController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const allContacts = await getAllEmergencyContact(userId);
+    console.log(allContacts);
+    res.status(200).json(allContacts);
+  } catch (error) {
+    console.error("Error fetching contacts:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createEmergencyContactController,
+  getAllEmergencyContactController,
 };

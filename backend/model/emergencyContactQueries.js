@@ -43,7 +43,6 @@ const createEmergencyContact = async (
         relationship: true,
         phone: true,
         isPrimary: true,
-        studentId: true,
       },
     });
 
@@ -53,6 +52,40 @@ const createEmergencyContact = async (
   }
 };
 
+const getAllEmergencyContact = async (userId) => {
+  try {
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
+    const allContacts = await prisma.emergencyContact.findMany({
+      where: {
+        studentId: student.id,
+      },
+      select: {
+        id: true,
+        name: true,
+        relationship: true,
+        phone: true,
+        isPrimary: true,
+      },
+      orderBy: {
+        isPrimary: "desc",
+      },
+    });
+
+    return allContacts;
+  } catch (error) {
+    throw new Error(`Failed to get all emergency contact: ${error.message}`);
+  }
+};
+
 module.exports = {
   createEmergencyContact,
+  getAllEmergencyContact,
 };
