@@ -1,37 +1,51 @@
-import { useState } from 'react';
-import { Modal, Button, Form, Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { useState } from "react";
+import { Modal, Button, Form, Alert } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "../styles/Index.css";
 
 const Index = () => {
   const [showModal, setShowModal] = useState(false);
-  const [code, setCode] = useState('');
-  const [error, setError] = useState('');
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  
-  const CORRECT_CODE = "TEST"; 
+  const CORRECT_CODE = "TEST";
 
   const handleVerifyCode = () => {
     if (code === CORRECT_CODE) {
-      navigate('/register');
+      navigate("/register");
     } else {
-      setError('Incorrect code. Contact your admin.');
+      setError("Incorrect code. Contact your admin.");
     }
   };
 
   return (
-    <>
-      <div className="d-flex flex-column justify-content-center align-items-center wrapper">
-        <div className="border border-2 rounded-3 p-5 m-5 d-flex flex-column justify-content-center align-items-center bg-warning-subtle">
-          <h1>Welcome to Kumusta Ka!</h1>
-          <p>Your go-to app for mental health support.</p>
-          <div className="d-flex flex-column justify-content-center align-items-center">
-            <button className="btn btn-success" onClick={() => navigate('/login')}>Login</button>
-            <span>or</span>
-            <Button variant="primary" onClick={() => setShowModal(true)}>
+    <div className="index-container">
+      <div className="login-card">
+        <div className="card-header">
+          <h1 className="app-title">Welcome to Kumusta Ka!</h1>
+          <p className="app-subtitle">Your mental wellness companion</p>
+        </div>
+
+        <div className="card-body">
+          <div className="app-description">
+            <p>
+              Connect with support resources and track your mental health
+              journey
+            </p>
+          </div>
+
+          <div className="auth-buttons">
+            <button className="login-btn" onClick={() => navigate("/login")}>
+              Login
+            </button>
+            <div className="divider">
+              <span>or</span>
+            </div>
+            <button className="register-btn" onClick={() => setShowModal(true)}>
               Register
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -40,16 +54,17 @@ const Index = () => {
         show={showModal}
         onHide={() => {
           setShowModal(false);
-          setError('');
+          setError("");
         }}
         backdrop="static"
         keyboard={false}
         centered
+        className="access-modal"
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Access Code Required</Modal.Title>
+        <Modal.Header closeButton className="modal-header-custom">
+          <Modal.Title>🔒 Access Code Required</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="modal-body-custom">
           <Form>
             <Form.Group className="mb-3">
               <Form.Label>Enter your access code:</Form.Label>
@@ -58,29 +73,38 @@ const Index = () => {
                 value={code}
                 onChange={(e) => {
                   setCode(e.target.value);
-                  setError('');
+                  setError("");
                 }}
                 placeholder="Enter code"
                 isInvalid={!!error}
+                className="code-input"
               />
               {error && (
-                <Alert variant="danger" className="mt-2">
+                <Alert variant="danger" className="error-alert">
                   {error}
                 </Alert>
               )}
             </Form.Group>
           </Form>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+        <Modal.Footer className="modal-footer-custom">
+          <Button
+            variant="secondary"
+            onClick={() => setShowModal(false)}
+            className="cancel-btn"
+          >
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleVerifyCode}>
+          <Button
+            variant="primary"
+            onClick={handleVerifyCode}
+            className="verify-btn"
+          >
             Verify Code
           </Button>
         </Modal.Footer>
       </Modal>
-    </>
+    </div>
   );
 };
 

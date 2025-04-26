@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { useOutletContext } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
+import { FaSignInAlt, FaArrowLeft, FaUser, FaLock } from "react-icons/fa";
+import "../styles/Login.css"; // Create this new CSS file
 
 const Login = () => {
   const { setToken } = useOutletContext();
@@ -61,7 +63,7 @@ const Login = () => {
           navigate("/admin");
           break;
         default:
-          navigate("/"); // Fallback for unknown roles
+          navigate("/");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -72,13 +74,15 @@ const Login = () => {
   };
 
   return (
-    <div className="container wrapper mt-5 d-flex justify-content-center align-items-center flex-column">
-      <LoginForm
-        handleChange={handleChange}
-        handleLogin={handleLogin}
-        error={error}
-        isLoading={isLoading}
-      />
+    <div className="login-container">
+      <div className="login-card">
+        <LoginForm
+          handleChange={handleChange}
+          handleLogin={handleLogin}
+          error={error}
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 };
@@ -88,46 +92,60 @@ const LoginForm = ({ handleChange, handleLogin, error, isLoading }) => {
 
   return (
     <>
-      <form className="login-form" onSubmit={handleLogin}>
-        <h1 className="h3 mb-3 fw-normal">Please sign in</h1>
+      <div className="login-header">
+        <h1>Welcome Back</h1>
+        <p>Sign in to continue your wellness journey</p>
+      </div>
 
-        {error && <div className="alert alert-danger">{error}</div>}
+      <form onSubmit={handleLogin} className="login-form">
+        {error && <div className="error-message">{error}</div>}
 
-        <div className="form-floating mb-3">
+        <div className="input-group">
+          <span className="input-icon">
+            <FaUser />
+          </span>
           <input
             type="email"
-            className="form-control"
-            id="floatingInput"
-            placeholder="name@example.com"
             name="email"
+            placeholder="Email address"
             required
             onChange={handleChange}
           />
-          <label htmlFor="floatingInput">Email address</label>
         </div>
-        <div className="form-floating mb-3">
+
+        <div className="input-group">
+          <span className="input-icon">
+            <FaLock />
+          </span>
           <input
             type="password"
-            className="form-control"
-            id="floatingPassword"
-            placeholder="Password"
             name="password"
+            placeholder="Password"
             required
             onChange={handleChange}
           />
-          <label htmlFor="floatingPassword">Password</label>
         </div>
-        <button
-          className="btn btn-primary w-100 py-2"
-          type="submit"
-          disabled={isLoading}
-        >
-          {isLoading ? "Signing in..." : "Sign in"}
+
+        <button type="submit" disabled={isLoading} className="login-button">
+          {isLoading ? (
+            <span className="spinner"></span>
+          ) : (
+            <>
+              <FaSignInAlt /> Sign In
+            </>
+          )}
         </button>
+
+        <div className="login-footer">
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="back-button"
+          >
+            <FaArrowLeft /> Back to Home
+          </button>
+        </div>
       </form>
-      <button className="btn btn-secondary mt-3" onClick={() => navigate("/")}>
-        Back
-      </button>
     </>
   );
 };

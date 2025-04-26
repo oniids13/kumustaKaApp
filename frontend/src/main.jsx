@@ -4,8 +4,8 @@ import { RouterProvider } from "react-router-dom";
 import router from "./router/Router";
 
 // CSS
-import "./index.css";
-import "./styles/forum.css";
+import "./main.css";
+import "./styles/Forum.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
