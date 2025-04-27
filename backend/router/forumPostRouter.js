@@ -7,6 +7,7 @@ const {
   getAllCommentsController,
   editCommentController,
   deleteCommentController,
+  sparkReactionController,
 } = require("../controller/forumController");
 const { Router } = require("express");
 const forumPostRouter = Router();
@@ -62,6 +63,12 @@ forumPostRouter.delete(
   "/deleteComment/:commentId/",
   passport.authenticate("jwt", { session: false }),
   deleteCommentController
+);
+
+forumPostRouter.post(
+  "/reaction/:postId",
+  passport.authenticate("jwt", { session: false }),
+  sparkReactionController
 );
 
 module.exports = forumPostRouter;

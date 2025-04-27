@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import CommentSection from "./CommentSection";
 import EditPostForm from "./EditPostForm";
+import SparkButton from "../SparkBrain";
 
 const PostList = () => {
   const [posts, setPosts] = useState([]);
@@ -172,13 +173,13 @@ const PostList = () => {
                     <div className="d-flex gap-3">
                       <button
                         onClick={() => setEditingPostId(post.id)}
-                        className="btn btn-sm btn-outline-primary"
+                        className="btn btn-sm btn-primary"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDeletePost(post.id)}
-                        className="btn btn-sm btn-outline-danger"
+                        className="btn btn-sm btn-danger"
                       >
                         Delete
                       </button>
@@ -221,6 +222,9 @@ const PostList = () => {
                     )}
                   </>
                 )}
+                <button>
+                  <SparkButton />
+                </button>
               </div>
 
               {editingPostId !== post.id && (

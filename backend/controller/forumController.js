@@ -8,6 +8,7 @@ const {
   getAllComments,
   editComment,
   deleteComment,
+  sparkReaction,
 } = require("../model/forumQueries");
 const { uploadImage } = require("../services/cloudinary.service");
 const fs = require("fs");
@@ -229,6 +230,27 @@ const deleteCommentController = async (req, res) => {
   }
 };
 
+const sparkReactionController = async (req, res) => {
+  const { postId } = req.params;
+
+  const { id, role } = req.user;
+
+  if (role !== "STUDENT" && role !== "TEACHER") {
+    return res
+      .status(403)
+      .json({ message: "Only students and teachers can react to posts" });
+  }
+
+  try {
+    const sparkCount = await sparkReaction(postId, id, role);
+
+    return res.status(200).json({ sparkCount });
+  } catch (error) {
+    console.error("Error handling reaction");
+    return res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createForumPostController,
   getAllForumPostsController,
@@ -238,4 +260,5 @@ module.exports = {
   getAllCommentsController,
   editCommentController,
   deleteCommentController,
+  sparkReactionController,
 };
