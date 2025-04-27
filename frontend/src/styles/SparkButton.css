@@ -1,0 +1,92 @@
+/* SparkButton.css */
+.spark-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.spark-button {
+  background: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 10px;
+  cursor: pointer;
+  width: 48px;
+  height: 48px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.spark-button:hover:not(.disabled) {
+  transform: scale(1.05);
+}
+
+.spark-button.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spark-button svg {
+  width: 100%;
+  height: 100%;
+}
+
+.spark-button.active svg {
+  animation: sparkAnimation 0.5s ease-out;
+}
+
+@keyframes sparkAnimation {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.boost-text {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #4caf50;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: bold;
+  animation: boostAnimation 0.5s ease-out;
+}
+
+@keyframes boostAnimation {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+}
+
+.spark-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #666;
+  font-size: 14px;
+}
+
+.spark-count .count {
+  font-weight: bold;
+  color: #ffa000;
+}

@@ -2,13 +2,15 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import CommentSection from "./CommentSection";
 import EditPostForm from "./EditPostForm";
-import SparkButton from "../SparkBrain";
+import SparkButton from "../SparkButton";
 
 const PostList = () => {
   const [posts, setPosts] = useState([]);
   const [editingPostId, setEditingPostId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reactingPostId, setReactingPostId] = useState(null);
+
   const user = JSON.parse(localStorage.getItem("userData")) || {};
 
   const fetchPosts = async () => {
@@ -24,7 +26,6 @@ const PostList = () => {
         }
       );
 
-      // Ensure all posts have author data
       const validatedPosts = (response.data.publishedPosts || []).map(
         (post) => ({
           ...post,
@@ -33,6 +34,9 @@ const PostList = () => {
             lastName: "User",
             avatar: "/default-avatar.png",
           },
+          sparkCount: post._count?.reactions || 0,
+          isSparked:
+            post.reactions?.some((r) => r.userId === user.userId) || false,
         })
       );
 
@@ -119,6 +123,40 @@ const PostList = () => {
     } catch (error) {
       console.error("Error deleting post:", error);
       alert("Failed to delete post");
+    }
+  };
+
+  const handleSpark = async (postId) => {
+    if (reactingPostId) return; // Prevent multiple clicks
+    setReactingPostId(postId);
+
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/api/forum/reaction/${postId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+
+      setPosts(
+        posts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                sparkCount: response.data.sparkCount,
+                isSparked: !post.isSparked,
+              }
+            : post
+        )
+      );
+    } catch (error) {
+      console.error("Error reacting to post:", error);
+      alert(error.response?.data?.message || "Failed to react to post");
+    } finally {
+      setReactingPostId(null);
     }
   };
 
@@ -222,9 +260,15 @@ const PostList = () => {
                     )}
                   </>
                 )}
-                <button>
-                  <SparkButton />
-                </button>
+                <SparkButton
+                  initialCount={post.sparkCount || 0}
+                  isSparked={post.isSparked}
+                  onSpark={() => handleSpark(post.id)}
+                  disabled={
+                    reactingPostId === post.id ||
+                    !["STUDENT", "TEACHER"].includes(user.role)
+                  }
+                />
               </div>
 
               {editingPostId !== post.id && (

@@ -232,7 +232,6 @@ const deleteCommentController = async (req, res) => {
 
 const sparkReactionController = async (req, res) => {
   const { postId } = req.params;
-
   const { id, role } = req.user;
 
   if (role !== "STUDENT" && role !== "TEACHER") {
@@ -242,9 +241,16 @@ const sparkReactionController = async (req, res) => {
   }
 
   try {
-    const sparkCount = await sparkReaction(postId, id, role);
+    const { sparkCount, isSparkedByCurrentUser } = await sparkReaction(
+      postId,
+      id,
+      role
+    );
 
-    return res.status(200).json({ sparkCount });
+    return res.status(200).json({
+      sparkCount,
+      isSparkedByCurrentUser,
+    });
   } catch (error) {
     console.error("Error handling reaction");
     return res.status(500).json({ error: error.message });

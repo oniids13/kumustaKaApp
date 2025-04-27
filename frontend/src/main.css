@@ -73,6 +73,31 @@ footer {
   animation: fadeIn 0.3s ease-out;
 }
 
+/* Add to your global CSS file */
+.spark-reaction-container {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.spark-reaction-container button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.spark-count {
+  margin-left: 8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.spark-count .count {
+  font-weight: bold;
+  color: #ffa000;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0.9;
