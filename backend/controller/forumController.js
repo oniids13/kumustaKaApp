@@ -61,9 +61,11 @@ const createForumPostController = async (req, res) => {
 };
 
 const getAllForumPostsController = async (req, res) => {
+  const userId = req.user.id;
+
   try {
-    const publishedPosts = await getAllPosts(true);
-    const unpublishedPosts = await getAllPosts(false);
+    const publishedPosts = await getAllPosts(true, userId);
+    const unpublishedPosts = await getAllPosts(false, userId);
 
     const allPosts = publishedPosts.concat(unpublishedPosts);
     if (allPosts.length > 0) {
@@ -235,25 +237,19 @@ const sparkReactionController = async (req, res) => {
   const { id, role } = req.user;
 
   if (role !== "STUDENT" && role !== "TEACHER") {
-    return res
-      .status(403)
-      .json({ message: "Only students and teachers can react to posts" });
+    return res.status(403).json({
+      message: "Only students and teachers can react to posts",
+    });
   }
 
   try {
-    const { sparkCount, isSparkedByCurrentUser } = await sparkReaction(
-      postId,
-      id,
-      role
-    );
-
-    return res.status(200).json({
-      sparkCount,
-      isSparkedByCurrentUser,
-    });
+    const result = await sparkReaction(postId, id, role);
+    return res.status(200).json(result);
   } catch (error) {
-    console.error("Error handling reaction");
-    return res.status(500).json({ error: error.message });
+    console.error("Error handling reaction:", error);
+    return res.status(500).json({
+      error: error.message || "Failed to process reaction",
+    });
   }
 };
 

@@ -21,30 +21,30 @@ const PostList = () => {
         {
           headers: {
             Authorization: `Bearer ${user.token}`,
-            "Content-Type": "application/json",
           },
         }
       );
 
-      const validatedPosts = (response.data.publishedPosts || []).map(
-        (post) => ({
-          ...post,
-          author: post.author || {
-            firstName: "Unknown",
-            lastName: "User",
-            avatar: "/default-avatar.png",
-          },
-          sparkCount: post._count?.reactions || 0,
-          isSparked:
-            post.reactions?.some((r) => r.userId === user.userId) || false,
-        })
-      );
+      const validatedPosts = response.data.publishedPosts.map((post) => ({
+        ...post,
+        author: post.author || {
+          firstName: "Unknown",
+          lastName: "User",
+          avatar: "/default-avatar.png",
+        },
+        sparkCount: post.reactions?.length || 0,
+        isSparked:
+          post.reactions?.some(
+            (r) =>
+              (r.studentId === user.userId && user.role === "STUDENT") ||
+              (r.teacherId === user.userId && user.role === "TEACHER")
+          ) || false,
+      }));
 
       setPosts(validatedPosts);
-      setError(null);
     } catch (error) {
-      console.error("Error fetching posts:", error);
-      setError("Failed to load posts. Please try again.");
+      console.error("Fetch error:", error);
+      setError("Failed to load posts");
     } finally {
       setLoading(false);
     }
@@ -127,11 +127,11 @@ const PostList = () => {
   };
 
   const handleSpark = async (postId) => {
-    if (reactingPostId) return; // Prevent multiple clicks
+    if (reactingPostId) return;
     setReactingPostId(postId);
 
     try {
-      const response = await axios.post(
+      const { data } = await axios.post(
         `http://localhost:3000/api/forum/reaction/${postId}`,
         {},
         {
@@ -146,15 +146,15 @@ const PostList = () => {
           post.id === postId
             ? {
                 ...post,
-                sparkCount: response.data.sparkCount,
-                isSparked: !post.isSparked,
+                sparkCount: data.sparkCount,
+                isSparked: data.isSparkedByCurrentUser,
               }
             : post
         )
       );
     } catch (error) {
-      console.error("Error reacting to post:", error);
-      alert(error.response?.data?.message || "Failed to react to post");
+      console.error("Reaction error:", error);
+      alert(error.response?.data?.message || "Failed to update reaction");
     } finally {
       setReactingPostId(null);
     }

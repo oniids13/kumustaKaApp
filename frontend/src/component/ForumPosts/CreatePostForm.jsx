@@ -36,6 +36,7 @@ const CreatePostForm = ({ onPostCreated }) => {
       setTitle("");
       setContent("");
       setImages([]);
+      alert("Your post is pending for approval.");
     } catch (error) {
       console.error("Error creating post:", error);
       alert(error.response?.data?.error || "Failed to create post");

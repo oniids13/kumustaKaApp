@@ -30,7 +30,7 @@ const createNewPost = async (title, content, imageUrls, authorId) => {
   }
 };
 
-const getAllPosts = async (status) => {
+const getAllPosts = async (status, currentUserId) => {
   try {
     const allPosts = await prisma.forumPost.findMany({
       where: {
@@ -59,12 +59,35 @@ const getAllPosts = async (status) => {
             },
           },
         },
+        reactions: {
+          where: { type: "SPARK" },
+          select: {
+            id: true,
+            studentId: true,
+            teacherId: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
       },
     });
-    return allPosts;
+
+    const formattedPosts = allPosts.map((post) => {
+      const sparkCount = post.reactions.length;
+
+      const isSparked = post.reactions.some((r) => {
+        r.studentId === currentUserId || r.teacherId === currentUserId;
+      });
+
+      return {
+        ...post,
+        sparkCount,
+        isSparked,
+      };
+    });
+
+    return formattedPosts;
   } catch (error) {
     console.error("Error retrieving posts:", error);
     throw new Error("Error retrieving posts: " + error.message);
@@ -301,24 +324,24 @@ const deleteComment = async (commentId, userId) => {
 
 const sparkReaction = async (postId, userId, userRole) => {
   try {
-    const [post, user] = await Promise.all([
-      prisma.forumPost.findUnique({ where: { id: postId } }),
-      prisma[userRole.toLowerCase()].findUnique({ where: { userId } }),
-    ]);
-
-    if (!post) throw new Error("Post not found");
-    if (!user) throw new Error(`${userRole} not found`);
-
-    // Check if user already reacted
     const existingReaction = await prisma.reaction.findFirst({
       where: {
         postId,
-        type: "SPARK",
-        ...(userRole === "STUDENT"
-          ? { studentId: userId }
-          : { teacherId: userId }),
+        OR: [
+          { studentId: userRole === "STUDENT" ? userId : undefined },
+          { teacherId: userRole === "TEACHER" ? userId : undefined },
+        ].filter(Boolean),
       },
     });
+
+    const userExists =
+      userRole === "STUDENT"
+        ? await prisma.student.findUnique({ where: { userId } })
+        : await prisma.teacher.findUnique({ where: { userId } });
+
+    if (!userExists) {
+      throw new Error(`${userRole} does not exist.`);
+    }
 
     if (existingReaction) {
       await prisma.reaction.delete({
@@ -327,44 +350,21 @@ const sparkReaction = async (postId, userId, userRole) => {
     } else {
       await prisma.reaction.create({
         data: {
-          post: { connect: { id: postId } },
+          postId,
+          [userRole === "STUDENT" ? "studentId" : "teacherId"]: userExists.id,
           type: "SPARK",
-          ...(userRole === "STUDENT"
-            ? { student: { connect: { userId } } }
-            : { teacher: { connect: { userId } } }),
         },
       });
     }
 
-    // After toggle, get total sparkCount + ifCurrentUserSparked
-    const [sparkCount, isSparkedByCurrentUser] = await Promise.all([
-      prisma.reaction.count({
-        where: { postId, type: "SPARK" },
-      }),
-      prisma.reaction.findFirst({
-        where: {
-          postId,
-          type: "SPARK",
-          ...(userRole === "STUDENT"
-            ? { studentId: userId }
-            : { teacherId: userId }),
-        },
-      }),
-    ]);
+    // 3. Get updated counts
+    const sparkCount = await prisma.reaction.count({ where: { postId } });
+    const isSparked = !existingReaction;
 
-    return {
-      sparkCount,
-      isSparkedByCurrentUser: !!isSparkedByCurrentUser,
-    };
+    return { sparkCount, isSparked };
   } catch (error) {
-    console.error("Reaction Error:", {
-      error: error.message,
-      postId,
-      userId,
-      userRole,
-      timestamp: new Date().toISOString(),
-    });
-    throw new Error(`Reaction toggle failed: ${error.message}`);
+    console.error("Reaction Error:", error);
+    throw error;
   }
 };
 

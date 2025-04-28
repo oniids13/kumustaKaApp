@@ -220,7 +220,7 @@ model Reaction {
   type  String  @default("SPARK")
   createdAt DateTime @default(now())
 
-  @@unique([postId, studentId, teacherId])
+  @@unique([postId, type, studentId, teacherId])
   @@map("reactions")
 
 }

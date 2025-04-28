@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "../styles/SparkButton.css";
 
 const SparkButton = ({
-  initialCount,
+  initialCount = 0,
   isSparked = false,
   onSpark,
   disabled = false,
@@ -115,14 +115,10 @@ const SparkButton = ({
       </button>
 
       <div className="spark-count">
-        {initialCount > 0 && (
-          <>
-            <span className="count">{initialCount}</span>
-            <span className="label">
-              {isSparked ? "You sparked this 🌟" : "Sparks"}
-            </span>
-          </>
-        )}
+        <span className="count">{initialCount}</span>
+        <span className="label">
+          {isSparked ? "You sparked this 🌟" : "Sparks"}
+        </span>
       </div>
     </div>
   );
