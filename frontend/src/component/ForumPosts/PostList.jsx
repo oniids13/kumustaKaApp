@@ -260,6 +260,9 @@ const PostList = () => {
                     )}
                   </>
                 )}
+              </div>
+
+              <div className="border border-top">
                 <SparkButton
                   initialCount={post.sparkCount || 0}
                   isSparked={post.isSparked}
