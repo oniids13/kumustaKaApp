@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { getTodayRange } = require("../utils/dateUtils");
+const { getTodayRange, getDateOfWeek } = require("../utils/dateUtils");
 
 const checkTodaySubmission = async (userId) => {
   const { todayStart, todayEnd } = getTodayRange();
@@ -69,10 +69,13 @@ const createMoodEntry = async (userId, moodLevel, notes) => {
   }
 };
 
-const getRecentMoodEntry = async (userId, days = 7) => {
+const getRecentMoodEntry = async (userId, weekNumber) => {
   try {
-    const date = new Date();
-    date.setDate(date.getDate() - days);
+    const year = new Date().getFullYear();
+
+    const startDate = getDateOfWeek(weekNumber, year);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6);
 
     const student = await prisma.student.findUnique({
       where: { userId },
@@ -83,17 +86,34 @@ const getRecentMoodEntry = async (userId, days = 7) => {
       throw new Error("Student not found");
     }
 
-    const weeklyMoodEntry = await prisma.moodEntry.findMany({
+    const entries = await prisma.moodEntry.findMany({
       where: {
         studentId: student.id,
-        createdAt: { gte: date },
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: "asc",
       },
     });
 
-    return weeklyMoodEntry;
+    const weekData = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(startDate);
+      day.setDate(startDate.getDate() + i);
+
+      const entry = entries.find(
+        (e) =>
+          e.createdAt.toISOString().split("T")[0] ===
+          day.toISOString().split("T")[0]
+      );
+
+      weekData.push(entry || null);
+    }
+
+    return weekData;
   } catch (error) {
     throw new Error("Error getting mood entries");
   }

@@ -1,12 +1,9 @@
-
-
 const Footer = () => {
-    return (
-        <footer>
-            {new Date().getFullYear()} || KumustaKa
-        </footer>
-    )
-}
+  return (
+    <footer>
+      <h6>All Rights Reserve {new Date().getFullYear()} || KumustaKa</h6>
+    </footer>
+  );
+};
 
-
-export default Footer
+export default Footer;

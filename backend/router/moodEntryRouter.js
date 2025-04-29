@@ -14,7 +14,7 @@ moodEntryRouter.post(
 );
 
 moodEntryRouter.get(
-  "/weeklyMoodEntries",
+  "/weeklyMoodEntries/:weekNumber",
   passport.authenticate("jwt", { session: false }),
   getRecentMoodEntryController
 );

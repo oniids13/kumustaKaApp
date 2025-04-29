@@ -39,23 +39,29 @@ const createMoodEntryController = async (req, res) => {
 const getRecentMoodEntryController = async (req, res) => {
   try {
     const userId = req.user.id;
+    const weekNumber = parseInt(req.params.weekNumber);
 
     if (!userId) {
-      return res.status(403).json({ error: "Unauthorized" });
+      return res.status(403).json([]); // Return empty array for consistency
     }
 
-    const entries = await getRecentMoodEntry(userId);
+    let entries = await getRecentMoodEntry(userId, weekNumber);
 
-    return res.status(200).json({
-      success: true,
-      data: entries,
-    });
+    // Ensure we're working with an array
+    if (!Array.isArray(entries)) {
+      console.warn("getRecentMoodEntry did not return an array");
+      entries = [];
+    }
+
+    // Filter and format response
+    const responseData = entries.filter(
+      (entry) => entry && typeof entry === "object" && "moodLevel" in entry
+    );
+
+    return res.status(200).json(responseData); // Direct array response
   } catch (error) {
     console.error("Error getting mood entries:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed fetching all mood entries",
-    });
+    return res.status(500).json([]); // Always return array
   }
 };
 
