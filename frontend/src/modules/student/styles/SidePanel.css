@@ -1,0 +1,94 @@
+/* Mood Entry Form Styles */
+.mood-entry-form {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.mood-entry-title {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.mood-options {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.mood-option {
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s;
+  padding: 0.5rem;
+}
+
+.mood-option:hover {
+  transform: scale(1.2);
+}
+
+.mood-option.selected {
+  transform: scale(1.3);
+}
+
+.mood-option svg {
+  width: 30px;
+  height: 30px;
+}
+
+.mood-notes {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  resize: none;
+  min-height: 60px;
+  font-size: 0.9rem;
+}
+
+.submit-mood-btn {
+  background-color: #4a6baf;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  margin-top: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-mood-btn:hover {
+  background-color: #3a5688;
+}
+
+.submit-mood-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.profile-card {
+  margin-bottom: 1.5rem;
+}
+
+.nav-button {
+  margin-bottom: 0.5rem;
+}
+
+.already-submitted {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.already-submitted svg {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}

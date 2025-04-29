@@ -2,7 +2,8 @@ const { Router } = require("express");
 const passport = require("passport");
 const {
   createMoodEntryController,
-  getAllMoodEntryController,
+  getRecentMoodEntryController,
+  checkTodaySubmissionController,
 } = require("../controller/moodEntryController");
 const moodEntryRouter = Router();
 
@@ -13,9 +14,15 @@ moodEntryRouter.post(
 );
 
 moodEntryRouter.get(
-  "/allMoodEntries",
+  "/weeklyMoodEntries",
   passport.authenticate("jwt", { session: false }),
-  getAllMoodEntryController
+  getRecentMoodEntryController
+);
+
+moodEntryRouter.get(
+  "/checkToday",
+  passport.authenticate("jwt", { session: false }),
+  checkTodaySubmissionController
 );
 
 module.exports = moodEntryRouter;

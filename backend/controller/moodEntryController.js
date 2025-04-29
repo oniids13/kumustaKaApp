@@ -1,6 +1,7 @@
 const {
   createMoodEntry,
-  getAllMoodEntry,
+  getRecentMoodEntry,
+  checkTodaySubmission,
 } = require("../model/moodEntryQueries");
 
 const createMoodEntryController = async (req, res) => {
@@ -35,7 +36,7 @@ const createMoodEntryController = async (req, res) => {
   }
 };
 
-const getAllMoodEntryController = async (req, res) => {
+const getRecentMoodEntryController = async (req, res) => {
   try {
     const userId = req.user.id;
 
@@ -43,11 +44,11 @@ const getAllMoodEntryController = async (req, res) => {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    const allMoodEntry = await getAllMoodEntry(userId);
+    const entries = await getRecentMoodEntry(userId);
 
     return res.status(200).json({
       success: true,
-      data: allMoodEntry,
+      data: entries,
     });
   } catch (error) {
     console.error("Error getting mood entries:", error);
@@ -58,7 +59,23 @@ const getAllMoodEntryController = async (req, res) => {
   }
 };
 
+const checkTodaySubmissionController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const entry = await checkTodaySubmission(userId);
+
+    return res.json({
+      hasSubmitted: !!entry,
+      todayEntry: entry || null,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createMoodEntryController,
-  getAllMoodEntryController,
+  getRecentMoodEntryController,
+  checkTodaySubmissionController,
 };
