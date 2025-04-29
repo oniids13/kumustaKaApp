@@ -106,27 +106,44 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
           <>
             <h5 className="mood-entry-title">Rate your current mood</h5>
             <div className="mood-options">
-              {[1, 2, 3, 4, 5].map((rating) => {
-                const icons = [
-                  <FaFaceSadCry size={24} />,
-                  <FaFaceSadTear size={24} />,
-                  <FaFaceMeh size={24} />,
-                  <FaFaceSmile size={24} />,
-                  <FaFaceGrinHearts size={24} />,
-                ];
-                return (
-                  <button
-                    key={rating}
-                    className={`mood-option ${
-                      moodRating === rating ? "selected" : ""
-                    }`}
-                    onClick={() => setMoodRating(rating)}
-                    aria-label={`Mood level ${rating}`}
-                  >
-                    {icons[rating - 1]}
-                  </button>
-                );
-              })}
+              {[
+                {
+                  level: 1,
+                  icon: <FaFaceSadCry className="mood-icon terrible" />,
+                  label: "Terrible",
+                },
+                {
+                  level: 2,
+                  icon: <FaFaceSadTear className="mood-icon bad" />,
+                  label: "Bad",
+                },
+                {
+                  level: 3,
+                  icon: <FaFaceMeh className="mood-icon neutral" />,
+                  label: "Neutral",
+                },
+                {
+                  level: 4,
+                  icon: <FaFaceSmile className="mood-icon good" />,
+                  label: "Good",
+                },
+                {
+                  level: 5,
+                  icon: <FaFaceGrinHearts className="mood-icon excellent" />,
+                  label: "Excellent",
+                },
+              ].map((mood) => (
+                <button
+                  key={mood.level}
+                  className={`mood-option ${
+                    moodRating === mood.level ? "selected" : ""
+                  }`}
+                  onClick={() => setMoodRating(mood.level)}
+                  aria-label={`Mood level ${mood.level}: ${mood.label}`}
+                >
+                  {mood.icon}
+                </button>
+              ))}
             </div>
             <textarea
               className="mood-notes"
