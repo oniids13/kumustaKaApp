@@ -1,0 +1,87 @@
+/* resources.css */
+
+/* Container Styles */
+.resources-container {
+  padding: 2rem 0;
+}
+
+/* Header Styles */
+.resources-header {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  height: 300px;
+}
+
+/* Resource Grid Layout */
+.resource-grid {
+  margin-top: 1rem;
+}
+
+/* Card Styles */
+.resource-card {
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.resource-card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  transform: translateY(-5px);
+}
+
+/* Resource Type Indicator */
+.resource-type {
+  margin-bottom: 1rem;
+}
+
+.resource-type-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6c757d;
+}
+
+/* Text Styles */
+.resource-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #343a40;
+}
+
+.resource-description {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+  flex-grow: 1;
+}
+
+/* Link Button */
+.resource-link {
+  width: 100%;
+  text-align: center;
+}
+
+/* Custom Icon Colors */
+.text-purple {
+  color: #6f42c1;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .resources-header {
+    font-size: 1.75rem;
+  }
+
+  .resource-title {
+    font-size: 1.1rem;
+  }
+}
