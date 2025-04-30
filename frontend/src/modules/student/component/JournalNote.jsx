@@ -4,9 +4,14 @@ const JournalNote = ({ journal, onClick, onEdit, onDelete, isSelected }) => {
   const previewText =
     journal.content.replace(/<[^>]*>/g, "").substring(0, 100) + "...";
 
+  const utcToPhTime = (utcDate) => {
+    const date = new Date(utcDate);
+    return new Date(date.getTime() + 8 * 60 * 60 * 1000);
+  };
+
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
+    const phDate = utcToPhTime(dateString);
+    return phDate.toLocaleString("en-PH", {
       month: "short",
       day: "numeric",
       year: "numeric",

@@ -48,11 +48,17 @@ const createMoodEntry = async (userId, moodLevel, notes) => {
       throw new Error("Already submitted mood entry today");
     }
 
+    const now = new Date();
+    const phTime = new Date(
+      now.getTime() - now.getTimezoneOffset() * 60 * 1000
+    );
+
     const moodEntry = await prisma.moodEntry.create({
       data: {
         studentId: student.id,
         moodLevel: numericMood,
         notes: notes || null,
+        createdAt: phTime,
       },
       select: {
         id: true,

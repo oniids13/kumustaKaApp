@@ -6,12 +6,15 @@ const { cloudinary } = require("../services/cloudinary.service");
 
 const createNewPost = async (title, content, imageUrls, authorId) => {
   try {
+    const phTime = new Date(Date.now() + 8 * 60 * 60 * 1000);
+
     const newPost = await prisma.forumPost.create({
       data: {
         title,
         content,
         images: imageUrls,
         author: { connect: { id: authorId } },
+        createdAt: phTime,
       },
       select: {
         id: true,
@@ -221,11 +224,14 @@ const getForumPost = async (postId) => {
 
 const createComment = async (content, postId, authorId) => {
   try {
+    const phTime = new Date(Date.now() + 8 * 60 * 60 * 1000);
+
     const newComment = await prisma.comment.create({
       data: {
         content,
         author: { connect: { id: authorId } },
         post: { connect: { id: postId } },
+        createdAt: phTime,
       },
       select: {
         id: true,

@@ -125,6 +125,18 @@ const CommentSection = ({ postId }) => {
     setEditedContent("");
   };
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString("en-PH", {
+      timeZone: "Asia/Manila",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   return (
     <div className="comment-section">
       <form onSubmit={handleSubmit} className="mb-3">
@@ -216,7 +228,7 @@ const CommentSection = ({ postId }) => {
                   )}
                 </div>
                 <small className="text-muted">
-                  {new Date(comment.createdAt).toLocaleString()}
+                  {formatDate(comment.createdAt)}
                 </small>
               </div>
 
