@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { Modal, Button } from "react-bootstrap";
 
 // Student module components
 import SidePanel from "./component/SidePanel";
@@ -19,6 +21,9 @@ const StudentDashboard = () => {
   const user = JSON.parse(localStorage.getItem("userData"));
   const [refreshPosts, setRefreshPosts] = useState(false);
   const [activeModule, setActiveModule] = useState("forum");
+
+  const [quote, setQuote] = useState(null);
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
 
   const handlePostCreated = () => {
     setRefreshPosts((prev) => !prev);
@@ -47,6 +52,25 @@ const StudentDashboard = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchQuote = async () => {
+      try {
+        const token = localStorage.getItem("token"); // Replace with your token key
+        const response = await axios.get("http://localhost:3000/api/quotes", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setQuote(response.data[0]); // Assuming response is an array from ZenQuotes
+        setShowQuoteModal(true);
+      } catch (error) {
+        console.error("Failed to fetch quote:", error);
+      }
+    };
+
+    fetchQuote();
+  }, []);
+
   return (
     <div className="student-dashboard container">
       <div className="row">
@@ -62,6 +86,31 @@ const StudentDashboard = () => {
           <div className="main-content-container">{renderMainContent()}</div>
         </div>
       </div>
+      {/* Quote Modal */}
+      <Modal
+        show={showQuoteModal}
+        onHide={() => setShowQuoteModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>✨ Daily Motivation</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {quote ? (
+            <>
+              <p className="fs-5 fst-italic">"{quote.q}"</p>
+              <p className="text-end fw-bold">- {quote.a}</p>
+            </>
+          ) : (
+            <p>Loading quote...</p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="primary" onClick={() => setShowQuoteModal(false)}>
+            Let's Start the Day!
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

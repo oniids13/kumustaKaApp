@@ -8,14 +8,6 @@ import {
   FaCheck,
 } from "react-icons/fa";
 
-import {
-  FaFaceSadTear,
-  FaFaceSadCry,
-  FaFaceMeh,
-  FaFaceSmile,
-  FaFaceGrinHearts,
-} from "react-icons/fa6";
-
 import "../styles/SidePanel.css";
 
 import { useState, useEffect } from "react";
@@ -95,11 +87,11 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
       </div>
 
       {/* Mood Entry Form */}
-      <div className="mood-entry-form">
+      <div className="mood-entry-form mt-3">
         {hasSubmittedToday ? (
-          <div className="already-submitted">
+          <div className="already-submitted alert alert-success text-center rounded shadow">
             <FaCheck className="text-success" />
-            <span>You've already submitted your mood today</span>
+            <p>You've already submitted your mood today</p>
             <p className="text-muted">Come back tomorrow!</p>
           </div>
         ) : (
@@ -109,27 +101,27 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
               {[
                 {
                   level: 1,
-                  icon: <FaFaceSadCry className="mood-icon terrible" />,
+                  icon: "😭",
                   label: "Terrible",
                 },
                 {
                   level: 2,
-                  icon: <FaFaceSadTear className="mood-icon bad" />,
+                  icon: "😥",
                   label: "Bad",
                 },
                 {
                   level: 3,
-                  icon: <FaFaceMeh className="mood-icon neutral" />,
+                  icon: "😐",
                   label: "Neutral",
                 },
                 {
                   level: 4,
-                  icon: <FaFaceSmile className="mood-icon good" />,
+                  icon: "😊",
                   label: "Good",
                 },
                 {
                   level: 5,
-                  icon: <FaFaceGrinHearts className="mood-icon excellent" />,
+                  icon: "😁",
                   label: "Excellent",
                 },
               ].map((mood) => (

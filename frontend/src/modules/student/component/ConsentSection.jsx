@@ -26,14 +26,12 @@ const PrivacyConsentSection = () => {
             <FaUserCheck className="text-muted mt-1 me-2" />
             <h4>Informed Consent</h4>
           </div>
-          <p>
-            By using our services, you consent to:
-            <ul className="mt-2">
-              <li>Anonymous data collection for service improvement</li>
-              <li>Secure sharing with your designated healthcare providers</li>
-              <li>Emergency intervention if risk of harm is detected</li>
-            </ul>
-          </p>
+          By using our services, you consent to:
+          <ul className="mt-2">
+            <li>Anonymous data collection for service improvement</li>
+            <li>Secure sharing with your designated healthcare providers</li>
+            <li>Emergency intervention if risk of harm is detected</li>
+          </ul>
         </div>
 
         <div className="privacy-item">

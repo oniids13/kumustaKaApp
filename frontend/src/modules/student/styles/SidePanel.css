@@ -1,65 +1,87 @@
 /* Mood Entry Form Styles */
 .mood-entry-form {
-  background-color: #f8f9fa;
-  border-radius: 10px;
+  background-color: #fefefe;
+  border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
+/* Title */
 .mood-entry-title {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   margin-bottom: 1rem;
-  color: #333;
-  font-weight: 500;
+  color: #222;
+  font-weight: 600;
+  text-align: center;
 }
 
+/* Mood Options Grid */
 .mood-options {
   display: flex;
   justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
   margin-bottom: 1rem;
 }
 
+/* Individual Mood Option Button */
 .mood-option {
-  background: none;
-  border: none;
+  background-color: #ffffff;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   cursor: pointer;
-  transition: transform 0.2s;
-  padding: 0.5rem;
+  padding: 0.75rem;
+  flex: 1;
+  min-width: 40px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
 }
 
 .mood-option:hover {
-  transform: scale(1.2);
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Selected Mood Button */
 .mood-option.selected {
-  transform: scale(1.3);
+  border-color: #4a6baf;
+  background-color: #e9f0ff;
+  transform: scale(1.1);
 }
 
-.mood-option svg {
-  width: 30px;
-  height: 30px;
+.mood-icon {
+  font-size: 1.8rem;
 }
 
+/* Notes Input */
 .mood-notes {
   width: 100%;
   padding: 0.5rem;
   border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 6px;
   resize: none;
-  min-height: 60px;
+  min-height: 70px;
   font-size: 0.9rem;
+  margin-top: 0.5rem;
 }
 
+/* Submit Button */
 .submit-mood-btn {
+  width: 100%;
   background-color: #4a6baf;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  margin-top: 0.5rem;
+  padding: 0.6rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease-in-out;
 }
 
 .submit-mood-btn:hover {
@@ -71,75 +93,14 @@
   cursor: not-allowed;
 }
 
-.profile-card {
-  margin-bottom: 1.5rem;
-  padding: 2rem;
-}
-
-.nav-button {
-  margin-bottom: 0.5rem;
-}
-
-.already-submitted {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  text-align: center;
-}
-
-.already-submitted svg {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-/* Mood Icons Colors */
-.mood-icon {
-  font-size: 1.5rem; /* Responsive size */
-}
-
-.terrible {
-  color: #e74c3c;
-} /* Red */
-.bad {
-  color: #e67e22;
-} /* Orange */
-.neutral {
-  color: #f1c40f;
-} /* Yellow */
-.good {
-  color: #2ecc71;
-} /* Green */
-.excellent {
-  color: #9b59b6;
-} /* Purple */
-
-/* Mood Options Responsiveness */
-.mood-options {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.mood-option {
-  flex: 1;
-  min-width: 50px; /* Minimum size for small screens */
-  aspect-ratio: 1/1; /* Keep buttons square */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-}
-
-/* For very small screens */
-@media (max-width: 400px) {
-  .mood-icon {
-    font-size: 1.2rem;
-  }
+/* Responsive Fixes */
+@media (max-width: 500px) {
   .mood-option {
     min-width: 40px;
-    padding: 0.3rem;
+    padding: 0.4rem;
+  }
+
+  .mood-icon {
+    font-size: 1.4rem;
   }
 }

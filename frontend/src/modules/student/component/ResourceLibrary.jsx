@@ -28,7 +28,6 @@ const ResourcesLibrary = () => {
           }
         );
 
-        console.log(response.data.data);
         setResources(response.data.data);
       } catch (err) {
         setError(err.message);
@@ -77,35 +76,42 @@ const ResourcesLibrary = () => {
       <h1 className="resources-header">
         <FaBookOpen className="me-2" /> Wellness Resources
       </h1>
+      {resources.length === 0 ? (
+        <div>
+          <h2 className="alert alert-success text-center rounded shadow p-4">
+            No resources yet. Come back again!
+          </h2>
+        </div>
+      ) : (
+        <div className="row resource-grid">
+          {resources.map((resource) => (
+            <div key={resource.id} className="col-md-6 col-lg-4 mb-4">
+              <div className="card resource-card h-100">
+                <div className="card-body">
+                  <div className="d-flex align-items-center resource-type">
+                    {getIconForType(resource.type)}
+                    <span className="ms-2 resource-type-label">
+                      {resource.type.toLowerCase()}
+                    </span>
+                  </div>
 
-      <div className="row resource-grid">
-        {resources.map((resource) => (
-          <div key={resource.id} className="col-md-6 col-lg-4 mb-4">
-            <div className="card resource-card h-100">
-              <div className="card-body">
-                <div className="d-flex align-items-center resource-type">
-                  {getIconForType(resource.type)}
-                  <span className="ms-2 resource-type-label">
-                    {resource.type.toLowerCase()}
-                  </span>
+                  <h3 className="resource-title">{resource.title}</h3>
+                  <p className="resource-description">{resource.description}</p>
+
+                  <a
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary resource-link"
+                  >
+                    View Resource
+                  </a>
                 </div>
-
-                <h3 className="resource-title">{resource.title}</h3>
-                <p className="resource-description">{resource.description}</p>
-
-                <a
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary resource-link"
-                >
-                  View Resource
-                </a>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
