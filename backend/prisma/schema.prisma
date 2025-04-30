@@ -58,6 +58,8 @@ model Student {
   interventions  Intervention[]
   emergencyContacts EmergencyContact[]
   reactions Reaction[]
+  quizzes  Quiz[]
+  attempts QuizAttempt[]
 
   @@map("students") 
 }
@@ -258,3 +260,29 @@ enum ResourceType {
   EXERCISE
 }
 
+model Quiz {
+  id          String     @id @default(uuid())
+  question    String
+  options     String[] // Array of strings
+  correctAnswer Int    // Index of correct option (0-based)
+  points      Int
+  explanation String?
+  createdAt   DateTime   @default(now())
+  student     Student?   @relation(fields: [studentId], references: [id])
+  studentId   String?
+  attempts    QuizAttempt[]
+}
+
+model QuizAttempt {
+  id        String   @id @default(uuid())
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
+  quizId    String
+  student   Student  @relation(fields: [studentId], references: [id])
+  studentId String
+  selectedAnswer Int 
+  score     Int
+  createdAt DateTime @default(now())
+  
+  @@index([quizId])
+  @@index([studentId])
+}

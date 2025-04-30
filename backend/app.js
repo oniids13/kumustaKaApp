@@ -15,6 +15,7 @@ const emergencyContactRouter = require("./router/emergencyContactRouter");
 const moodEntryRouter = require("./router/moodEntryRouter");
 const resourcesRouter = require("./router/resourcesRouter");
 const quotesRouter = require("./router/quotesRouter");
+const quizzesRouter = require("./router/quizzesRouter");
 
 app.use(
   cors({
@@ -39,6 +40,7 @@ app.use("/api/emergencycontact", emergencyContactRouter);
 app.use("/api/moodEntry", moodEntryRouter);
 app.use("/api/resources", resourcesRouter);
 app.use("/api", quotesRouter);
+app.use("/api/quizzes", quizzesRouter);
 
 app.listen(3000, () => {
   console.log("Server is running on http://localhost:3000");

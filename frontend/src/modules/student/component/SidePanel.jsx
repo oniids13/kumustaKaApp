@@ -6,6 +6,7 @@ import {
   FaShieldAlt,
   FaAddressCard,
   FaCheck,
+  FaPenSquare,
 } from "react-icons/fa";
 
 import "../styles/SidePanel.css";
@@ -175,6 +176,12 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
           onClick={() => setActiveModule("moodtracker")}
         >
           <FaChartLine /> Mood Tracker
+        </button>
+        <button
+          className={`nav-button ${activeModule === "quiz" ? "active" : ""}`}
+          onClick={() => setActiveModule("quiz")}
+        >
+          <FaPenSquare /> Interactive Quizzes
         </button>
         <button
           className={`nav-button ${
