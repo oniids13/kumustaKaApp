@@ -4,6 +4,7 @@ const {
   getDailyQuestionsController,
   submitAttemptController,
   getAttemptHistoryController,
+  checkAttemptTodayController,
 } = require("../controller/quizzesController");
 const quizzesRouter = Router();
 const passport = require("passport");
@@ -31,4 +32,9 @@ quizzesRouter.post(
   createQuestionController
 );
 
+quizzesRouter.get(
+  "/attempts/today",
+  passport.authenticate("jwt", { session: false }),
+  checkAttemptTodayController
+);
 module.exports = quizzesRouter;

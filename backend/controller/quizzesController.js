@@ -3,6 +3,8 @@ const {
   createQuizQuestion,
   recordQuizAttempt,
   getStudentAttempts,
+  getQuiz,
+  checkAttemptToday,
 } = require("../model/quizzesQueries");
 
 const createQuestionController = async (req, res) => {
@@ -16,7 +18,9 @@ const createQuestionController = async (req, res) => {
 
 const getDailyQuestionsController = async (req, res) => {
   try {
-    const questions = await getDailyQuestions(req.user.studentId);
+    const userId = req.user.id;
+
+    const questions = await getDailyQuestions(userId);
 
     if (questions.length === 0) {
       return res.status(404).json({ error: "No questions available" });
@@ -31,21 +35,22 @@ const getDailyQuestionsController = async (req, res) => {
 const submitAttemptController = async (req, res) => {
   try {
     const { quizId, selectedAnswer } = req.body;
+    const userId = req.user.id;
 
     // Get the quiz to verify correct answer
-    const quiz = await getAllQuizQuestions(null, quizId);
+    const quiz = await getQuiz(quizId);
     if (!quiz) throw new Error("Quiz not found");
 
     // Calculate score
     const isCorrect = quiz.correctAnswer === selectedAnswer;
     const score = isCorrect ? quiz.points : 0;
 
-    const attempt = await recordQuizAttempt({
+    const attempt = await recordQuizAttempt(
       quizId,
-      studentId: req.user.studentId,
+      userId,
       selectedAnswer,
-      score,
-    });
+      score
+    );
 
     res.status(201).json({
       attempt,
@@ -59,10 +64,29 @@ const submitAttemptController = async (req, res) => {
 
 const getAttemptHistoryController = async (req, res) => {
   try {
-    const attempts = await getStudentAttempts(req.user.studentId);
+    const userId = req.user.id;
+    const attempts = await getStudentAttempts(userId);
     res.json(attempts);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+const checkAttemptTodayController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    if (!userId) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const attempts = await checkAttemptToday(userId);
+    res.json({
+      completed: attempts.length > 0,
+    });
+  } catch (error) {
+    console.error("Error checking today attempts:", error);
+    res.status(500).json({ error: "Failed to check today attempts" });
   }
 };
 
@@ -71,4 +95,5 @@ module.exports = {
   getDailyQuestionsController,
   submitAttemptController,
   getAttemptHistoryController,
+  checkAttemptTodayController,
 };
