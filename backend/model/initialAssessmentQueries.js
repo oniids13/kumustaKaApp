@@ -4,37 +4,42 @@ const dass21 = require("../resources/initialAssessmentData");
 
 const createInitialAssessment = async (userId) => {
   try {
+    // First check if student exists
     const student = await prisma.student.findUnique({
       where: { userId },
       select: { id: true },
     });
 
-    const existing = await prisma.initialAssessment.findUnique({
-      where: {
-        studentId: student.id,
-      },
-    });
-
-    if (existing) {
-      throw new Error("Initial assessment already exists for this student.");
+    if (!student) {
+      throw new Error("Student not found");
     }
 
-    const assessment = await prisma.initialAssessment.create({
-      data: {
-        studentId: student.id,
-        assessmentData: dass21,
-        anwers: {},
-        totalScore: 0.0,
-        depressionScore: 0.0,
-        anxietyScore: 0.0,
-        stressScore: 0.0,
-      },
-    });
+    // Check for existing assessment in transaction
+    return await prisma.$transaction(async (tx) => {
+      const existing = await tx.initialAssessment.findUnique({
+        where: { studentId: student.id },
+      });
 
-    return assessment;
+      if (existing) {
+        return existing; // Return existing if found
+      }
+
+      // Create new assessment
+      return await tx.initialAssessment.create({
+        data: {
+          studentId: student.id,
+          assessmentData: dass21,
+          answers: {},
+          totalScore: 0,
+          depressionScore: 0,
+          anxietyScore: 0,
+          stressScore: 0,
+        },
+      });
+    });
   } catch (error) {
     console.error("Create Initial Assessment Error:", error);
-    throw new Error("Error creating initial assessment");
+    throw error; // Re-throw the original error
   }
 };
 
@@ -62,29 +67,26 @@ const getInitialAssessment = async (userId) => {
   }
 };
 
+// model/initialAssessmentQueries.js
 const submitInitialAssessment = async (userId, answers) => {
   try {
-    // Get the student ID
     const student = await prisma.student.findUnique({
       where: { userId },
       select: { id: true },
     });
 
-    if (!student) {
-      throw new Error("Student not found");
-    }
+    if (!student) throw new Error("Student not found");
 
     const assessment = await prisma.initialAssessment.findUnique({
       where: { studentId: student.id },
     });
 
-    if (!assessment) {
-      throw new Error("Assessment not found");
-    }
+    if (!assessment) throw new Error("Assessment not found");
 
-    const depressionItems = ["3", "5", "10", "13", "16", "17", "21"];
-    const anxietyItems = ["2", "4", "7", "9", "15", "19", "20"];
-    const stressItems = ["1", "6", "8", "11", "12", "14", "18"];
+    // Updated scoring to work with D1, A2, etc. format
+    const depressionItems = ["D1", "D2", "D3", "D4", "D5", "D6", "D7"];
+    const anxietyItems = ["A1", "A2", "A3", "A4", "A5", "A6", "A7"];
+    const stressItems = ["S1", "S2", "S3", "S4", "S5", "S6", "S7"];
 
     const computeSubscale = (keys) =>
       keys.reduce((sum, key) => sum + (answers[key] || 0), 0) * 2;
@@ -97,7 +99,7 @@ const submitInitialAssessment = async (userId, answers) => {
     const updated = await prisma.initialAssessment.update({
       where: { studentId: student.id },
       data: {
-        answers,
+        answers, // Now stores original format { D1: 2, A2: 1, ... }
         depressionScore,
         anxietyScore,
         stressScore,
