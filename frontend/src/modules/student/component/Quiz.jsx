@@ -29,8 +29,6 @@ const Quiz = () => {
         }
       );
 
-      console.log(res.data.completed);
-
       if (res.data.completed) {
         setDailyCompleted(true);
       }

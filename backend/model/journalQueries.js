@@ -12,14 +12,11 @@ const createJournal = async (userId, content) => {
       throw new Error("Student not found");
     }
 
-    const phTime = new Date(Date.now() + 8 * 60 * 60 * 1000);
-
     const newJournal = await prisma.journal.create({
       data: {
         content,
         student: { connect: { id: student.id } },
         isPrivate: true,
-        createdAt: phTime,
       },
       select: {
         id: true,

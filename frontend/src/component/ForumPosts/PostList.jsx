@@ -178,6 +178,18 @@ const PostList = () => {
             avatar: "/default-avatar.png",
           };
 
+          const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            return date.toLocaleString("en-PH", {
+              timeZone: "Asia/Manila",
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+          };
+
           return (
             <div key={post.id} className="card mb-4">
               <div className="card-header bg-white">
@@ -193,16 +205,12 @@ const PostList = () => {
                         objectFit: "cover",
                       }}
                     />
-                    <div>
+                    <div className="text-start">
                       <h6 className="mb-0">
                         {author.firstName} {author.lastName}
                       </h6>
                       <small className="text-muted">
-                        {new Date(post.createdAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
+                        {formatDate(post.createdAt)}
                       </small>
                     </div>
                   </div>
