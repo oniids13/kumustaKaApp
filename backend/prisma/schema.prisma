@@ -166,7 +166,10 @@ model InitialAssessment {
   studentId String @unique
   assessmentData Json
   anwers  Json
-  score   Float
+  totalScore     Float
+  depressionScore Float
+  anxietyScore    Float
+  stressScore     Float
   createdAt DateTime @default(now())
 
   @@map("initial_assessments")

@@ -18,6 +18,7 @@ const moodEntryRouter = require("./router/moodEntryRouter");
 const resourcesRouter = require("./router/resourcesRouter");
 const quotesRouter = require("./router/quotesRouter");
 const quizzesRouter = require("./router/quizzesRouter");
+const initialAssessmentRouter = require("./router/initialAssessmentRouter");
 
 app.use(
   cors({
@@ -43,6 +44,7 @@ app.use("/api/moodEntry", moodEntryRouter);
 app.use("/api/resources", resourcesRouter);
 app.use("/api", quotesRouter);
 app.use("/api/quizzes", quizzesRouter);
+app.use("/api/initialAssessment", initialAssessmentRouter);
 
 app.listen(3000, () => {
   console.log("Server is running on http://localhost:3000");
