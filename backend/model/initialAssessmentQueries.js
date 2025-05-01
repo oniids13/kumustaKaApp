@@ -4,7 +4,7 @@ const dass21 = require("../resources/initialAssessmentData");
 
 const createInitialAssessment = async (userId) => {
   try {
-    const student = prisma.student.findUnique({
+    const student = await prisma.student.findUnique({
       where: { userId },
       select: { id: true },
     });
@@ -33,16 +33,19 @@ const createInitialAssessment = async (userId) => {
 
     return assessment;
   } catch (error) {
+    console.error("Create Initial Assessment Error:", error);
     throw new Error("Error creating initial assessment");
   }
 };
 
 const getInitialAssessment = async (userId) => {
   try {
-    const student = prisma.student.findUnique({
+    const student = await prisma.student.findUnique({
       where: { userId },
       select: { id: true },
     });
+
+    if (!student) throw new Error("Student not found");
 
     const assessment = await prisma.initialAssessment.findUnique({
       where: { studentId: student.id },
@@ -54,6 +57,7 @@ const getInitialAssessment = async (userId) => {
 
     return assessment;
   } catch (error) {
+    console.error("Error fetching initial assessment:", error);
     throw new Error("Error fetching initial assessment data");
   }
 };
