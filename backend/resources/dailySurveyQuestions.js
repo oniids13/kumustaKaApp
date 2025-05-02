@@ -1,0 +1,148 @@
+const dailySurveyQuestions = [
+  {
+    id: 1,
+    question: "I felt calm and relaxed.",
+    options: [
+      { label: "Strongly Disagree", value: 1 },
+      { label: "Disagree", value: 2 },
+      { label: "Neutral", value: 3 },
+      { label: "Agree", value: 4 },
+      { label: "Strongly Agree", value: 5 },
+    ],
+    selectedValue: null,
+  },
+  {
+    id: 2,
+    question: "I had trouble focusing on my schoolwork.",
+    options: [
+      { label: "Strongly Disagree", value: 5 },
+      { label: "Disagree", value: 4 },
+      { label: "Neutral", value: 3 },
+      { label: "Agree", value: 2 },
+      { label: "Strongly Agree", value: 1 },
+    ],
+    selectedValue: null,
+  },
+  {
+    id: 3,
+    question: "I felt connected with my classmates or friends.",
+    options: [
+      { label: "Strongly Disagree", value: 1 },
+      { label: "Disagree", value: 2 },
+      { label: "Neutral", value: 3 },
+      { label: "Agree", value: 4 },
+      { label: "Strongly Agree", value: 5 },
+    ],
+    selectedValue: null,
+  },
+  {
+    id: 4,
+    question: "I felt anxious or nervous.",
+    options: [
+      { label: "Strongly Disagree", value: 5 },
+      { label: "Disagree", value: 4 },
+      { label: "Neutral", value: 3 },
+      { label: "Agree", value: 2 },
+      { label: "Strongly Agree", value: 1 },
+    ],
+    selectedValue: null,
+  },
+  {
+    id: 5,
+    question: "I enjoyed the things I did today.",
+    options: [
+      { label: "Strongly Disagree", value: 1 },
+      { label: "Disagree", value: 2 },
+      { label: "Neutral", value: 3 },
+      { label: "Agree", value: 4 },
+      { label: "Strongly Agree", value: 5 },
+    ],
+    selectedValue: null,
+  },
+  {
+    id: 6,
+    question: "I felt overwhelmed or stressed.",
+    options: [
+      { label: "Strongly Disagree", value: 5 },
+      { label: "Disagree", value: 4 },
+      { label: "Neutral", value: 3 },
+      { label: "Agree", value: 2 },
+      { label: "Strongly Agree", value: 1 },
+    ],
+    selectedValue: null,
+  },
+  {
+    id: 7,
+    question: "I had enough energy to do my tasks.",
+    options: [
+      { label: "Strongly Disagree", value: 1 },
+      { label: "Disagree", value: 2 },
+      { label: "Neutral", value: 3 },
+      { label: "Agree", value: 4 },
+      { label: "Strongly Agree", value: 5 },
+    ],
+    selectedValue: null,
+  },
+  {
+    id: 8,
+    question: "I felt hopeful about my future.",
+    options: [
+      { label: "Strongly Disagree", value: 1 },
+      { label: "Disagree", value: 2 },
+      { label: "Neutral", value: 3 },
+      { label: "Agree", value: 4 },
+      { label: "Strongly Agree", value: 5 },
+    ],
+    selectedValue: null,
+  },
+  {
+    id: 9,
+    question: "I had trouble sleeping or felt tired.",
+    options: [
+      { label: "Strongly Disagree", value: 5 },
+      { label: "Disagree", value: 4 },
+      { label: "Neutral", value: 3 },
+      { label: "Agree", value: 2 },
+      { label: "Strongly Agree", value: 1 },
+    ],
+    selectedValue: null,
+  },
+  {
+    id: 10,
+    question: "I felt proud of something I did today.",
+    options: [
+      { label: "Strongly Disagree", value: 1 },
+      { label: "Disagree", value: 2 },
+      { label: "Neutral", value: 3 },
+      { label: "Agree", value: 4 },
+      { label: "Strongly Agree", value: 5 },
+    ],
+    selectedValue: null,
+  },
+  {
+    id: 11,
+    question: "I felt sad or down.",
+    options: [
+      { label: "Strongly Disagree", value: 5 },
+      { label: "Disagree", value: 4 },
+      { label: "Neutral", value: 3 },
+      { label: "Agree", value: 2 },
+      { label: "Strongly Agree", value: 1 },
+    ],
+    selectedValue: null,
+  },
+  {
+    id: 12,
+    question: "I was able to manage my emotions today.",
+    options: [
+      { label: "Strongly Disagree", value: 1 },
+      { label: "Disagree", value: 2 },
+      { label: "Neutral", value: 3 },
+      { label: "Agree", value: 4 },
+      { label: "Strongly Agree", value: 5 },
+    ],
+    selectedValue: null,
+  },
+];
+
+export default dailySurveyQuestions;

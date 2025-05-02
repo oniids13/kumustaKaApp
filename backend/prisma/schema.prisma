@@ -110,29 +110,38 @@ model Admin {
 // Mental Health Features
 
 model Survey {
-  id        String   @id @default(uuid())
-  title     String
+  id          String            @id @default(uuid())
+  title       String
   description String?
-  questions Json
-  createdAt DateTime @default(now())
-  responses SurveyResponse[]
+  questions   Json              
+  type        SurveyType        @default(DAILY) 
+  createdAt   DateTime          @default(now())
+  responses   SurveyResponse[]
 
   @@map("surveys")
 }
 
 model SurveyResponse {
-  id        String   @id @default(uuid())
-  student   Student  @relation(fields: [studentId], references: [id])
-  studentId String
-  survey    Survey   @relation(fields: [surveyId], references: [id])
-  surveyId  String
-  answers   Json
-  score     Float
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  student    Student  @relation(fields: [studentId], references: [id])
+  studentId  String
+  survey     Survey   @relation(fields: [surveyId], references: [id])
+  surveyId   String
+  answers    Json     
+  score      Float
+  percentage Float   
+  zone       String   
+  createdAt  DateTime @default(now())
 
   @@index([studentId, surveyId, createdAt])
-
   @@map("survey_responses")
+}
+
+// For future use, expanding to other types of surveys
+enum SurveyType {
+  DAILY
+  WEEKLY
+  INITIAL
 }
 
 model Journal {
