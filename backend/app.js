@@ -19,6 +19,7 @@ const resourcesRouter = require("./router/resourcesRouter");
 const quotesRouter = require("./router/quotesRouter");
 const quizzesRouter = require("./router/quizzesRouter");
 const initialAssessmentRouter = require("./router/initialAssessmentRouter");
+const surveyRouter = require("./router/surveyRouter");
 
 app.use(
   cors({
@@ -45,6 +46,7 @@ app.use("/api/resources", resourcesRouter);
 app.use("/api", quotesRouter);
 app.use("/api/quizzes", quizzesRouter);
 app.use("/api/initialAssessment", initialAssessmentRouter);
+app.use("/api/survey", surveyRouter);
 
 app.listen(3000, () => {
   console.log("Server is running on http://localhost:3000");

@@ -29,4 +29,4 @@ function calculateDailySurveyScore(responses) {
   };
 }
 
-export default calculateDailySurveyScore;
+module.exports = { calculateDailySurveyScore };
