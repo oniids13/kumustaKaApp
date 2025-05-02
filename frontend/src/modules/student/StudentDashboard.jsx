@@ -1,13 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import {
-  Modal,
-  Button,
-  Alert,
-  Form,
-  ProgressBar,
-  Spinner,
-} from "react-bootstrap";
+import { Modal, Button, Spinner } from "react-bootstrap";
 
 // Student module components
 import SidePanel from "./component/SidePanel";
@@ -27,7 +21,6 @@ import "./styles/StudentModule.css";
 
 const StudentDashboard = () => {
   const user = JSON.parse(localStorage.getItem("userData"));
-  const API_BASE = "http://localhost:3000/api";
 
   const [activeModule, setActiveModule] = useState("forum");
   const [refreshPosts, setRefreshPosts] = useState(false);
@@ -35,14 +28,9 @@ const StudentDashboard = () => {
   const [quote, setQuote] = useState(null);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
 
-  const [showAssessmentModal, setShowAssessmentModal] = useState(false);
-  const [assessmentData, setAssessmentData] = useState([]);
-  const [answers, setAnswers] = useState({});
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [showError, setShowError] = useState(null);
-  const [loadingAssessment, setLoadingAssessment] = useState(true);
-  const [submitLoading, setSubmitLoading] = useState(false);
+  const navigate = useNavigate();
+  const [showAssessmentPrompt, setShowAssessmentPrompt] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const handlePostCreated = () => setRefreshPosts((prev) => !prev);
 
@@ -93,94 +81,58 @@ const StudentDashboard = () => {
 
   useEffect(() => {
     const checkOrCreateAssessment = async () => {
-      setLoadingAssessment(true);
       try {
-        // Try to get existing assessment
-        const res = await axios.get(
-          `${API_BASE}/initialAssessment/getInitialAssessment`,
-          { headers: { Authorization: `Bearer ${user.token}` } }
-        );
+        const user = JSON.parse(localStorage.getItem("userData"));
+        const token = user.token;
 
-        const assessment = res.data;
-        const allQuestions = flattenQuestions(assessment.assessmentData);
-        setAssessmentData(allQuestions);
+        // First try to get existing assessment
+        try {
+          const res = await axios.get(
+            "http://localhost:3000/api/initialAssessment/getInitialAssessment",
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
 
-        // Only show modal if no answers exist
-        if (
-          !assessment.answers ||
-          Object.keys(assessment.answers).length === 0
-        ) {
-          setShowAssessmentModal(true);
+          // If exists but not completed
+          if (!res.data.answers || Object.keys(res.data.answers).length === 0) {
+            setShowAssessmentPrompt(true);
+          }
+        } catch (getError) {
+          if (getError.response?.status === 404) {
+            // If not exists, create one
+            await axios.post(
+              "http://localhost:3000/api/initialAssessment/createInitialAssessment",
+              {},
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setShowAssessmentPrompt(true);
+          } else {
+            throw getError;
+          }
         }
       } catch (err) {
-        if (err.response?.status === 404) {
-          try {
-            // Create new assessment
-            const createRes = await axios.post(
-              `${API_BASE}/initialAssessment/createInitialAssessment`,
-              {},
-              { headers: { Authorization: `Bearer ${user.token}` } }
-            );
-
-            const allQuestions = flattenQuestions(
-              createRes.data.assessmentData
-            );
-            setAssessmentData(allQuestions);
-            setShowAssessmentModal(true);
-          } catch (createErr) {
-            console.error("Creation failed:", createErr);
-          }
-        } else {
-          console.error("Assessment error:", err);
-        }
+        console.error("Assessment error:", err);
       } finally {
-        setLoadingAssessment(false);
+        setLoading(false);
       }
-    };
-
-    // Helper function to flatten questions
-    const flattenQuestions = (data) => {
-      if (!data?.sections) return [];
-      return data.sections.flatMap((section) =>
-        section.questions.map((q) => ({
-          ...q,
-          category: section.category,
-        }))
-      );
     };
 
     checkOrCreateAssessment();
   }, []);
 
-  const handleAnswerChange = (questionId, value) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [questionId]: Number(value), // Ensure numeric value
-    }));
-  };
-
-  const handleSubmitAssessment = async () => {
-    // Validation
-    if (Object.keys(answers).length !== assessmentData.length) {
-      alert("Please answer all questions before submitting");
-      return;
-    }
-
-    setSubmitLoading(true);
-    try {
-      // No key conversion needed now (backend accepts original keys)
-      await axios.post(
-        `${API_BASE}/initialAssessment/submitInitialAssessment`,
-        { answers }, // Sends original { D1: 2, A2: 1 } format
-        { headers: { Authorization: `Bearer ${user.token}` } }
-      );
-      // Success handling
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSubmitLoading(false);
+  const handleAssessmentResponse = (takeAssessment) => {
+    setShowAssessmentPrompt(false);
+    if (takeAssessment) {
+      navigate("/student/initial-assessment");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center mt-5">
+        <Spinner animation="border" />
+      </div>
+    );
+  }
 
   return (
     <div className="student-dashboard container">
@@ -197,12 +149,6 @@ const StudentDashboard = () => {
           <div className="main-content-container">{renderMainContent()}</div>
         </div>
       </div>
-
-      {showSuccess && (
-        <Alert variant="success" className="text-center mt-3">
-          ✅ Initial assessment submitted successfully!
-        </Alert>
-      )}
 
       {/* Quote Modal */}
       <Modal
@@ -230,101 +176,36 @@ const StudentDashboard = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Assessment Modal */}
-      {showError && (
-        <Alert variant="danger" className="mt-3">
-          {showError}
-        </Alert>
-      )}
+      {/* Assessment Prompt Modal */}
       <Modal
-        show={showAssessmentModal}
-        onHide={() => setShowAssessmentModal(false)}
-        size="lg"
-        centered
-        scrollable
+        show={showAssessmentPrompt}
+        onHide={() => handleAssessmentResponse(false)}
         backdrop="static"
+        keyboard={false}
+        centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>
-            🧠 Initial Mental Health Assessment (DASS-21)
-          </Modal.Title>
+          <Modal.Title>Welcome to Your Mental Health Journey</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <div className="mb-4">
-            <h5>DASS-21 Assessment</h5>
-            <p className="text-muted">
-              Please read each statement and select the option that indicates
-              how much the statement applied to you over the past week.
-            </p>
-
-            <ProgressBar
-              now={progress}
-              label={`${progress}%`}
-              className="mb-3"
-              visuallyHidden={false}
-            />
-          </div>
-
-          {assessmentData.length > 0 ? (
-            <Form>
-              {assessmentData.map((q, idx) => (
-                <Form.Group key={q.id} className="mb-4">
-                  <Form.Label className="fw-bold">
-                    {idx + 1}. {q.question}
-                  </Form.Label>
-                  <div className="mt-2">
-                    {[0, 1, 2, 3].map((value) => (
-                      <Form.Check
-                        key={value}
-                        inline
-                        type="radio"
-                        id={`${q.id}-${value}`}
-                        label={`${value} - ${
-                          q.scale.options.find((o) => o.value === value)
-                            ?.label || ""
-                        }`}
-                        name={`question-${q.id}`}
-                        value={value}
-                        checked={answers[q.id] === value}
-                        onChange={(e) =>
-                          handleAnswerChange(q.id, e.target.value)
-                        }
-                        className="py-1"
-                      />
-                    ))}
-                  </div>
-                </Form.Group>
-              ))}
-            </Form>
-          ) : (
-            <div className="text-center py-4">
-              <Spinner animation="border" variant="primary" />
-              <p className="mt-2">Loading assessment questions...</p>
-            </div>
-          )}
+          <p>
+            To provide you with the best support, we'd like you to complete a
+            brief initial assessment.
+          </p>
+          <p>This will only take about 5-10 minutes.</p>
         </Modal.Body>
         <Modal.Footer>
           <Button
             variant="outline-secondary"
-            onClick={() => setShowAssessmentModal(false)}
+            onClick={() => handleAssessmentResponse(false)}
           >
-            I'll Complete This Later
+            I'll Do It Later
           </Button>
           <Button
             variant="primary"
-            onClick={handleSubmitAssessment}
-            disabled={
-              submitLoading ||
-              Object.keys(answers).length !== assessmentData.length
-            }
+            onClick={() => handleAssessmentResponse(true)}
           >
-            {submitLoading ? (
-              <>
-                <Spinner size="sm" animation="border" /> Submitting...
-              </>
-            ) : (
-              "Submit Assessment"
-            )}
+            Start Assessment Now
           </Button>
         </Modal.Footer>
       </Modal>

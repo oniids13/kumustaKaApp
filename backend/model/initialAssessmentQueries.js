@@ -15,31 +15,31 @@ const createInitialAssessment = async (userId) => {
     }
 
     // Check for existing assessment in transaction
-    return await prisma.$transaction(async (tx) => {
-      const existing = await tx.initialAssessment.findUnique({
-        where: { studentId: student.id },
-      });
-
-      if (existing) {
-        return existing; // Return existing if found
-      }
-
-      // Create new assessment
-      return await tx.initialAssessment.create({
-        data: {
-          studentId: student.id,
-          assessmentData: dass21,
-          answers: {},
-          totalScore: 0,
-          depressionScore: 0,
-          anxietyScore: 0,
-          stressScore: 0,
-        },
-      });
+    const existing = await prisma.initialAssessment.findUnique({
+      where: { studentId: student.id },
     });
+
+    if (existing) {
+      return existing;
+    }
+
+    // Create new assessment
+    const assessment = await prisma.initialAssessment.create({
+      data: {
+        studentId: student.id,
+        assessmentData: dass21,
+        answers: {},
+        totalScore: 0,
+        depressionScore: 0,
+        anxietyScore: 0,
+        stressScore: 0,
+      },
+    });
+
+    return assessment;
   } catch (error) {
     console.error("Create Initial Assessment Error:", error);
-    throw error; // Re-throw the original error
+    throw error;
   }
 };
 
