@@ -165,7 +165,7 @@ model InitialAssessment {
   student   Student  @relation(fields: [studentId], references: [id])
   studentId String @unique
   assessmentData Json
-  anwers  Json
+  answers  Json
   totalScore     Float
   depressionScore Float
   anxietyScore    Float

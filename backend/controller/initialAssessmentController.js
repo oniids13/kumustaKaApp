@@ -24,9 +24,10 @@ const getInitialAssessmentController = async (req, res) => {
   }
 };
 
+// controller/initialAssessmentController.js
 const submitInitialAssessmentController = async (req, res) => {
   const userId = req.user.id;
-  const answers = req.body.answers;
+  const { answers } = req.body;
 
   if (!answers || typeof answers !== "object") {
     return res
