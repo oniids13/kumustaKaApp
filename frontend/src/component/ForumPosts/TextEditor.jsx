@@ -3,7 +3,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import "../../styles/forum.css";
-import { FaBold, FaItalic, FaListUl, FaImage } from "react-icons/fa";
+import { FaBold, FaItalic, FaListUl } from "react-icons/fa";
 
 const TextEditor = ({ content, onUpdate }) => {
   const editor = useEditor({
@@ -76,12 +76,6 @@ const TextEditor = ({ content, onUpdate }) => {
           onChange={(e) => addImage(e.target.files?.[0])}
           style={{ display: "none" }}
         />
-        <button
-          onClick={() => document.getElementById("image-upload").click()}
-          title="Add Image"
-        >
-          <FaImage />
-        </button>
       </div>
       <EditorContent editor={editor} />
     </div>

@@ -17,7 +17,8 @@ const Journal = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
+    return date.toLocaleString("en-PH", {
+      timeZone: "Asia/Manila",
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -199,16 +200,7 @@ const Journal = () => {
               <FaTimes />
             </button>
             <div className="journal-modal-header">
-              <h3>
-                {new Date(selectedJournal.createdAt).toLocaleDateString(
-                  "en-US",
-                  {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  }
-                )}
-              </h3>
+              <h3>{formatDate(selectedJournal.createdAt)}</h3>
               {selectedJournal.updatedAt && (
                 <small>
                   Updated at: {formatDate(selectedJournal.updatedAt)}
