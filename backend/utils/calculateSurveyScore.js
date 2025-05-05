@@ -1,32 +1,39 @@
-function calculateDailySurveyScore(responses) {
-  let totalScore = 0;
-  let maxScore = responses.length * 5; // max per item is 5
+// utils/scoreCalculator.js
+const { DAILY_SURVEY_SCORING } = require("./surveyScoring");
 
-  responses.forEach((item) => {
-    if (item.selectedValue) {
-      totalScore += item.selectedValue;
+function calculateDailySurveyScore(answers) {
+  if (!answers || typeof answers !== "object") {
+    throw new Error("Answers must be an object");
+  }
+
+  let totalScore = 0;
+  const maxPossible = Object.keys(answers).length * 5;
+
+  // Calculate score with reverse items handled
+  Object.entries(answers).forEach(([questionId, value]) => {
+    const numId = parseInt(questionId);
+
+    if (DAILY_SURVEY_SCORING.reverseItems.includes(numId)) {
+      // For reverse items, the score is (6 - selected value)
+      totalScore += 6 - value;
+    } else {
+      totalScore += value;
     }
   });
 
-  // Compute percentage score
-  const percentage = (totalScore / maxScore) * 100;
+  const percentage = (totalScore / maxPossible) * 100;
+  const roundedPercentage = Math.round(percentage);
 
-  // Interpret score zone
   let zone;
-  if (percentage >= 80) {
-    zone = "Green (Positive)";
-  } else if (percentage >= 60) {
-    zone = "Yellow (Moderate)";
-  } else {
-    zone = "Red (Needs Attention)";
-  }
+  if (roundedPercentage >= 80) zone = "Green (Positive)";
+  else if (roundedPercentage >= 60) zone = "Yellow (Moderate)";
+  else zone = "Red (Needs Attention)";
 
   return {
     totalScore,
-    maxScore,
-    percentage: Math.round(percentage),
+    percentage: roundedPercentage,
     zone,
   };
 }
 
-module.exports = { calculateDailySurveyScore };
+module.exports = calculateDailySurveyScore;

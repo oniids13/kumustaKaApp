@@ -130,10 +130,11 @@ model SurveyResponse {
   answers    Json     
   score      Float
   percentage Float   
-  zone       String   
+  zone       String
+  phDate     String   
   createdAt  DateTime @default(now())
 
-  @@index([studentId, surveyId, createdAt])
+  @@index([studentId, phDate])
   @@map("survey_responses")
 }
 

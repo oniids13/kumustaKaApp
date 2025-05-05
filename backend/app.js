@@ -5,6 +5,7 @@ const passport = require("passport");
 const cors = require("cors");
 const jwtStrategy = require("./config/jwtStrategy");
 const { createUploadsDir } = require("./utils/fileUtils");
+const { ensureDailySurveyExists } = require("./services/surveyInitService");
 
 const app = express();
 
@@ -28,6 +29,15 @@ app.use(
   })
 );
 
+async function initializeApp() {
+  try {
+    await ensureDailySurveyExists();
+    console.log("Daily survey ready");
+  } catch (error) {
+    console.error("Failed to initialize daily survey:", error);
+  }
+}
+
 createUploadsDir();
 
 app.use(express.json());
@@ -47,6 +57,8 @@ app.use("/api", quotesRouter);
 app.use("/api/quizzes", quizzesRouter);
 app.use("/api/initialAssessment", initialAssessmentRouter);
 app.use("/api/survey", surveyRouter);
+
+initializeApp();
 
 app.listen(3000, () => {
   console.log("Server is running on http://localhost:3000");

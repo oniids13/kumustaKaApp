@@ -57,6 +57,8 @@ const InitialAssessmentPage = () => {
         { answers },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
+
+      alert("Assessment submitted successfully!");
       navigate("/student");
     } catch (err) {
       console.error("Error submitting assessment:", err);
