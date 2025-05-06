@@ -60,6 +60,8 @@ model Student {
   reactions Reaction[]
   quizzes  Quiz[]
   attempts QuizAttempt[]
+  goals   Goal[]
+  weeklyGoalSummaries WeeklyGoalSummary[]
 
   @@map("students") 
 }
@@ -78,6 +80,42 @@ model EmergencyContact {
   @@map("emergency_contacts")
 }
 
+model Goal {
+  id        String   @id @default(uuid())
+  student   Student  @relation(fields: [studentId], references: [id])
+  studentId String
+  title     String
+  isCompleted Boolean @default(false)
+  weekNumber Int
+  year Int
+  description String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId, weekNumber, year])
+  @@map("goals")
+}
+
+model WeeklyGoalSummary {
+  id        String   @id @default(uuid())
+  student   Student  @relation(fields: [studentId], references: [id])
+  studentId String
+  weekNumber Int
+  year Int
+  totalGoals Int  @default(0)
+  completed Int @default(0)
+  percentage  Float
+  status   GoalStatus
+
+  @@unique([studentId, weekNumber, year])
+  @@map("weekly_goal_summaries")
+}
+
+enum GoalStatus {
+  COMPLETED
+  INCOMPLETE
+  EMPTY
+}
 
 model Teacher {
   id        String   @id @default(uuid())

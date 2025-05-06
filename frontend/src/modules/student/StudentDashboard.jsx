@@ -11,6 +11,7 @@ import ResourceLibrary from "./component/ResourceLibrary";
 import PrivacyConsentSection from "./component/ConsentSection";
 import EmergencyContact from "./component/EmergencyContact";
 import Quiz from "./component/Quiz";
+import GoalTracker from "./component/GoalTracker";
 
 // Forum Post Components
 import CreatePostForm from "../../component/ForumPosts/CreatePostForm";
@@ -48,6 +49,8 @@ const StudentDashboard = () => {
         return <PrivacyConsentSection />;
       case "emergency":
         return <EmergencyContact />;
+      case "goaltracker":
+        return <GoalTracker />;
       case "forum":
       default:
         return (

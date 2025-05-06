@@ -21,7 +21,6 @@ const DailySurveyAlert = () => {
           }
         );
 
-        console.log(response.data);
         setCompleted(response.data.data.submitted);
       } catch (error) {
         console.error("Error checking survey status:", error);

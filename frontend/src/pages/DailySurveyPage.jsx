@@ -68,7 +68,7 @@ function DailySurveyPage() {
           headers: { Authorization: `Bearer ${user.token}` },
         }
       );
-
+      alert("Survey submitted successfully!");
       navigate("/student", { state: { surveyCompleted: true } });
     } catch (error) {
       setError(error.response?.data?.error || "Submission failed");
