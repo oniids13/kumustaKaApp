@@ -25,13 +25,17 @@ const getDailySurvey = async () => {
   });
 };
 
-const createSurveyResponse = async (studentId, answers) => {
+const createSurveyResponse = async (userId, answers) => {
   const phDate = getPHDateString();
+
+  const student = await prisma.student.findUnique({
+    where: { userId },
+  });
 
   return await prisma.$transaction(async (tx) => {
     // Check for existing response
     const existing = await tx.surveyResponse.findFirst({
-      where: { studentId, phDate },
+      where: { studentId: student.id, phDate },
     });
 
     if (existing) {
@@ -63,7 +67,7 @@ const createSurveyResponse = async (studentId, answers) => {
     // Create response
     return await tx.surveyResponse.create({
       data: {
-        studentId,
+        studentId: student.id,
         surveyId: survey.id,
         answers,
         score: scoreData.totalScore,
@@ -76,19 +80,27 @@ const createSurveyResponse = async (studentId, answers) => {
   });
 };
 
-const getTodaysResponse = async (studentId) => {
+const getTodaysResponse = async (userId) => {
+  const student = await prisma.student.findUnique({
+    where: { userId },
+  });
+
   const phDate = getPHDateString();
   return await prisma.surveyResponse.findFirst({
-    where: { studentId, phDate },
+    where: { studentId: student.id, phDate },
     include: { survey: true },
   });
 };
 
-const getSurveyResponses = async (studentId, period = "30d") => {
+const getSurveyResponses = async (userId, period = "30d") => {
+  const student = await prisma.student.findUnique({
+    where: { userId },
+  });
+
   const dateFilter = getDateFilter(period);
   return await prisma.surveyResponse.findMany({
     where: {
-      studentId,
+      studentId: student.id,
       createdAt: { gte: dateFilter },
     },
     orderBy: { createdAt: "desc" },

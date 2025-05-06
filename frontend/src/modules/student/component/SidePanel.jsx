@@ -14,6 +14,8 @@ import "../styles/SidePanel.css";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+import DailySurveyAlert from "./DailySurveyAlert";
+
 const SidePanel = ({ user, activeModule, setActiveModule }) => {
   const [moodRating, setMoodRating] = useState(null);
   const [notes, setNotes] = useState("");
@@ -76,15 +78,15 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
 
   return (
     <>
-      <div className="profile-card">
+      <div className="profile-card p-3 rounded">
+        <p className="text-muted">Student Dashboard</p>
         <img
           src={user.avatar || "/default-avatar.png"}
           alt={`${user.name}'s avatar`}
           className="rounded-circle mb-3"
         />
         <h4>Hello, {user.name}!</h4>
-        <p>How are you feeling today?</p>
-        <p className="text-muted">Student Dashboard</p>
+        <p>Hoping everything is good today! 😁</p>
       </div>
 
       {/* Mood Entry Form */}
@@ -153,6 +155,9 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
             </button>
           </>
         )}
+        <div className="daily-survey mt-5">
+          <DailySurveyAlert />
+        </div>
       </div>
 
       {/* Navigation Buttons */}

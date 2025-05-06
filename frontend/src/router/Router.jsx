@@ -12,6 +12,7 @@ import Login from "../pages/Login";
 import RegisterPage from "../pages/Register";
 import ErrorPage from "../pages/ErrorPage";
 import UnauthorizedPage from "../pages/UnauthorizedPage";
+import DailySurveyPage from "../pages/DailySurveyPage";
 
 // Dashboard Pages
 import StudentDashboard from "../modules/student/StudentDashboard";
@@ -46,6 +47,15 @@ const router = createBrowserRouter(
         element={
           <ProtectedRoute roles={["STUDENT"]}>
             <InitialAssessmentPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/daily-survey"
+        element={
+          <ProtectedRoute>
+            <DailySurveyPage />
           </ProtectedRoute>
         }
       />

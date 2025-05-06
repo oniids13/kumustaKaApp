@@ -23,9 +23,6 @@ const loginController = async (req, res) => {
 
   const token = jwt.sign(tokenPayload, secretKey, { expiresIn: "1d" });
 
-  console.log(token);
-  console.log(user);
-
   return res.status(200).json({
     message: "Login successful",
     token: token,

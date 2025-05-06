@@ -69,7 +69,7 @@ const getDailySurveyController = async (req, res) => {
 // Submit survey responses
 const submitSurveyController = async (req, res) => {
   const { answers } = req.body;
-  const studentId = req.user.id;
+  const userId = req.user.id;
 
   if (!answers || typeof answers !== "object") {
     return res.status(400).json({
@@ -79,7 +79,7 @@ const submitSurveyController = async (req, res) => {
   }
 
   try {
-    const response = await createSurveyResponse(studentId, answers);
+    const response = await createSurveyResponse(userId, answers);
 
     res.status(201).json({
       success: true,
@@ -103,7 +103,8 @@ const submitSurveyController = async (req, res) => {
 // Check if user completed today's survey
 const checkTodaysSubmissionController = async (req, res) => {
   try {
-    const response = await getTodaysResponse(req.user.id);
+    const userId = req.user.id;
+    const response = await getTodaysResponse(userId);
 
     res.json({
       success: true,
@@ -131,8 +132,10 @@ const checkTodaysSubmissionController = async (req, res) => {
 // Get historical responses
 const getResponseHistoryController = async (req, res) => {
   try {
+    const userId = req.user.id;
+
     const period = req.query.period || "30d";
-    const responses = await getSurveyResponses(req.user.id, period);
+    const responses = await getSurveyResponses(userId, period);
 
     res.json({
       success: true,
