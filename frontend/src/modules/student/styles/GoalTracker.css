@@ -1,0 +1,392 @@
+.goal-tracker-container {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.goal-tracker-header {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eaeaea;
+  padding-bottom: 15px;
+}
+
+.goal-tracker-header h2 {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: #4a6baf;
+}
+
+.goal-tracker-header p {
+  color: #777;
+  margin-top: 5px;
+}
+
+.week-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.week-navigation button {
+  background-color: #f0f2f5;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.week-navigation button:hover:not(:disabled) {
+  background-color: #e0e3e8;
+}
+
+.week-navigation button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.week-navigation h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.goal-form {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.goal-form input {
+  flex: 1;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px 0 0 4px;
+  font-size: 16px;
+}
+
+.goal-form input.input-error {
+  border-color: #d32f2f;
+  background-color: #ffebee;
+}
+
+.goal-form button {
+  background-color: #4a6baf;
+  color: white;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.goal-form button:hover {
+  background-color: #3a5a9f;
+}
+
+.goal-form button:disabled {
+  background-color: #a0a0a0;
+  cursor: not-allowed;
+}
+
+.goals-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.goal-item {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+}
+
+.goal-item:hover {
+  background-color: #f9f9f9;
+}
+
+.goal-item.completed {
+  background-color: #f0f7ed;
+}
+
+.goal-check {
+  margin-right: 15px;
+  cursor: pointer;
+}
+
+.goal-text {
+  flex: 1;
+  font-size: 16px;
+}
+
+.goal-text.completed {
+  text-decoration: line-through;
+  color: #7cb342;
+}
+
+.error-message {
+  color: #d32f2f;
+  margin: 15px 0;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 20px;
+  color: #777;
+}
+
+.weekly-summary {
+  margin-top: 30px;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #f0f2f5;
+}
+
+.weekly-summary h4 {
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.progress-container {
+  margin-bottom: 15px;
+}
+
+.progress-bar-container {
+  height: 12px;
+  background-color: #e0e0e0;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 6px;
+  background-color: #4a6baf;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #555;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #777;
+}
+
+.empty-state svg {
+  color: #4a6baf;
+  opacity: 0.7;
+  margin-bottom: 15px;
+}
+
+.empty-state h4 {
+  margin-bottom: 10px;
+}
+
+.max-goals-message {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #ff9800;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 10px;
+}
+
+.status-completed {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-incomplete {
+  background-color: #fff8e1;
+  color: #ff8f00;
+}
+
+.status-empty {
+  background-color: #f5f5f5;
+  color: #757575;
+}
+
+/* Yearly Calendar View */
+.yearly-calendar {
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 1px solid #eaeaea;
+}
+
+.yearly-calendar h4 {
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.calendar-container {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 5px;
+  overflow-x: auto;
+  padding: 0 0 10px 0;
+}
+
+.month-column {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 200px; /* Ensure all columns have minimum height */
+}
+
+.month-column:first-child .week-number {
+  color: #d32f2f; /* Red color for week numbers in the first column */
+  font-weight: 600;
+}
+
+.month-header {
+  font-weight: 600;
+  padding: 8px 5px;
+  text-align: center;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-size: 12px;
+  position: sticky; /* Keep month headers visible */
+  top: 0;
+  z-index: 2;
+}
+
+.week-cell {
+  height: 30px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+  background-color: #f0f0f0;
+  position: relative;
+  margin-bottom: 2px; /* Add consistent spacing between cells */
+}
+
+.week-cell:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.week-cell.current {
+  border: 2px solid #4a6baf;
+}
+
+.week-cell.completed {
+  background-color: #e8f5e9;
+}
+
+.week-cell.incomplete {
+  background-color: #fff8e1;
+}
+
+.week-cell.empty {
+  background-color: #f5f5f5;
+  opacity: 0.6;
+}
+
+.week-number {
+  font-size: 12px;
+  font-weight: 500;
+  color: #555;
+}
+
+.week-cell.completed:after,
+.week-cell.incomplete:after,
+.week-cell.empty:after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  z-index: 10;
+}
+
+.week-cell.completed:after {
+  content: "✓";
+  color: #2e7d32;
+}
+
+.week-cell.incomplete:after {
+  content: "✕";
+  color: #ff8f00;
+}
+
+.week-tooltip {
+  position: absolute;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  left: 50%;
+}
+
+.tooltip-top {
+  top: -40px;
+}
+
+.tooltip-top:after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+
+.tooltip-bottom {
+  bottom: -40px;
+}
+
+.tooltip-bottom:after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #333 transparent;
+}
+
+.week-cell:hover .week-tooltip {
+  opacity: 1;
+}
+
+/* Set week number color in the first column (legend) to red */
+.month-column:first-child .week-number {
+  color: #d32f2f;
+  font-weight: 600;
+}

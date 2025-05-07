@@ -3,8 +3,7 @@ const prisma = new PrismaClient();
 const { startOfWeek, endOfWeek, getISOWeek } = require("date-fns");
 
 // Getting current ISO week number and year
-
-function getCurrentWek() {
+function getCurrentWeek() {
   const now = new Date();
   return {
     weekNumber: getISOWeek(now),
@@ -13,7 +12,6 @@ function getCurrentWek() {
 }
 
 // Calculate completion percentage and status
-
 function calculateWeeklyStatus(goals) {
   const total = goals.length;
   const completed = goals.filter((g) => g.isCompleted).length;
@@ -27,14 +25,14 @@ function calculateWeeklyStatus(goals) {
   };
 }
 
-const createGoal = async (userId, title) => {
+const createGoal = async (userId, title, description = "") => {
   try {
     const student = await prisma.student.findUnique({
       where: { userId },
       select: { id: true },
     });
 
-    const { weekNumber, year } = getCurrentWek();
+    const { weekNumber, year } = getCurrentWeek();
 
     const existingGoals = await prisma.goal.findMany({
       where: {
@@ -54,29 +52,39 @@ const createGoal = async (userId, title) => {
         studentId: student.id,
         weekNumber,
         year,
+        description,
       },
     });
   } catch (error) {
     console.error("Error creating goals:", error);
-    throw new Error("Failed to create goals.");
+    throw error;
   }
 };
 
 // Toggle goal completion status
-
 const toggleGoalCompletion = async (goalId) => {
-  const goal = await prisma.goal.findUnique({
-    where: { id: goalId },
-  });
+  try {
+    // Validate the goal exists
+    const goal = await prisma.goal.findUnique({
+      where: { id: goalId },
+    });
 
-  return prisma.goal.update({
-    where: { id: goalId },
-    data: { isCompleted: !goal.isCompleted },
-  });
+    if (!goal) {
+      throw new Error(`Goal with ID ${goalId} not found`);
+    }
+
+    // Update the goal completion status
+    return await prisma.goal.update({
+      where: { id: goalId },
+      data: { isCompleted: !goal.isCompleted },
+    });
+  } catch (error) {
+    console.error(`Error toggling goal completion for goal ${goalId}:`, error);
+    throw error;
+  }
 };
 
 // Getting goals for the current week
-
 const getWeeklyGoals = async (userId) => {
   try {
     const student = await prisma.student.findUnique({
@@ -84,7 +92,7 @@ const getWeeklyGoals = async (userId) => {
       select: { id: true },
     });
 
-    const { weekNumber, year } = getCurrentWek();
+    const { weekNumber, year } = getCurrentWeek();
 
     return prisma.goal.findMany({
       where: {
@@ -102,28 +110,36 @@ const getWeeklyGoals = async (userId) => {
   }
 };
 
-const updateWeeklySummary = async (userId) => {
+// Update weekly summary for a specific student
+const updateWeeklySummaryForStudent = async (studentId) => {
   try {
-    const student = await prisma.student.findUnique({
-      where: { userId },
-      select: { id: true },
+    const { weekNumber, year } = getCurrentWeek();
+
+    // Get goals directly from database for this student, week and year
+    const goals = await prisma.goal.findMany({
+      where: {
+        studentId,
+        weekNumber,
+        year,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
     });
 
-    const { weekNumber, year } = getCurrentWek();
-    const goals = await getWeeklyGoals(student.id);
     const { totalGoals, completed, percentage, status } =
       calculateWeeklyStatus(goals);
 
     return prisma.weeklyGoalSummary.upsert({
       where: {
         studentId_weekNumber_year: {
-          studentId: student.id,
+          studentId,
           weekNumber,
           year,
         },
       },
       create: {
-        studentId: student.id,
+        studentId,
         weekNumber,
         year,
         totalGoals,
@@ -139,13 +155,34 @@ const updateWeeklySummary = async (userId) => {
       },
     });
   } catch (error) {
-    console.error("Error updating weekly summary", error);
+    console.error(
+      `Error updating weekly summary for student ${studentId}:`,
+      error
+    );
+    throw error;
+  }
+};
+
+// Update weekly summary for a user
+const updateWeeklySummary = async (userId) => {
+  try {
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!student) {
+      throw new Error(`Student not found for user ID ${userId}`);
+    }
+
+    return updateWeeklySummaryForStudent(student.id);
+  } catch (error) {
+    console.error("Error updating weekly summary:", error);
     throw new Error("Failed to update weekly summary.");
   }
 };
 
-// Get calendat view (all weeks of year)
-
+// Get calendar view (all weeks of year)
 const getYearlySummary = async (userId, year = new Date().getFullYear()) => {
   try {
     const student = await prisma.student.findUnique({
@@ -165,20 +202,15 @@ const getYearlySummary = async (userId, year = new Date().getFullYear()) => {
     throw new Error("Failed to fetch yearly summary.");
   }
 };
-// Reset weekly goals every monday
 
-const resetWeeklyGoals = async (userId) => {
+// Reset weekly goals for a specific student
+const resetWeeklyGoalsForStudent = async (studentId) => {
   try {
-    const student = await prisma.student.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
-
-    const { weekNumber, year } = getCurrentWek();
+    const { weekNumber, year } = getCurrentWeek();
 
     return prisma.goal.updateMany({
       where: {
-        studentId: student.id,
+        studentId,
         weekNumber,
         year,
       },
@@ -187,41 +219,80 @@ const resetWeeklyGoals = async (userId) => {
       },
     });
   } catch (error) {
-    console.error("Error resetting weekly goals", error);
+    console.error(
+      `Error resetting weekly goals for student ${studentId}:`,
+      error
+    );
+    throw error;
+  }
+};
+
+// Reset weekly goals for a user
+const resetWeeklyGoals = async (userId) => {
+  try {
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!student) {
+      throw new Error(`Student not found for user ID ${userId}`);
+    }
+
+    return resetWeeklyGoalsForStudent(student.id);
+  } catch (error) {
+    console.error("Error resetting weekly goals:", error);
     throw new Error("Failed to reset weekly goals.");
   }
 };
 
 // Scheduled tasks
-
 // Run in cron job setup
 const sundayNightUpdate = async () => {
   try {
+    console.log("Starting Sunday night update for all students...");
     const students = await prisma.student.findMany({
       select: {
         id: true,
       },
     });
-    await Promise.all(
-      students.map((student) => updateWeeklySummary(student.id))
+
+    console.log(`Found ${students.length} students to update summaries for`);
+    const results = await Promise.all(
+      students.map((student) => updateWeeklySummaryForStudent(student.id))
     );
+
+    console.log(
+      `Successfully updated weekly summaries for ${results.length} students`
+    );
+    return results;
   } catch (error) {
-    console.error("Error during sunday night update", error);
-    throw new Error("Failed to complete sunday night update.");
+    console.error("Error during Sunday night update:", error);
+    throw error;
   }
 };
 
 const mondayMorningReset = async () => {
   try {
+    console.log("Starting Monday morning reset for all students...");
     const students = await prisma.student.findMany({
       select: {
         id: true,
       },
     });
-    await Promise.all(students.map((student) => resetWeeklyGoals(student.id)));
+
+    console.log(`Found ${students.length} students to reset goals for`);
+    const results = await Promise.all(
+      students.map((student) => resetWeeklyGoalsForStudent(student.id))
+    );
+
+    console.log(
+      `Successfully reset weekly goals for ${results.length} students`
+    );
+    return results;
   } catch (error) {
-    console.error("Error during monday morning reset", error);
-    throw new Error("Failed to complete monday morning reset.");
+    console.error("Error during Monday morning reset:", error);
+    throw error;
   }
 };
 
@@ -230,6 +301,8 @@ module.exports = {
   toggleGoalCompletion,
   getWeeklyGoals,
   getYearlySummary,
+  updateWeeklySummary,
+  resetWeeklyGoals,
   sundayNightUpdate,
   mondayMorningReset,
 };

@@ -67,15 +67,25 @@ app.use("/api/goals", goalTrackerRouter);
 initializeApp();
 
 // Every Sunday at 11:30 PM
-cron.schedule("30 23 * * 0", () => {
-  console.log("Running weekly goal summary update....");
-  sundayNightUpdate();
+cron.schedule("30 23 * * 0", async () => {
+  try {
+    console.log("Running weekly goal summary update....");
+    await sundayNightUpdate();
+    console.log("Weekly goal summary update completed successfully");
+  } catch (error) {
+    console.error("Failed to run weekly goal summary update:", error);
+  }
 });
 
 // Every Monday at 12:05 AM
-cron.schedule("5 0 * * 1", () => {
-  console.log("Running weekly goal reset....");
-  mondayMorningReset();
+cron.schedule("5 0 * * 1", async () => {
+  try {
+    console.log("Running weekly goal reset....");
+    await mondayMorningReset();
+    console.log("Weekly goal reset completed successfully");
+  } catch (error) {
+    console.error("Failed to run weekly goal reset:", error);
+  }
 });
 
 app.listen(3000, () => {

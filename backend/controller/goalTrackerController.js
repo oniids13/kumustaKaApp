@@ -8,16 +8,16 @@ const {
 
 // Create a new goal
 const createGoalController = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
   try {
-    const { title } = req.body;
+    const { title, description = "" } = req.body;
     const userId = req.user.id;
 
-    const goal = await createGoal(userId, title);
+    // Basic validation on the server side
+    if (!title || title.trim() === "") {
+      return res.status(400).json({ message: "Goal title is required" });
+    }
+
+    const goal = await createGoal(userId, title, description);
     return res.status(201).json(goal);
   } catch (error) {
     console.error("Error creating goal:", error);
