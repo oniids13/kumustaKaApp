@@ -6,7 +6,11 @@ const cors = require("cors");
 const jwtStrategy = require("./config/jwtStrategy");
 const { createUploadsDir } = require("./utils/fileUtils");
 const { ensureDailySurveyExists } = require("./services/surveyInitService");
-
+const {
+  sundayNightUpdate,
+  mondayMorningReset,
+} = require("./model/goalTracker");
+const cron = require("node-cron");
 const app = express();
 
 // Routers
@@ -21,6 +25,7 @@ const quotesRouter = require("./router/quotesRouter");
 const quizzesRouter = require("./router/quizzesRouter");
 const initialAssessmentRouter = require("./router/initialAssessmentRouter");
 const surveyRouter = require("./router/surveyRouter");
+const goalTrackerRouter = require("./router/goalTrackerRouter");
 
 app.use(
   cors({
@@ -57,8 +62,21 @@ app.use("/api", quotesRouter);
 app.use("/api/quizzes", quizzesRouter);
 app.use("/api/initialAssessment", initialAssessmentRouter);
 app.use("/api/survey", surveyRouter);
+app.use("/api/goals", goalTrackerRouter);
 
 initializeApp();
+
+// Every Sunday at 11:30 PM
+cron.schedule("30 23 * * 0", () => {
+  console.log("Running weekly goal summary update....");
+  sundayNightUpdate();
+});
+
+// Every Monday at 12:05 AM
+cron.schedule("5 0 * * 1", () => {
+  console.log("Running weekly goal reset....");
+  mondayMorningReset();
+});
 
 app.listen(3000, () => {
   console.log("Server is running on http://localhost:3000");

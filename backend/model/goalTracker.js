@@ -101,3 +101,135 @@ const getWeeklyGoals = async (userId) => {
     throw new Error("Failed to fetch goals.");
   }
 };
+
+const updateWeeklySummary = async (userId) => {
+  try {
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    const { weekNumber, year } = getCurrentWek();
+    const goals = await getWeeklyGoals(student.id);
+    const { totalGoals, completed, percentage, status } =
+      calculateWeeklyStatus(goals);
+
+    return prisma.weeklyGoalSummary.upsert({
+      where: {
+        studentId_weekNumber_year: {
+          studentId: student.id,
+          weekNumber,
+          year,
+        },
+      },
+      create: {
+        studentId: student.id,
+        weekNumber,
+        year,
+        totalGoals,
+        completed,
+        percentage,
+        status,
+      },
+      update: {
+        totalGoals,
+        completed,
+        percentage,
+        status,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating weekly summary", error);
+    throw new Error("Failed to update weekly summary.");
+  }
+};
+
+// Get calendat view (all weeks of year)
+
+const getYearlySummary = async (userId, year = new Date().getFullYear()) => {
+  try {
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    return prisma.weeklyGoalSummary.findMany({
+      where: {
+        studentId: student.id,
+        year,
+      },
+      orderBy: [{ year: "asc" }, { weekNumber: "asc" }],
+    });
+  } catch (error) {
+    console.error("Error fetching yearly summary", error);
+    throw new Error("Failed to fetch yearly summary.");
+  }
+};
+// Reset weekly goals every monday
+
+const resetWeeklyGoals = async (userId) => {
+  try {
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    const { weekNumber, year } = getCurrentWek();
+
+    return prisma.goal.updateMany({
+      where: {
+        studentId: student.id,
+        weekNumber,
+        year,
+      },
+      data: {
+        isCompleted: false,
+      },
+    });
+  } catch (error) {
+    console.error("Error resetting weekly goals", error);
+    throw new Error("Failed to reset weekly goals.");
+  }
+};
+
+// Scheduled tasks
+
+// Run in cron job setup
+const sundayNightUpdate = async () => {
+  try {
+    const students = await prisma.student.findMany({
+      select: {
+        id: true,
+      },
+    });
+    await Promise.all(
+      students.map((student) => updateWeeklySummary(student.id))
+    );
+  } catch (error) {
+    console.error("Error during sunday night update", error);
+    throw new Error("Failed to complete sunday night update.");
+  }
+};
+
+const mondayMorningReset = async () => {
+  try {
+    const students = await prisma.student.findMany({
+      select: {
+        id: true,
+      },
+    });
+    await Promise.all(students.map((student) => resetWeeklyGoals(student.id)));
+  } catch (error) {
+    console.error("Error during monday morning reset", error);
+    throw new Error("Failed to complete monday morning reset.");
+  }
+};
+
+module.exports = {
+  createGoal,
+  toggleGoalCompletion,
+  getWeeklyGoals,
+  getYearlySummary,
+  sundayNightUpdate,
+  mondayMorningReset,
+};
