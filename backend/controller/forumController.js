@@ -18,6 +18,7 @@ const fs = require("fs");
 const createForumPostController = async (req, res) => {
   const { title, content } = req.body;
   const userId = req.user.id;
+  const role = req.user.role;
 
   if (!req.user) {
     console.log(userId);
@@ -38,7 +39,13 @@ const createForumPostController = async (req, res) => {
       }
     }
 
-    const newPost = await createNewPost(title, content, imageUrls, userId);
+    const newPost = await createNewPost(
+      title,
+      content,
+      imageUrls,
+      userId,
+      role
+    );
     return res.status(201).json(newPost);
   } catch (error) {
     console.error("Error creating post:", error);

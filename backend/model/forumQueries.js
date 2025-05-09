@@ -4,7 +4,7 @@ const { cloudinary } = require("../services/cloudinary.service");
 
 // Post Related Queries
 
-const createNewPost = async (title, content, imageUrls, authorId) => {
+const createNewPost = async (title, content, imageUrls, authorId, role) => {
   try {
     const newPost = await prisma.forumPost.create({
       data: {
@@ -12,6 +12,7 @@ const createNewPost = async (title, content, imageUrls, authorId) => {
         content,
         images: imageUrls,
         author: { connect: { id: authorId } },
+        isPublished: role === "TEACHER" ? true : false,
       },
       select: {
         id: true,

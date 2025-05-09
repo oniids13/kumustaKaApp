@@ -2,6 +2,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
+import { useEffect } from "react";
 import "../../styles/forum.css";
 import { FaBold, FaItalic, FaListUl } from "react-icons/fa";
 
@@ -30,6 +31,13 @@ const TextEditor = ({ content, onUpdate }) => {
       },
     },
   });
+
+  // This useEffect will update the editor content when the content prop changes
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
 
   const addImage = (file) => {
     if (file && editor) {

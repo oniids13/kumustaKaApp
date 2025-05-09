@@ -1,0 +1,36 @@
+.teacher-dashboard {
+  padding: 20px;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.side-panel-container {
+  margin-bottom: 20px;
+}
+
+.main-content-container {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-height: 85vh;
+}
+
+/* For tablets and larger phones */
+@media (max-width: 991.98px) {
+  .side-panel-container {
+    margin-bottom: 20px;
+  }
+}
+
+/* For smaller screens */
+@media (max-width: 767.98px) {
+  .teacher-dashboard {
+    padding: 10px;
+  }
+
+  .main-content-container {
+    padding: 15px;
+    min-height: auto;
+  }
+}

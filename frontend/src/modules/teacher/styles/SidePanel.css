@@ -1,0 +1,75 @@
+.side-panel {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: 85vh;
+}
+
+.user-info {
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.user-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.user-name {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.user-role {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.nav-item {
+  margin-bottom: 10px;
+}
+
+.module-button {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-radius: 8px;
+  background-color: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.module-button:hover {
+  background-color: #f1f1f1;
+}
+
+.module-button.active {
+  background-color: #4e73df;
+  color: white;
+}
+
+.module-button.active:hover {
+  background-color: #3a5ecc;
+}
+
+.module-icon {
+  margin-right: 10px;
+  width: 20px;
+  text-align: center;
+}
+
+/* For tablets and smaller screens */
+@media (max-width: 991.98px) {
+  .side-panel {
+    height: auto;
+    margin-bottom: 20px;
+  }
+}
