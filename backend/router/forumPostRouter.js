@@ -8,6 +8,7 @@ const {
   editCommentController,
   deleteCommentController,
   sparkReactionController,
+  publishForumPostController,
 } = require("../controller/forumController");
 const { Router } = require("express");
 const forumPostRouter = Router();
@@ -69,6 +70,12 @@ forumPostRouter.post(
   "/reaction/:postId",
   passport.authenticate("jwt", { session: false }),
   sparkReactionController
+);
+
+forumPostRouter.patch(
+  "/publishPost/:postId",
+  passport.authenticate("jwt", { session: false }),
+  publishForumPostController
 );
 
 module.exports = forumPostRouter;

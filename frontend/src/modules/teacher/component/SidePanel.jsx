@@ -2,6 +2,9 @@ import React from "react";
 
 import "../styles/SidePanel.css";
 
+// Icons
+import { FaComments, FaBalanceScale } from "react-icons/fa";
+
 const SidePanel = ({ user, activeModule, setActiveModule }) => {
   return (
     <div className="side-panel">
@@ -22,13 +25,16 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
       <div className="navigation">
         <div className="nav-item">
           <button
-            className={`module-button ${
-              activeModule === "forum" ? "active" : ""
-            }`}
+            className={`nav-button ${activeModule === "forum" ? "active" : ""}`}
             onClick={() => setActiveModule("forum")}
           >
-            <span className="module-icon">💬</span>
-            Discussion Forum
+            <FaComments /> Discussion Forum
+          </button>
+          <button
+            className={`nav-button ${activeModule === "posts" ? "active" : ""}`}
+            onClick={() => setActiveModule("posts")}
+          >
+            <FaBalanceScale /> Approve Post
           </button>
         </div>
       </div>

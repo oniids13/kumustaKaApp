@@ -380,4 +380,5 @@ module.exports = {
   editComment,
   deleteComment,
   sparkReaction,
+  publishForumPost,
 };

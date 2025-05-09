@@ -9,6 +9,9 @@ import PostList from "../../component/ForumPosts/PostList";
 // CSS
 import "./styles/TeacherModule.css";
 
+// Features
+import PostApproval from "./component/PostApproval";
+
 const TeacherDashboard = () => {
   const user = JSON.parse(localStorage.getItem("userData"));
   const [activeModule, setActiveModule] = useState("forum");
@@ -18,6 +21,8 @@ const TeacherDashboard = () => {
 
   const renderMainContent = () => {
     switch (activeModule) {
+      case "posts":
+        return <PostApproval />;
       case "forum":
       default:
         return (

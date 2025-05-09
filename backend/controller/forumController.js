@@ -9,6 +9,7 @@ const {
   editComment,
   deleteComment,
   sparkReaction,
+  publishForumPost,
 } = require("../model/forumQueries");
 const { uploadImage } = require("../services/cloudinary.service");
 const fs = require("fs");
@@ -260,6 +261,26 @@ const sparkReactionController = async (req, res) => {
   }
 };
 
+const publishForumPostController = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const role = req.user.role;
+
+    if (role !== "TEACHER") {
+      return res.status(403).json({
+        message: "Only teachers can publish posts",
+      });
+    }
+    const result = await publishForumPost(postId);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error publishing post:", error);
+    return res.status(500).json({
+      error: error.message || "Failed to publish post",
+    });
+  }
+};
+
 module.exports = {
   createForumPostController,
   getAllForumPostsController,
@@ -270,4 +291,5 @@ module.exports = {
   editCommentController,
   deleteCommentController,
   sparkReactionController,
+  publishForumPostController,
 };
