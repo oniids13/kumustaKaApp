@@ -26,6 +26,7 @@ const quizzesRouter = require("./router/quizzesRouter");
 const initialAssessmentRouter = require("./router/initialAssessmentRouter");
 const surveyRouter = require("./router/surveyRouter");
 const goalTrackerRouter = require("./router/goalTrackerRouter");
+const analyticsRouter = require("./router/analyticsRouter");
 
 app.use(
   cors({
@@ -63,6 +64,7 @@ app.use("/api/quizzes", quizzesRouter);
 app.use("/api/initialAssessment", initialAssessmentRouter);
 app.use("/api/survey", surveyRouter);
 app.use("/api/goals", goalTrackerRouter);
+app.use("/api/analytics", analyticsRouter);
 
 initializeApp();
 

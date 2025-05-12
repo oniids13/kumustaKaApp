@@ -11,6 +11,8 @@ import "./styles/TeacherModule.css";
 
 // Features
 import PostApproval from "./component/PostApproval";
+import TrendsView from "./component/TrendsView";
+import ReportGenerator from "./component/ReportGenerator";
 
 const TeacherDashboard = () => {
   const user = JSON.parse(localStorage.getItem("userData"));
@@ -23,6 +25,10 @@ const TeacherDashboard = () => {
     switch (activeModule) {
       case "posts":
         return <PostApproval />;
+      case "trends":
+        return <TrendsView />;
+      case "reports":
+        return <ReportGenerator />;
       case "forum":
       default:
         return (

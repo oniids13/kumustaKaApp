@@ -3,7 +3,12 @@ import React from "react";
 import "../styles/SidePanel.css";
 
 // Icons
-import { FaComments, FaBalanceScale } from "react-icons/fa";
+import {
+  FaComments,
+  FaBalanceScale,
+  FaChartLine,
+  FaFileAlt,
+} from "react-icons/fa";
 
 const SidePanel = ({ user, activeModule, setActiveModule }) => {
   return (
@@ -35,6 +40,22 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
             onClick={() => setActiveModule("posts")}
           >
             <FaBalanceScale /> Approve Post
+          </button>
+          <button
+            className={`nav-button ${
+              activeModule === "trends" ? "active" : ""
+            }`}
+            onClick={() => setActiveModule("trends")}
+          >
+            <FaChartLine /> View Trends
+          </button>
+          <button
+            className={`nav-button ${
+              activeModule === "reports" ? "active" : ""
+            }`}
+            onClick={() => setActiveModule("reports")}
+          >
+            <FaFileAlt /> Generate Report
           </button>
         </div>
       </div>
