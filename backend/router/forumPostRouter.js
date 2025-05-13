@@ -9,6 +9,7 @@ const {
   deleteCommentController,
   sparkReactionController,
   publishForumPostController,
+  getPendingPostsCount,
 } = require("../controller/forumController");
 const { Router } = require("express");
 const forumPostRouter = Router();
@@ -76,6 +77,13 @@ forumPostRouter.patch(
   "/publishPost/:postId",
   passport.authenticate("jwt", { session: false }),
   publishForumPostController
+);
+
+// Add route for pending posts count
+forumPostRouter.get(
+  "/pending-count",
+  passport.authenticate("jwt", { session: false }),
+  getPendingPostsCount
 );
 
 module.exports = forumPostRouter;

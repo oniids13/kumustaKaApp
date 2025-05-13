@@ -15,6 +15,8 @@ import "../styles/SidePanel.css";
 
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { Badge } from "react-bootstrap";
+import { setupNotificationChecks } from "../../../utils/notificationUtils";
 
 import DailySurveyAlert from "./DailySurveyAlert";
 
@@ -60,6 +62,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
     checkLocalStorageMoodSubmission()
   );
   const [errorMessage, setErrorMessage] = useState(null);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   const checkTodaySubmission = async () => {
     try {
@@ -239,6 +242,28 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
   const finalSubmittedState =
     hasSubmittedToday || checkLocalStorageMoodSubmission();
 
+  // Set up notification checking
+  useEffect(() => {
+    // Set up notification checks
+    const cleanup = setupNotificationChecks(setUnreadMessages, null, "STUDENT");
+    return cleanup;
+  }, []);
+
+  // Navigation Buttons
+  const renderNavButton = (module, icon, label, count) => (
+    <button
+      className={`nav-button ${activeModule === module ? "active" : ""}`}
+      onClick={() => setActiveModule(module)}
+    >
+      {icon} {label}
+      {count > 0 && (
+        <Badge pill bg="danger" className="notification-badge">
+          {count}
+        </Badge>
+      )}
+    </button>
+  );
+
   return (
     <>
       <div className="profile-card p-3 rounded">
@@ -345,70 +370,20 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
 
       {/* Navigation Buttons */}
       <div className="navigation-buttons">
-        <button
-          className={`nav-button ${activeModule === "forum" ? "active" : ""}`}
-          onClick={() => setActiveModule("forum")}
-        >
-          <FaComments /> Community Forum
-        </button>
-        <button
-          className={`nav-button ${
-            activeModule === "messaging" ? "active" : ""
-          }`}
-          onClick={() => setActiveModule("messaging")}
-        >
-          <FaEnvelope /> Messages
-        </button>
-        <button
-          className={`nav-button ${activeModule === "journal" ? "active" : ""}`}
-          onClick={() => setActiveModule("journal")}
-        >
-          <FaBook /> Wellness Journal
-        </button>
-        <button
-          className={`nav-button ${
-            activeModule === "moodtracker" ? "active" : ""
-          }`}
-          onClick={() => setActiveModule("moodtracker")}
-        >
-          <FaChartLine /> Mood Tracker
-        </button>
-        <button
-          className={`nav-button ${
-            activeModule === "goaltracker" ? "active" : ""
-          }`}
-          onClick={() => setActiveModule("goaltracker")}
-        >
-          <FaBullseye /> Goal Tracker
-        </button>
-        <button
-          className={`nav-button ${activeModule === "quiz" ? "active" : ""}`}
-          onClick={() => setActiveModule("quiz")}
-        >
-          <FaPenSquare /> Interactive Quizzes
-        </button>
-        <button
-          className={`nav-button ${
-            activeModule === "resources" ? "active" : ""
-          }`}
-          onClick={() => setActiveModule("resources")}
-        >
-          <FaBookOpen /> Resource Library
-        </button>
-        <button
-          className={`nav-button ${activeModule === "consent" ? "active" : ""}`}
-          onClick={() => setActiveModule("consent")}
-        >
-          <FaShieldAlt /> Privacy and Consent
-        </button>
-        <button
-          className={`nav-button ${
-            activeModule === "emergency" ? "active" : ""
-          }`}
-          onClick={() => setActiveModule("emergency")}
-        >
-          <FaAddressCard /> Emergency Contact
-        </button>
+        {renderNavButton("forum", <FaComments />, "Community Forum")}
+        {renderNavButton(
+          "messaging",
+          <FaEnvelope />,
+          "Messages",
+          unreadMessages
+        )}
+        {renderNavButton("journal", <FaBook />, "Wellness Journal")}
+        {renderNavButton("moodtracker", <FaChartLine />, "Mood Tracker")}
+        {renderNavButton("goaltracker", <FaBullseye />, "Goal Tracker")}
+        {renderNavButton("quiz", <FaPenSquare />, "Interactive Quizzes")}
+        {renderNavButton("resources", <FaBookOpen />, "Resource Library")}
+        {renderNavButton("consent", <FaShieldAlt />, "Privacy and Consent")}
+        {renderNavButton("emergency", <FaAddressCard />, "Emergency Contact")}
       </div>
     </>
   );

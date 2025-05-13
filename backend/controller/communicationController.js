@@ -1,4 +1,7 @@
 const communicationQueries = require("../model/communicationQueries");
+const { PrismaClient } = require("@prisma/client");
+
+const prisma = new PrismaClient();
 
 /**
  * Get conversations for the current user
@@ -154,6 +157,37 @@ const getMessageableUsers = async (req, res) => {
   }
 };
 
+// Get unread messages count
+const getUnreadMessagesCount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Count unread messages across all conversations for this user
+    const unreadCount = await prisma.message.count({
+      where: {
+        conversation: {
+          participants: {
+            some: {
+              id: userId,
+            },
+          },
+        },
+        senderId: {
+          not: userId,
+        },
+        isRead: false,
+      },
+    });
+
+    return res.status(200).json({ unreadCount });
+  } catch (error) {
+    console.error("Error getting unread message count:", error);
+    return res
+      .status(500)
+      .json({ error: "Failed to get unread message count" });
+  }
+};
+
 module.exports = {
   getUserConversations,
   getConversationById,
@@ -161,4 +195,5 @@ module.exports = {
   createConversation,
   markConversationAsRead,
   getMessageableUsers,
+  getUnreadMessagesCount,
 };

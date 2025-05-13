@@ -104,3 +104,10 @@
     font-size: 1.4rem;
   }
 }
+
+.notification-badge {
+  margin-left: 5px;
+  font-size: 0.7rem;
+  position: relative;
+  top: -1px;
+}

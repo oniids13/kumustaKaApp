@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaChartLine,
   FaUserMd,
@@ -9,8 +9,38 @@ import {
   FaEnvelope,
 } from "react-icons/fa";
 import "../styles/SidePanel.css";
+import { Badge } from "react-bootstrap";
+import { setupNotificationChecks } from "../../../utils/notificationUtils";
 
 const SidePanel = ({ user, activeModule, setActiveModule }) => {
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  // Set up notification checking
+  useEffect(() => {
+    // Set up notification checks
+    const cleanup = setupNotificationChecks(
+      setUnreadMessages,
+      null,
+      "COUNSELOR"
+    );
+    return cleanup;
+  }, []);
+
+  // Navigation Buttons
+  const renderNavButton = (module, icon, label, count) => (
+    <button
+      className={`nav-button ${activeModule === module ? "active" : ""}`}
+      onClick={() => setActiveModule(module)}
+    >
+      {icon} {label}
+      {count > 0 && (
+        <Badge pill bg="danger" className="notification-badge">
+          {count}
+        </Badge>
+      )}
+    </button>
+  );
+
   return (
     <>
       <div className="profile-card p-3 rounded">
@@ -26,56 +56,22 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
 
       {/* Navigation Buttons */}
       <div className="navigation-buttons">
-        <button
-          className={`nav-button ${
-            activeModule === "dashboard" ? "active" : ""
-          }`}
-          onClick={() => setActiveModule("dashboard")}
-        >
-          <FaTachometerAlt /> Mental Health Overview
-        </button>
-        <button
-          className={`nav-button ${
-            activeModule === "analytics" ? "active" : ""
-          }`}
-          onClick={() => setActiveModule("analytics")}
-        >
-          <FaChartLine /> Student Analytics
-        </button>
-        <button
-          className={`nav-button ${
-            activeModule === "interventions" ? "active" : ""
-          }`}
-          onClick={() => setActiveModule("interventions")}
-        >
-          <FaUserMd /> Intervention Plans
-        </button>
-        <button
-          className={`nav-button ${activeModule === "reports" ? "active" : ""}`}
-          onClick={() => setActiveModule("reports")}
-        >
-          <FaClipboardList /> Reports
-        </button>
-        <button
-          className={`nav-button ${
-            activeModule === "messaging" ? "active" : ""
-          }`}
-          onClick={() => setActiveModule("messaging")}
-        >
-          <FaEnvelope /> Messages
-        </button>
-        <button
-          className={`nav-button ${activeModule === "forum" ? "active" : ""}`}
-          onClick={() => setActiveModule("forum")}
-        >
-          <FaComments /> Community Forum
-        </button>
-        <button
-          className={`nav-button ${activeModule === "history" ? "active" : ""}`}
-          onClick={() => setActiveModule("history")}
-        >
-          <FaHistory /> Intervention History
-        </button>
+        {renderNavButton(
+          "dashboard",
+          <FaTachometerAlt />,
+          "Mental Health Overview"
+        )}
+        {renderNavButton("analytics", <FaChartLine />, "Student Analytics")}
+        {renderNavButton("interventions", <FaUserMd />, "Intervention Plans")}
+        {renderNavButton("reports", <FaClipboardList />, "Reports")}
+        {renderNavButton(
+          "messaging",
+          <FaEnvelope />,
+          "Messages",
+          unreadMessages
+        )}
+        {renderNavButton("forum", <FaComments />, "Community Forum")}
+        {renderNavButton("history", <FaHistory />, "Intervention History")}
       </div>
     </>
   );

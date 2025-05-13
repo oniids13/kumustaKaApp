@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 import "../styles/SidePanel.css";
+import { Badge } from "react-bootstrap";
+import { setupNotificationChecks } from "../../../utils/notificationUtils";
 
 // Icons
 import {
@@ -12,6 +14,35 @@ import {
 } from "react-icons/fa";
 
 const SidePanel = ({ user, activeModule, setActiveModule }) => {
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [pendingPosts, setPendingPosts] = useState(0);
+
+  // Set up notification checking
+  useEffect(() => {
+    // Set up notification checks
+    const cleanup = setupNotificationChecks(
+      setUnreadMessages,
+      setPendingPosts,
+      "TEACHER"
+    );
+    return cleanup;
+  }, []);
+
+  // Navigation Buttons
+  const renderNavButton = (module, icon, label, count) => (
+    <button
+      className={`nav-button ${activeModule === module ? "active" : ""}`}
+      onClick={() => setActiveModule(module)}
+    >
+      {icon} {label}
+      {count > 0 && (
+        <Badge pill bg="danger" className="notification-badge">
+          {count}
+        </Badge>
+      )}
+    </button>
+  );
+
   return (
     <div className="side-panel">
       <div className="user-info">
@@ -30,42 +61,21 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
 
       <div className="navigation">
         <div className="nav-item">
-          <button
-            className={`nav-button ${activeModule === "forum" ? "active" : ""}`}
-            onClick={() => setActiveModule("forum")}
-          >
-            <FaComments /> Discussion Forum
-          </button>
-          <button
-            className={`nav-button ${
-              activeModule === "messaging" ? "active" : ""
-            }`}
-            onClick={() => setActiveModule("messaging")}
-          >
-            <FaEnvelope /> Messages
-          </button>
-          <button
-            className={`nav-button ${activeModule === "posts" ? "active" : ""}`}
-            onClick={() => setActiveModule("posts")}
-          >
-            <FaBalanceScale /> Approve Post
-          </button>
-          <button
-            className={`nav-button ${
-              activeModule === "trends" ? "active" : ""
-            }`}
-            onClick={() => setActiveModule("trends")}
-          >
-            <FaChartLine /> View Trends
-          </button>
-          <button
-            className={`nav-button ${
-              activeModule === "reports" ? "active" : ""
-            }`}
-            onClick={() => setActiveModule("reports")}
-          >
-            <FaFileAlt /> Generate Report
-          </button>
+          {renderNavButton("forum", <FaComments />, "Discussion Forum")}
+          {renderNavButton(
+            "messaging",
+            <FaEnvelope />,
+            "Messages",
+            unreadMessages
+          )}
+          {renderNavButton(
+            "posts",
+            <FaBalanceScale />,
+            "Approve Post",
+            pendingPosts
+          )}
+          {renderNavButton("trends", <FaChartLine />, "View Trends")}
+          {renderNavButton("reports", <FaFileAlt />, "Generate Report")}
         </div>
       </div>
     </div>

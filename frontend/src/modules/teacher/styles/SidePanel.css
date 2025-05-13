@@ -66,6 +66,13 @@
   text-align: center;
 }
 
+.notification-badge {
+  margin-left: 5px;
+  font-size: 0.7rem;
+  position: relative;
+  top: -1px;
+}
+
 /* For tablets and smaller screens */
 @media (max-width: 991.98px) {
   .side-panel {

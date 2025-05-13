@@ -30,4 +30,11 @@ router.put(
 // Get users available for messaging
 router.get("/users", communicationController.getMessageableUsers);
 
+// Add route for unread message count
+router.get(
+  "/unread-count",
+  passport.authenticate("jwt", { session: false }),
+  communicationController.getUnreadMessagesCount
+);
+
 module.exports = router;
