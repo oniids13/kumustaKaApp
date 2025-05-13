@@ -6,6 +6,7 @@
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .messaging-header {
@@ -115,6 +116,10 @@
   padding: 16px;
   overflow-y: auto;
   background-color: #f9f9f9;
+  scroll-behavior: auto;
+  overflow-anchor: auto;
+  /* Prevent auto-scrolling to bottom on new content */
+  scroll-snap-type: none;
 }
 
 .message-item {
