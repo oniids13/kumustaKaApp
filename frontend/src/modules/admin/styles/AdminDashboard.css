@@ -1,0 +1,86 @@
+.admin-dashboard {
+  min-height: calc(100vh - 60px);
+  padding: 20px 0;
+}
+
+.side-panel-container {
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.main-content-container {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  min-height: calc(100vh - 100px);
+}
+
+/* Dashboard Overview specific styles */
+.status-card {
+  text-align: center;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.status-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* User Management specific styles */
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.status-badge {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+/* System Configuration specific styles */
+.settings-container {
+  background-color: #fafafa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.settings-header {
+  border-bottom: 1px solid #e8e8e8;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+/* Compliance specific styles */
+.compliance-status-good {
+  color: #52c41a;
+}
+
+.compliance-status-warning {
+  color: #faad14;
+}
+
+.compliance-status-critical {
+  color: #f5222d;
+}
+
+.log-entry {
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  background-color: #f9f9f9;
+  transition: background-color 0.2s ease;
+}
+
+.log-entry:hover {
+  background-color: #f0f0f0;
+}

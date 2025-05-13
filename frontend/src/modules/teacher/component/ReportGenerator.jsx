@@ -36,7 +36,7 @@ const ReportGenerator = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/analytics/generateReport",
+        "http://localhost:3000/api/teacher/reports",
         {
           ...values,
           startDate: values.dateRange[0].format("YYYY-MM-DD"),

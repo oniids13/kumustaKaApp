@@ -11,7 +11,30 @@ const {
   mondayMorningReset,
 } = require("./model/goalTracker");
 const cron = require("node-cron");
+const dotenv = require("dotenv");
+const morgan = require("morgan");
+const path = require("path");
+const { rateLimit } = require("express-rate-limit");
+
+// Load Environment variables
+dotenv.config();
+
 const app = express();
+
+// Set up middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
+app.use(morgan("dev"));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
 
 // Routers
 const userRouter = require("./router/userRouter");
@@ -26,7 +49,9 @@ const quizzesRouter = require("./router/quizzesRouter");
 const initialAssessmentRouter = require("./router/initialAssessmentRouter");
 const surveyRouter = require("./router/surveyRouter");
 const goalTrackerRouter = require("./router/goalTrackerRouter");
-const analyticsRouter = require("./router/analyticsRouter");
+const counselorRouter = require("./router/counselorRouter");
+const adminRouter = require("./router/adminRouter");
+const teacherRouter = require("./router/teacherRouter");
 
 app.use(
   cors({
@@ -46,8 +71,6 @@ async function initializeApp() {
 
 createUploadsDir();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 passport.use(jwtStrategy);
 
@@ -64,7 +87,12 @@ app.use("/api/quizzes", quizzesRouter);
 app.use("/api/initialAssessment", initialAssessmentRouter);
 app.use("/api/survey", surveyRouter);
 app.use("/api/goals", goalTrackerRouter);
-app.use("/api/analytics", analyticsRouter);
+app.use("/api/counselor", counselorRouter);
+app.use("/api/admin", adminRouter);
+app.use("/api/teacher", teacherRouter);
+
+// Serve static files from the uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 initializeApp();
 
@@ -90,6 +118,24 @@ cron.schedule("5 0 * * 1", async () => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("Server is running on http://localhost:3000");
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    message: "Something went wrong!",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
 });
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+module.exports = app;

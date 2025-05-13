@@ -11,8 +11,6 @@ import {
   Alert,
 } from "antd";
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
   PieChart,
@@ -31,10 +29,10 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const COLORS = [
+  "#00C49F", // Green
+  "#FFBB28", // Yellow
+  "#FF8042", // Red
   "#0088FE",
-  "#00C49F",
-  "#FFBB28",
-  "#FF8042",
   "#8884d8",
   "#82ca9d",
 ];
@@ -45,7 +43,7 @@ const TrendsView = () => {
   const [moodData, setMoodData] = useState([]);
   const [issueData, setIssueData] = useState([]);
   const [timeframeData, setTimeframeData] = useState([]);
-  const [periodFilter, setPeriodFilter] = useState("month");
+  const [periodFilter, setPeriodFilter] = useState("week");
   const [dateRange, setDateRange] = useState([]);
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
@@ -66,7 +64,7 @@ const TrendsView = () => {
       };
 
       const response = await axios.get(
-        "http://localhost:3000/api/analytics/trends",
+        "http://localhost:3000/api/teacher/trends",
         {
           params,
           headers: {
@@ -113,10 +111,48 @@ const TrendsView = () => {
   const mockMoodData = moodData.length
     ? moodData
     : [
-        { name: "Week 1", happy: 40, neutral: 30, sad: 20, anxious: 10 },
-        { name: "Week 2", happy: 35, neutral: 32, sad: 22, anxious: 11 },
-        { name: "Week 3", happy: 37, neutral: 31, sad: 19, anxious: 13 },
-        { name: "Week 4", happy: 42, neutral: 28, sad: 18, anxious: 12 },
+        {
+          name: "Mon",
+          "Green (Positive)": 15,
+          "Yellow (Moderate)": 10,
+          "Red (Needs Attention)": 5,
+        },
+        {
+          name: "Tue",
+          "Green (Positive)": 12,
+          "Yellow (Moderate)": 8,
+          "Red (Needs Attention)": 10,
+        },
+        {
+          name: "Wed",
+          "Green (Positive)": 8,
+          "Yellow (Moderate)": 12,
+          "Red (Needs Attention)": 10,
+        },
+        {
+          name: "Thu",
+          "Green (Positive)": 10,
+          "Yellow (Moderate)": 15,
+          "Red (Needs Attention)": 5,
+        },
+        {
+          name: "Fri",
+          "Green (Positive)": 18,
+          "Yellow (Moderate)": 7,
+          "Red (Needs Attention)": 5,
+        },
+        {
+          name: "Sat",
+          "Green (Positive)": 5,
+          "Yellow (Moderate)": 3,
+          "Red (Needs Attention)": 2,
+        },
+        {
+          name: "Sun",
+          "Green (Positive)": 2,
+          "Yellow (Moderate)": 2,
+          "Red (Needs Attention)": 1,
+        },
       ];
 
   const mockIssueData = issueData.length
@@ -165,22 +201,45 @@ const TrendsView = () => {
 
       <Row gutter={16}>
         <Col span={24}>
-          <Card title="Mood Trends Over Time" style={{ marginBottom: "20px" }}>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart
+          <Card
+            title="Weekly Mental Health Zone Distribution"
+            style={{ marginBottom: "20px" }}
+          >
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
                 data={mockMoodData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
+                <YAxis
+                  label={{
+                    value: "Number of Respondents",
+                    angle: -90,
+                    position: "insideLeft",
+                  }}
+                />
+                <Tooltip formatter={(value, name) => [value, name]} />
                 <Legend />
-                <Line type="monotone" dataKey="happy" stroke="#00C49F" />
-                <Line type="monotone" dataKey="neutral" stroke="#FFBB28" />
-                <Line type="monotone" dataKey="sad" stroke="#FF8042" />
-                <Line type="monotone" dataKey="anxious" stroke="#0088FE" />
-              </LineChart>
+                <Bar
+                  dataKey="Green (Positive)"
+                  stackId="a"
+                  fill="#00C49F"
+                  name="Green (Positive)"
+                />
+                <Bar
+                  dataKey="Yellow (Moderate)"
+                  stackId="a"
+                  fill="#FFBB28"
+                  name="Yellow (Moderate)"
+                />
+                <Bar
+                  dataKey="Red (Needs Attention)"
+                  stackId="a"
+                  fill="#FF8042"
+                  name="Red (Needs Attention)"
+                />
+              </BarChart>
             </ResponsiveContainer>
           </Card>
         </Col>
