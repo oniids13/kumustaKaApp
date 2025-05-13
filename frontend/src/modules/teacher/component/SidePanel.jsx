@@ -8,6 +8,7 @@ import {
   FaBalanceScale,
   FaChartLine,
   FaFileAlt,
+  FaEnvelope,
 } from "react-icons/fa";
 
 const SidePanel = ({ user, activeModule, setActiveModule }) => {
@@ -34,6 +35,14 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
             onClick={() => setActiveModule("forum")}
           >
             <FaComments /> Discussion Forum
+          </button>
+          <button
+            className={`nav-button ${
+              activeModule === "messaging" ? "active" : ""
+            }`}
+            onClick={() => setActiveModule("messaging")}
+          >
+            <FaEnvelope /> Messages
           </button>
           <button
             className={`nav-button ${activeModule === "posts" ? "active" : ""}`}

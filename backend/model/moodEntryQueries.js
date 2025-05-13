@@ -5,25 +5,51 @@ const { getTodayRange, getDateOfWeek } = require("../utils/dateUtils");
 const checkTodaySubmission = async (userId) => {
   const { todayStart, todayEnd } = getTodayRange();
 
-  const student = await prisma.student.findUnique({
-    where: { userId },
-    select: { id: true },
-  });
+  console.log(
+    `[DEBUG] Checking mood for user ${userId} between ${todayStart.toISOString()} and ${todayEnd.toISOString()}`
+  );
 
-  return await prisma.moodEntry.findFirst({
-    where: {
-      studentId: student.id,
-      createdAt: {
-        gte: todayStart,
-        lte: todayEnd,
+  try {
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!student) {
+      console.log(`[DEBUG] Student not found for userId ${userId}`);
+      return null;
+    }
+
+    console.log(`[DEBUG] Found student ID ${student.id} for user ${userId}`);
+
+    const entry = await prisma.moodEntry.findFirst({
+      where: {
+        studentId: student.id,
+        createdAt: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
       },
-    },
-    select: {
-      id: true,
-      moodLevel: true,
-      createdAt: true,
-    },
-  });
+      select: {
+        id: true,
+        moodLevel: true,
+        createdAt: true,
+      },
+    });
+
+    console.log(
+      `[DEBUG] Mood entry result for student ${student.id}: ${
+        entry ? `Found entry (ID: ${entry.id})` : "No entry found"
+      }`
+    );
+
+    return entry;
+  } catch (error) {
+    console.error(
+      `[ERROR] Error checking today's mood submission: ${error.message}`
+    );
+    throw error;
+  }
 };
 
 const createMoodEntry = async (userId, moodLevel, notes) => {
@@ -33,38 +59,66 @@ const createMoodEntry = async (userId, moodLevel, notes) => {
       throw new Error("Mood level must be between 1-5");
     }
 
-    const student = await prisma.student.findUnique({
-      where: { userId },
-      select: { id: true },
+    // Use a transaction to prevent race conditions
+    return await prisma.$transaction(async (tx) => {
+      const student = await tx.student.findUnique({
+        where: { userId },
+        select: { id: true },
+      });
+
+      if (!student) {
+        throw new Error("Student not found");
+      }
+
+      // Get the date range within the transaction
+      const { todayStart, todayEnd } = getTodayRange();
+
+      // Check for existing entry within the transaction
+      const existingEntry = await tx.moodEntry.findFirst({
+        where: {
+          studentId: student.id,
+          createdAt: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+      });
+
+      if (existingEntry) {
+        console.log(
+          `[INFO] User ${userId} already has a mood entry for today (ID: ${existingEntry.id})`
+        );
+        throw new Error("Already submitted mood entry today");
+      }
+
+      console.log(
+        `[INFO] Creating new mood entry for user ${userId} with mood level ${numericMood}`
+      );
+
+      // Create the entry within the transaction
+      const moodEntry = await tx.moodEntry.create({
+        data: {
+          studentId: student.id,
+          moodLevel: numericMood,
+          notes: notes || null,
+        },
+        select: {
+          id: true,
+          moodLevel: true,
+          notes: true,
+          createdAt: true,
+        },
+      });
+
+      console.log(
+        `[INFO] Successfully created mood entry with ID: ${moodEntry.id}`
+      );
+      return moodEntry;
     });
-
-    if (!student) {
-      throw new Error("Student not found");
-    }
-
-    const existingEntry = await checkTodaySubmission(userId);
-
-    if (existingEntry) {
-      throw new Error("Already submitted mood entry today");
-    }
-
-    const moodEntry = await prisma.moodEntry.create({
-      data: {
-        studentId: student.id,
-        moodLevel: numericMood,
-        notes: notes || null,
-      },
-      select: {
-        id: true,
-        moodLevel: true,
-        notes: true,
-        createdAt: true,
-      },
-    });
-
-    return moodEntry;
   } catch (error) {
-    console.error("Database Error Details:", error);
+    console.error(
+      `[ERROR] Database Error in createMoodEntry: ${error.message}`
+    );
     throw error;
   }
 };

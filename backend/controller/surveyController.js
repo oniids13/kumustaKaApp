@@ -104,7 +104,16 @@ const submitSurveyController = async (req, res) => {
 const checkTodaysSubmissionController = async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log(
+      `[DEBUG] Checking survey submission for user ${userId} at ${new Date().toISOString()}`
+    );
+
     const response = await getTodaysResponse(userId);
+    console.log(
+      `[DEBUG] Survey response result:`,
+      response ? "Response found" : "No response found",
+      response ? `(ID: ${response.id}, created: ${response.createdAt})` : ""
+    );
 
     res.json({
       success: true,
@@ -122,6 +131,7 @@ const checkTodaysSubmissionController = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("[ERROR] Check today survey submission failed:", error);
     res.status(500).json({
       success: false,
       error: error.message,

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Modal, Button, Spinner } from "react-bootstrap";
+import { Modal, Button, Spinner, Alert } from "react-bootstrap";
 
 // Student module components
 import SidePanel from "./component/SidePanel";
@@ -17,17 +17,33 @@ import GoalTracker from "./component/GoalTracker";
 import CreatePostForm from "../../component/ForumPosts/CreatePostForm";
 import PostList from "../../component/ForumPosts/PostList";
 
+// Messaging Component
+import MessagingContainer from "../../component/Messaging/MessagingContainer";
+
 // CSS
 import "./styles/StudentModule.css";
 
 const StudentDashboard = () => {
-  const user = JSON.parse(localStorage.getItem("userData"));
+  // Get user data safely
+  const getUserData = () => {
+    try {
+      const userData = localStorage.getItem("userData");
+      return userData ? JSON.parse(userData) : null;
+    } catch (e) {
+      console.error("Error parsing user data:", e);
+      return null;
+    }
+  };
+
+  const user = getUserData();
+  const isAuthenticated = user && user.token;
 
   const [activeModule, setActiveModule] = useState("forum");
   const [refreshPosts, setRefreshPosts] = useState(false);
 
   const [quote, setQuote] = useState(null);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [dashboardError, setDashboardError] = useState(null);
 
   const navigate = useNavigate();
   const [showAssessmentPrompt, setShowAssessmentPrompt] = useState(false);
@@ -36,6 +52,27 @@ const StudentDashboard = () => {
   const handlePostCreated = () => setRefreshPosts((prev) => !prev);
 
   const renderMainContent = () => {
+    if (!isAuthenticated) {
+      return (
+        <Alert variant="danger">
+          <Alert.Heading>Authentication Error</Alert.Heading>
+          <p>Unable to load dashboard. Please try logging in again.</p>
+          <Button variant="primary" onClick={() => navigate("/login")}>
+            Go to Login
+          </Button>
+        </Alert>
+      );
+    }
+
+    if (dashboardError) {
+      return (
+        <Alert variant="warning">
+          <Alert.Heading>Warning</Alert.Heading>
+          <p>{dashboardError}</p>
+        </Alert>
+      );
+    }
+
     switch (activeModule) {
       case "journal":
         return <Journal />;
@@ -51,6 +88,8 @@ const StudentDashboard = () => {
         return <EmergencyContact />;
       case "goaltracker":
         return <GoalTracker />;
+      case "messaging":
+        return <MessagingContainer />;
       case "forum":
       default:
         return (
@@ -64,10 +103,22 @@ const StudentDashboard = () => {
 
   useEffect(() => {
     const fetchQuote = async () => {
+      if (!isAuthenticated) {
+        return;
+      }
+
+      // Check if quote has already been shown today
+      const today = new Date().toDateString();
+      const quoteShownToday = localStorage.getItem("quoteShownDate") === today;
+
+      if (quoteShownToday) {
+        console.log("Quote already shown today, skipping");
+        return; // Skip showing the quote if already shown today
+      }
+
       try {
-        const token = localStorage.getItem("token");
         const response = await axios.get("http://localhost:3000/api/quotes", {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${user.token}` },
         });
 
         if (Array.isArray(response.data) && response.data.length > 0) {
@@ -76,23 +127,35 @@ const StudentDashboard = () => {
         }
       } catch (err) {
         console.error("Error fetching quote:", err);
+        // Don't show error to user - quotes are non-critical
       }
     };
 
     fetchQuote();
-  }, []);
+  }, [isAuthenticated, user]);
+
+  // Handler for when quote modal is closed
+  const handleCloseQuoteModal = () => {
+    setShowQuoteModal(false);
+
+    // Mark quote as shown for today
+    const today = new Date().toDateString();
+    localStorage.setItem("quoteShownDate", today);
+  };
 
   useEffect(() => {
     const checkOrCreateAssessment = async () => {
-      try {
-        const user = JSON.parse(localStorage.getItem("userData"));
-        const token = user.token;
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
 
+      try {
         // First try to get existing assessment
         try {
           const res = await axios.get(
             "http://localhost:3000/api/initialAssessment/getInitialAssessment",
-            { headers: { Authorization: `Bearer ${token}` } }
+            { headers: { Authorization: `Bearer ${user.token}` } }
           );
 
           // If exists but not completed
@@ -105,22 +168,28 @@ const StudentDashboard = () => {
             await axios.post(
               "http://localhost:3000/api/initialAssessment/createInitialAssessment",
               {},
-              { headers: { Authorization: `Bearer ${token}` } }
+              { headers: { Authorization: `Bearer ${user.token}` } }
             );
             setShowAssessmentPrompt(true);
           } else {
-            throw getError;
+            setDashboardError(
+              "There was an error checking your assessment status. Some features may be limited."
+            );
+            console.error("Assessment fetch error:", getError);
           }
         }
       } catch (err) {
         console.error("Assessment error:", err);
+        setDashboardError(
+          "There was an error initializing your dashboard. Some features may be limited."
+        );
       } finally {
         setLoading(false);
       }
     };
 
     checkOrCreateAssessment();
-  }, []);
+  }, [isAuthenticated, user]);
 
   const handleAssessmentResponse = (takeAssessment) => {
     setShowAssessmentPrompt(false);
@@ -155,8 +224,8 @@ const StudentDashboard = () => {
 
       {/* Quote Modal */}
       <Modal
-        show={showQuoteModal}
-        onHide={() => setShowQuoteModal(false)}
+        show={showQuoteModal && quote}
+        onHide={handleCloseQuoteModal}
         centered
       >
         <Modal.Header closeButton>
@@ -173,7 +242,7 @@ const StudentDashboard = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="primary" onClick={() => setShowQuoteModal(false)}>
+          <Button variant="primary" onClick={handleCloseQuoteModal}>
             Let's Start the Day!
           </Button>
         </Modal.Footer>

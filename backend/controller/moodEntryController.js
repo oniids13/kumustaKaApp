@@ -68,15 +68,40 @@ const getRecentMoodEntryController = async (req, res) => {
 const checkTodaySubmissionController = async (req, res) => {
   try {
     const userId = req.user.id;
+    const requestTime = new Date();
+
+    console.log(
+      `[DEBUG] Checking mood entry for user ${userId} at ${requestTime.toISOString()}`
+    );
 
     const entry = await checkTodaySubmission(userId);
 
-    return res.json({
+    const responseData = {
       hasSubmitted: !!entry,
       todayEntry: entry || null,
-    });
+      debug: {
+        requestTime: requestTime.toISOString(),
+        responseTime: new Date().toISOString(),
+        timeZone: process.env.TZ || "Not specified",
+        // Include more details about the process
+        entryExists: !!entry,
+        entryId: entry?.id,
+        entryCreatedAt: entry?.createdAt,
+      },
+    };
+
+    console.log(
+      `[DEBUG] Mood check response for user ${userId}:`,
+      JSON.stringify(responseData, null, 2)
+    );
+
+    return res.json(responseData);
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    console.error("[ERROR] Check today mood submission failed:", error);
+    return res.status(500).json({
+      error: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
   }
 };
 

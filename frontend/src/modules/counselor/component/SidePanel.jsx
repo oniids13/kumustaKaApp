@@ -6,6 +6,7 @@ import {
   FaComments,
   FaHistory,
   FaTachometerAlt,
+  FaEnvelope,
 } from "react-icons/fa";
 import "../styles/SidePanel.css";
 
@@ -54,6 +55,14 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
           onClick={() => setActiveModule("reports")}
         >
           <FaClipboardList /> Reports
+        </button>
+        <button
+          className={`nav-button ${
+            activeModule === "messaging" ? "active" : ""
+          }`}
+          onClick={() => setActiveModule("messaging")}
+        >
+          <FaEnvelope /> Messages
         </button>
         <button
           className={`nav-button ${activeModule === "forum" ? "active" : ""}`}

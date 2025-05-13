@@ -13,6 +13,9 @@ import "./styles/CounselorDashboard.css";
 import CreatePostForm from "../../component/ForumPosts/CreatePostForm";
 import PostList from "../../component/ForumPosts/PostList";
 
+// Messaging Component
+import MessagingContainer from "../../component/Messaging/MessagingContainer";
+
 const CounselorDashboard = () => {
   const user = JSON.parse(localStorage.getItem("userData"));
   const [activeModule, setActiveModule] = useState("dashboard");
@@ -30,6 +33,8 @@ const CounselorDashboard = () => {
         return <InterventionPlans />;
       case "reports":
         return <Reports />;
+      case "messaging":
+        return <MessagingContainer />;
       case "forum":
         return (
           <>

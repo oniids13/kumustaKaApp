@@ -6,6 +6,9 @@ import SidePanel from "./component/SidePanel";
 import CreatePostForm from "../../component/ForumPosts/CreatePostForm";
 import PostList from "../../component/ForumPosts/PostList";
 
+// Messaging Component
+import MessagingContainer from "../../component/Messaging/MessagingContainer";
+
 // CSS
 import "./styles/TeacherModule.css";
 
@@ -29,6 +32,8 @@ const TeacherDashboard = () => {
         return <TrendsView />;
       case "reports":
         return <ReportGenerator />;
+      case "messaging":
+        return <MessagingContainer />;
       case "forum":
       default:
         return (

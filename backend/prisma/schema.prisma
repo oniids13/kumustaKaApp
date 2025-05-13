@@ -31,7 +31,12 @@ model User {
   // Relation fields
   forumPosts ForumPost[]
   comments   Comment[]
-
+  
+  // Communication
+  sentMessages     Message[]        @relation("SentMessages")
+  receivedMessages Message[]        @relation("ReceivedMessages")
+  conversations    Conversation[]
+  
   @@map("users")
 }
 
@@ -345,4 +350,33 @@ model Report {
 
   @@index([counselorId])
   @@map("reports")
+}
+
+// Communication
+model Conversation {
+  id          String    @id @default(uuid())
+  title       String?
+  participants User[]
+  messages    Message[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isGroup     Boolean   @default(false)
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  content        String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+  senderId       String
+  recipients     User[]       @relation("ReceivedMessages")
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@map("messages")
 }

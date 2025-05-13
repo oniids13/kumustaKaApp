@@ -27,14 +27,28 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(morgan("dev"));
 
-// Rate limiting
-const limiter = rateLimit({
+// Configure more permissive rate limiting for development
+const isProduction = process.env.NODE_ENV === "production";
+
+// Default limiter for all routes
+const defaultLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: isProduction ? 500 : 1000, // Increased limits, more permissive in dev
   standardHeaders: true,
   legacyHeaders: false,
+  message: "Too many requests from this IP, please try again later",
+  skipSuccessfulRequests: true, // Only count failed requests against the limit
 });
-app.use(limiter);
+
+// More permissive limiter for read-heavy routes
+const readLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: isProduction ? 300 : 2000, // Much higher limit for reading data
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: "Too many read requests, please try again shortly",
+  skipSuccessfulRequests: true,
+});
 
 // Routers
 const userRouter = require("./router/userRouter");
@@ -52,6 +66,7 @@ const goalTrackerRouter = require("./router/goalTrackerRouter");
 const counselorRouter = require("./router/counselorRouter");
 const adminRouter = require("./router/adminRouter");
 const teacherRouter = require("./router/teacherRouter");
+const communicationRouter = require("./router/communicationRouter");
 
 app.use(
   cors({
@@ -74,6 +89,21 @@ createUploadsDir();
 app.use(passport.initialize());
 passport.use(jwtStrategy);
 
+// Apply different rate limits to different routes
+// Login routes - strict limits to prevent brute force
+app.use("/api/login", defaultLimiter);
+
+// Read-heavy routes - more permissive limits
+app.use("/api/quotes", readLimiter);
+app.use("/api/forum", readLimiter);
+app.use("/api/survey/status", readLimiter);
+app.use("/api/moodEntry/checkToday", readLimiter);
+app.use("/api/initialAssessment/getInitialAssessment", readLimiter);
+app.use("/api/communication/conversations", readLimiter);
+
+// Apply default limiter to all other routes
+app.use(defaultLimiter);
+
 // Routes
 app.use("/api/user", userRouter);
 app.use("/api", loginRouter);
@@ -90,6 +120,7 @@ app.use("/api/goals", goalTrackerRouter);
 app.use("/api/counselor", counselorRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/teacher", teacherRouter);
+app.use("/api/communication", communicationRouter);
 
 // Serve static files from the uploads directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

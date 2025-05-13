@@ -1,10 +1,18 @@
+const { getPHTime } = require("./phTime");
+
 const getTodayRange = () => {
-  const todayStart = new Date();
+  // Use Philippine time for consistency across the app
+  const phNow = getPHTime();
+
+  const todayStart = new Date(phNow);
   todayStart.setHours(0, 0, 0, 0);
 
-  const todayEnd = new Date();
+  const todayEnd = new Date(phNow);
   todayEnd.setHours(23, 59, 59, 999);
 
+  console.log(
+    `[DEBUG] Today's range in PH time: ${todayStart.toISOString()} to ${todayEnd.toISOString()}`
+  );
   return { todayStart, todayEnd };
 };
 
