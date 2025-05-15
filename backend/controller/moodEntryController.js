@@ -2,18 +2,24 @@ const {
   createMoodEntry,
   getRecentMoodEntry,
   checkTodaySubmission,
+  getAllMoodEntries,
 } = require("../model/moodEntryQueries");
 
 const createMoodEntryController = async (req, res) => {
   const userId = req.user.id;
-  const { moodLevel, notes } = req.body;
+  const { moodLevel, notes, forceCreate } = req.body;
 
   try {
     if (!userId) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    const newMoodEntry = await createMoodEntry(userId, moodLevel, notes);
+    const newMoodEntry = await createMoodEntry(
+      userId,
+      moodLevel,
+      notes,
+      forceCreate === true
+    );
 
     return res.status(201).json({
       success: true,
@@ -69,24 +75,42 @@ const checkTodaySubmissionController = async (req, res) => {
   try {
     const userId = req.user.id;
     const requestTime = new Date();
+    const clientTime = req.headers["x-client-time"]
+      ? new Date(req.headers["x-client-time"])
+      : null;
+    const clientTimezone = req.headers["x-client-timezone"] || "Not provided";
+    const forceCheck = req.query.forceCheck === "true";
 
     console.log(
-      `[DEBUG] Checking mood entry for user ${userId} at ${requestTime.toISOString()}`
+      `[DEBUG] Checking mood entry for user ${userId}:
+      - Server time: ${requestTime.toISOString()}
+      - Client time: ${clientTime ? clientTime.toISOString() : "Not provided"}
+      - Client timezone: ${clientTimezone}
+      - Force check: ${forceCheck}`
     );
 
-    const entry = await checkTodaySubmission(userId);
+    // Get the entry result - only call this once
+    const result = await checkTodaySubmission(userId);
+    const { entry, debugInfo } = result || { entry: null, debugInfo: {} };
+
+    // Allow overriding if forceCheck is true
+    const hasSubmitted = forceCheck ? false : !!entry;
 
     const responseData = {
-      hasSubmitted: !!entry,
+      hasSubmitted,
       todayEntry: entry || null,
       debug: {
         requestTime: requestTime.toISOString(),
         responseTime: new Date().toISOString(),
         timeZone: process.env.TZ || "Not specified",
+        clientTime: clientTime ? clientTime.toISOString() : "Not provided",
+        clientTimezone,
+        dateCalculation: debugInfo || {},
         // Include more details about the process
         entryExists: !!entry,
         entryId: entry?.id,
         entryCreatedAt: entry?.createdAt,
+        forceCheckApplied: forceCheck,
       },
     };
 
@@ -105,8 +129,32 @@ const checkTodaySubmissionController = async (req, res) => {
   }
 };
 
+const getAllMoodEntriesController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    if (!userId) {
+      return res.status(403).json([]); // Return empty array for consistency
+    }
+
+    let entries = await getAllMoodEntries(userId);
+
+    // Ensure we're working with an array
+    if (!Array.isArray(entries)) {
+      console.warn("getAllMoodEntries did not return an array");
+      entries = [];
+    }
+
+    return res.status(200).json(entries); // Direct array response
+  } catch (error) {
+    console.error("Error getting all mood entries:", error);
+    return res.status(500).json([]); // Always return array
+  }
+};
+
 module.exports = {
   createMoodEntryController,
   getRecentMoodEntryController,
   checkTodaySubmissionController,
+  getAllMoodEntriesController,
 };

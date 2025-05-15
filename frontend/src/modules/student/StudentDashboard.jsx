@@ -41,6 +41,11 @@ const StudentDashboard = () => {
   const [activeModule, setActiveModule] = useState("forum");
   const [refreshPosts, setRefreshPosts] = useState(false);
 
+  // Add debug logging for activeModule changes
+  useEffect(() => {
+    console.log("[DEBUG] Active module changed to:", activeModule);
+  }, [activeModule]);
+
   const [quote, setQuote] = useState(null);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [dashboardError, setDashboardError] = useState(null);
@@ -111,12 +116,22 @@ const StudentDashboard = () => {
       const today = new Date().toDateString();
       const quoteShownToday = localStorage.getItem("quoteShownDate") === today;
 
-      if (quoteShownToday) {
+      // Get initial login date from localStorage to check if this is a new user
+      const firstLogin = localStorage.getItem("firstLoginDate");
+      const isNewUser = !firstLogin;
+
+      // For a new user, always show a quote regardless of quoteShownToday
+      if (!isNewUser && quoteShownToday) {
         console.log("Quote already shown today, skipping");
-        return; // Skip showing the quote if already shown today
+        return; // Skip showing the quote if already shown today and not a new user
       }
 
       try {
+        // If this is a first login, save the date
+        if (isNewUser) {
+          localStorage.setItem("firstLoginDate", today);
+        }
+
         const response = await axios.get("http://localhost:3000/api/quotes", {
           headers: { Authorization: `Bearer ${user.token}` },
         });
@@ -146,6 +161,14 @@ const StudentDashboard = () => {
   useEffect(() => {
     const checkOrCreateAssessment = async () => {
       if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
+
+      // Check if user has dismissed the assessment prompt in this session
+      const assessmentPromptSeen =
+        localStorage.getItem("assessmentPromptSeen") === "true";
+      if (assessmentPromptSeen) {
         setLoading(false);
         return;
       }
@@ -192,9 +215,14 @@ const StudentDashboard = () => {
   }, [isAuthenticated, user]);
 
   const handleAssessmentResponse = (takeAssessment) => {
+    // Always hide the modal
     setShowAssessmentPrompt(false);
+
     if (takeAssessment) {
       navigate("/student/initial-assessment");
+    } else {
+      // Mark the assessment as seen for this session to prevent it from showing again immediately
+      localStorage.setItem("assessmentPromptSeen", "true");
     }
   };
 
@@ -256,7 +284,7 @@ const StudentDashboard = () => {
         keyboard={false}
         centered
       >
-        <Modal.Header closeButton>
+        <Modal.Header>
           <Modal.Title>Welcome to Your Mental Health Journey</Modal.Title>
         </Modal.Header>
         <Modal.Body>

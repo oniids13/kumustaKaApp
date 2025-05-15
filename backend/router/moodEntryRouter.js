@@ -4,8 +4,15 @@ const {
   createMoodEntryController,
   getRecentMoodEntryController,
   checkTodaySubmissionController,
+  getAllMoodEntriesController,
 } = require("../controller/moodEntryController");
 const moodEntryRouter = Router();
+
+moodEntryRouter.post(
+  "/create",
+  passport.authenticate("jwt", { session: false }),
+  createMoodEntryController
+);
 
 moodEntryRouter.post(
   "/newMoodEntry",
@@ -17,6 +24,12 @@ moodEntryRouter.get(
   "/weeklyMoodEntries/:weekNumber",
   passport.authenticate("jwt", { session: false }),
   getRecentMoodEntryController
+);
+
+moodEntryRouter.get(
+  "/allMoodEntries",
+  passport.authenticate("jwt", { session: false }),
+  getAllMoodEntriesController
 );
 
 moodEntryRouter.get(

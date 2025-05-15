@@ -9,6 +9,8 @@ import {
   FaPenSquare,
   FaBullseye,
   FaEnvelope,
+  FaSmile,
+  FaThermometerHalf,
 } from "react-icons/fa";
 
 import "../styles/SidePanel.css";
@@ -54,12 +56,15 @@ const saveMoodSubmissionToStorage = () => {
 };
 
 const SidePanel = ({ user, activeModule, setActiveModule }) => {
-  // Initialize state with both API check and localStorage check
+  // Initialize state based on localStorage check
+  const initialSubmittedState = checkLocalStorageMoodSubmission();
+  console.log(`[DEBUG] Initial localStorage check: ${initialSubmittedState}`);
+
   const [moodRating, setMoodRating] = useState(null);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmittedToday, setHasSubmittedToday] = useState(
-    checkLocalStorageMoodSubmission()
+    initialSubmittedState
   );
   const [errorMessage, setErrorMessage] = useState(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -91,6 +96,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
+        timeout: 8000, // Add reasonable timeout
       });
 
       console.log("[DEBUG] Raw mood check response:", response.data);
@@ -122,6 +128,14 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
       return hasSubmitted;
     } catch (error) {
       console.error("[ERROR] Error checking mood submission:", error);
+
+      // If API check fails, rely on localStorage (fail safely)
+      const hasLocalRecord = checkLocalStorageMoodSubmission();
+      if (hasLocalRecord) {
+        setHasSubmittedToday(true);
+        return true;
+      }
+
       return false;
     }
   };
@@ -138,9 +152,6 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
     setErrorMessage(null);
 
     try {
-      // Immediately disable the form
-      setHasSubmittedToday(true);
-
       console.log("[INFO] Submitting mood entry with level:", moodRating);
 
       const response = await axios.post(
@@ -157,30 +168,25 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
         }
       );
 
+      console.log("[DEBUG] Mood submission response:", response);
+
       if (response.status === 201) {
-        setMoodRating(null);
-        setNotes("");
         console.log("[SUCCESS] Mood entry recorded successfully");
 
-        // Save submission to localStorage for persistence across refreshes
-        saveMoodSubmissionToStorage();
+        // Clear form data
+        setMoodRating(null);
+        setNotes("");
 
-        // Ensure the UI shows that entry has been submitted
+        // Update both localStorage and state
+        saveMoodSubmissionToStorage();
         setHasSubmittedToday(true);
-        console.log(
-          "[DEBUG] hasSubmittedToday set to true after successful submission"
-        );
 
         alert("Mood recorded successfully!");
       } else {
-        // If there's an unexpected response status, revert the UI state
-        setHasSubmittedToday(false);
         throw new Error(response.data.message || "Failed to record mood");
       }
     } catch (error) {
       console.error("[ERROR] Error submitting mood:", error);
-      // Revert the UI state if there was an error
-      setHasSubmittedToday(false);
 
       // Show error message to user
       setErrorMessage(
@@ -191,31 +197,35 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
       );
     } finally {
       setIsSubmitting(false);
-
-      // Do one final check to ensure UI state is correct
-      setTimeout(() => {
-        console.log("[DEBUG] Final check after submission");
-        checkTodaySubmission();
-      }, 1500);
     }
   };
 
-  // Force check for today's submission on component mount
+  // Force check for today's submission on component mount and set up periodic checks
   useEffect(() => {
-    console.log("[DEBUG] Component mounted - checking mood submission status");
+    console.log(
+      "[DEBUG] Component mounted - performing API check for mood submission"
+    );
 
-    // Check localStorage first (already done in useState initialization)
-    const hasLocalRecord = checkLocalStorageMoodSubmission();
-    console.log(`[DEBUG] Initial localStorage check: ${hasLocalRecord}`);
+    // Set initial state from localStorage first
+    if (initialSubmittedState) {
+      setHasSubmittedToday(true);
+    }
 
-    // Still do an API check to keep things in sync
-    checkTodaySubmission();
+    // Then verify with API
+    const verifySubmissionStatus = async () => {
+      try {
+        await checkTodaySubmission();
+      } catch (error) {
+        console.error("[ERROR] Failed to verify submission status:", error);
+      }
+    };
 
-    // Set up periodic checks
+    verifySubmissionStatus();
+
+    // Set up periodic checks every 30 seconds
     const intervalId = setInterval(() => {
-      console.log("[DEBUG] Running periodic mood submission check");
       checkTodaySubmission();
-    }, 30000); // Check every 30 seconds
+    }, 30000);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -249,20 +259,41 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
     return cleanup;
   }, []);
 
+  // Add synchronization effect to ensure UI consistency
+  useEffect(() => {
+    // If state shows submitted, ensure localStorage is in sync
+    if (hasSubmittedToday) {
+      saveMoodSubmissionToStorage();
+    }
+
+    console.log(`[DEBUG] Mood submission state updated: ${hasSubmittedToday}`);
+  }, [hasSubmittedToday]);
+
   // Navigation Buttons
-  const renderNavButton = (module, icon, label, count) => (
-    <button
-      className={`nav-button ${activeModule === module ? "active" : ""}`}
-      onClick={() => setActiveModule(module)}
-    >
-      {icon} {label}
-      {count > 0 && (
-        <Badge pill bg="danger" className="notification-badge">
-          {count}
-        </Badge>
-      )}
-    </button>
-  );
+  const renderNavButton = (module, icon, label, count) => {
+    console.log(
+      `[DEBUG] Rendering button for module: ${module}, active: ${
+        activeModule === module
+      }`
+    );
+
+    return (
+      <button
+        className={`nav-button ${activeModule === module ? "active" : ""}`}
+        onClick={() => {
+          console.log(`[DEBUG] NavButton clicked: ${module}`);
+          setActiveModule(module);
+        }}
+      >
+        {icon} {label}
+        {count > 0 && (
+          <Badge pill bg="danger" className="notification-badge">
+            {count}
+          </Badge>
+        )}
+      </button>
+    );
+  };
 
   return (
     <>
@@ -290,18 +321,20 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
           Final state used for rendering={String(finalSubmittedState)}
         </div>
 
-        {finalSubmittedState ? (
+        {hasSubmittedToday ? (
           <div className="already-submitted alert alert-success text-center rounded shadow">
             <FaCheck className="text-success" />
             <p>You've already submitted your mood today</p>
             <p className="text-muted">Come back tomorrow!</p>
-            <button
-              className="btn btn-sm btn-outline-secondary mt-2"
-              onClick={handleRefreshClick}
-              aria-label="Refresh mood submission status"
-            >
-              Refresh Status
-            </button>
+            <div className="d-flex justify-content-center mt-2">
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={handleRefreshClick}
+                aria-label="Refresh mood submission status"
+              >
+                Refresh Status
+              </button>
+            </div>
           </div>
         ) : (
           <>
@@ -343,7 +376,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
                   aria-label={`Mood level ${mood.level}: ${mood.label}`}
                   disabled={isSubmitting}
                 >
-                  {mood.icon}
+                  <span className="mood-emoji">{mood.icon}</span>
                 </button>
               ))}
             </div>

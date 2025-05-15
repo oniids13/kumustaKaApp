@@ -4,16 +4,31 @@ const getTodayRange = () => {
   // Use Philippine time for consistency across the app
   const phNow = getPHTime();
 
+  // Get user's local date without time component
   const todayStart = new Date(phNow);
   todayStart.setHours(0, 0, 0, 0);
 
   const todayEnd = new Date(phNow);
   todayEnd.setHours(23, 59, 59, 999);
 
+  // Add debugging information
   console.log(
-    `[DEBUG] Today's range in PH time: ${todayStart.toISOString()} to ${todayEnd.toISOString()}`
+    `[DEBUG] Date Range Calculation:
+    - Server time: ${new Date().toISOString()}
+    - Adjusted PH time: ${phNow.toISOString()}
+    - Today's range: ${todayStart.toISOString()} to ${todayEnd.toISOString()}`
   );
-  return { todayStart, todayEnd };
+
+  return {
+    todayStart,
+    todayEnd,
+    debugInfo: {
+      serverTime: new Date().toISOString(),
+      phTime: phNow.toISOString(),
+      calculatedStart: todayStart.toISOString(),
+      calculatedEnd: todayEnd.toISOString(),
+    },
+  };
 };
 
 const getDateOfWeek = (week, year) => {

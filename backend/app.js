@@ -149,6 +149,27 @@ cron.schedule("5 0 * * 1", async () => {
   }
 });
 
+// Add debugging middleware to log all requests
+app.use((req, res, next) => {
+  const startTime = new Date();
+  console.log(
+    `[${startTime.toISOString()}] ${req.method} ${req.originalUrl} - Started`
+  );
+
+  // Capture response finish event
+  res.on("finish", () => {
+    const endTime = new Date();
+    const duration = endTime - startTime;
+    console.log(
+      `[${endTime.toISOString()}] ${req.method} ${
+        req.originalUrl
+      } - Finished in ${duration}ms with status ${res.statusCode}`
+    );
+  });
+
+  next();
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

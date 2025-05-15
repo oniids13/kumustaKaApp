@@ -2,9 +2,12 @@
 .mood-entry-form {
   background-color: #fefefe;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.5rem 1rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* Title */
@@ -20,26 +23,27 @@
 .mood-options {
   display: flex;
   justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  gap: 0.3rem;
   margin-bottom: 1rem;
+  flex-wrap: nowrap;
 }
 
 /* Individual Mood Option Button */
 .mood-option {
   background-color: #ffffff;
   border: 2px solid transparent;
-  border-radius: 10px;
+  border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   cursor: pointer;
-  padding: 0.75rem;
+  padding: 0.35rem;
   flex: 1;
-  min-width: 40px;
+  font-size: 1rem;
   aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease-in-out;
+  max-width: 40px;
 }
 
 .mood-option:hover {
@@ -56,6 +60,12 @@
 
 .mood-icon {
   font-size: 1.8rem;
+}
+
+/* Mood Emoji Style */
+.mood-emoji {
+  font-size: 1rem;
+  display: block;
 }
 
 /* Notes Input */
@@ -95,13 +105,44 @@
 
 /* Responsive Fixes */
 @media (max-width: 500px) {
+  .mood-options {
+    gap: 0.2rem;
+  }
+
   .mood-option {
-    min-width: 40px;
-    padding: 0.4rem;
+    padding: 0.3rem;
+    font-size: 0.9rem;
+    max-width: 34px;
+    border-width: 1px;
+    border-radius: 6px;
+  }
+
+  .mood-emoji {
+    font-size: 0.9rem;
   }
 
   .mood-icon {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
+  }
+
+  .mood-entry-form {
+    padding: 1.2rem 0.8rem;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 350px) {
+  .mood-options {
+    gap: 0.15rem;
+  }
+
+  .mood-option {
+    max-width: 28px;
+    padding: 0.25rem;
+  }
+
+  .mood-emoji {
+    font-size: 0.8rem;
   }
 }
 

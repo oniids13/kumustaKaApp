@@ -3,7 +3,8 @@ const prisma = new PrismaClient();
 const { getTodayRange, getDateOfWeek } = require("../utils/dateUtils");
 
 const checkTodaySubmission = async (userId) => {
-  const { todayStart, todayEnd } = getTodayRange();
+  const dateRange = getTodayRange();
+  const { todayStart, todayEnd, debugInfo } = dateRange;
 
   console.log(
     `[DEBUG] Checking mood for user ${userId} between ${todayStart.toISOString()} and ${todayEnd.toISOString()}`
@@ -17,7 +18,7 @@ const checkTodaySubmission = async (userId) => {
 
     if (!student) {
       console.log(`[DEBUG] Student not found for userId ${userId}`);
-      return null;
+      return { entry: null, debugInfo };
     }
 
     console.log(`[DEBUG] Found student ID ${student.id} for user ${userId}`);
@@ -43,7 +44,7 @@ const checkTodaySubmission = async (userId) => {
       }`
     );
 
-    return entry;
+    return { entry, debugInfo };
   } catch (error) {
     console.error(
       `[ERROR] Error checking today's mood submission: ${error.message}`
@@ -52,7 +53,12 @@ const checkTodaySubmission = async (userId) => {
   }
 };
 
-const createMoodEntry = async (userId, moodLevel, notes) => {
+const createMoodEntry = async (
+  userId,
+  moodLevel,
+  notes,
+  forceCreate = false
+) => {
   try {
     const numericMood = Number(moodLevel);
     if (![1, 2, 3, 4, 5].includes(numericMood)) {
@@ -73,22 +79,25 @@ const createMoodEntry = async (userId, moodLevel, notes) => {
       // Get the date range within the transaction
       const { todayStart, todayEnd } = getTodayRange();
 
-      // Check for existing entry within the transaction
-      const existingEntry = await tx.moodEntry.findFirst({
-        where: {
-          studentId: student.id,
-          createdAt: {
-            gte: todayStart,
-            lte: todayEnd,
+      // Only check for existing entries if forceCreate is false
+      if (!forceCreate) {
+        // Check for existing entry within the transaction
+        const existingEntry = await tx.moodEntry.findFirst({
+          where: {
+            studentId: student.id,
+            createdAt: {
+              gte: todayStart,
+              lte: todayEnd,
+            },
           },
-        },
-      });
+        });
 
-      if (existingEntry) {
-        console.log(
-          `[INFO] User ${userId} already has a mood entry for today (ID: ${existingEntry.id})`
-        );
-        throw new Error("Already submitted mood entry today");
+        if (existingEntry) {
+          console.log(
+            `[INFO] User ${userId} already has a mood entry for today (ID: ${existingEntry.id})`
+          );
+          throw new Error("Already submitted mood entry today");
+        }
       }
 
       console.log(
@@ -173,4 +182,36 @@ const getRecentMoodEntry = async (userId, weekNumber) => {
   }
 };
 
-module.exports = { createMoodEntry, getRecentMoodEntry, checkTodaySubmission };
+const getAllMoodEntries = async (userId) => {
+  try {
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
+    const entries = await prisma.moodEntry.findMany({
+      where: {
+        studentId: student.id,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return entries;
+  } catch (error) {
+    console.error("Error getting all mood entries:", error);
+    throw new Error("Error getting all mood entries");
+  }
+};
+
+module.exports = {
+  createMoodEntry,
+  getRecentMoodEntry,
+  checkTodaySubmission,
+  getAllMoodEntries,
+};
