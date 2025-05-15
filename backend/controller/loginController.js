@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { getUserLogin } = require("../model/userQueries");
+const { getUserLogin, updateUserLastLogin } = require("../model/userQueries");
 require("dotenv").config();
 
 const secretKey = process.env.JWT_SECRETKEY;
@@ -12,6 +12,9 @@ const loginController = async (req, res) => {
   if (!user || !user.id) {
     return res.status(401).json({ message: "Invalid email or password" });
   }
+
+  // Update last login timestamp
+  await updateUserLastLogin(user.id);
 
   const tokenPayload = {
     id: user.id,

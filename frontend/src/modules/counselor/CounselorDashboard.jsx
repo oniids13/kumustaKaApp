@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import SidePanel from "./component/SidePanel";
 import StudentAnalytics from "./component/StudentAnalytics";
 import InterventionPlans from "./component/InterventionPlans";
@@ -20,6 +21,16 @@ const CounselorDashboard = () => {
   const user = JSON.parse(localStorage.getItem("userData"));
   const [activeModule, setActiveModule] = useState("dashboard");
   const [refreshPosts, setRefreshPosts] = useState(false);
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const studentId = searchParams.get("studentId");
+
+  useEffect(() => {
+    // Check if we're on the analytics page
+    if (location.pathname === "/counselor/analytics") {
+      setActiveModule("analytics");
+    }
+  }, [location]);
 
   const handlePostCreated = () => setRefreshPosts((prev) => !prev);
 
@@ -28,7 +39,7 @@ const CounselorDashboard = () => {
       case "dashboard":
         return <MentalHealthOverview />;
       case "analytics":
-        return <StudentAnalytics />;
+        return <StudentAnalytics initialStudentId={studentId} />;
       case "interventions":
         return <InterventionPlans />;
       case "reports":

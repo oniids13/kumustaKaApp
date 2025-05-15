@@ -64,109 +64,13 @@ const UserManagement = () => {
 
       if (response.data && response.data.users) {
         console.log("API User data:", response.data.users);
-
-        // Process API data to ensure lastLogin is properly set
-        const processedUsers = response.data.users.map((apiUser) => {
-          // If lastLogin is null, set it to a date based on user's creation date or now
-          if (!apiUser.lastLogin) {
-            // If there's a creation date, use that minus a random hour offset
-            const randomHours = Math.floor(Math.random() * 24) + 1;
-
-            if (apiUser.createdAt) {
-              const creationDate = new Date(apiUser.createdAt);
-              creationDate.setHours(creationDate.getHours() + randomHours);
-              return {
-                ...apiUser,
-                lastLogin: creationDate.toISOString(),
-              };
-            } else {
-              // Or just set to a recent time
-              const recentTime = new Date();
-              recentTime.setHours(recentTime.getHours() - randomHours);
-              return {
-                ...apiUser,
-                lastLogin: recentTime.toISOString(),
-              };
-            }
-          }
-          return apiUser;
-        });
-
-        setUsers(processedUsers);
+        setUsers(response.data.users);
+      } else {
+        setError("No user data received from server");
       }
     } catch (err) {
       console.error("Error fetching users:", err);
-      // For demonstration purposes, use mock data
-      const mockUsers = [
-        {
-          id: "1",
-          firstName: "John",
-          lastName: "Doe",
-          email: "john.doe@example.com",
-          role: "STUDENT",
-          avatar: "",
-          status: "ACTIVE",
-          lastLogin: new Date(Date.now() - 2 * 3600000).toISOString(),
-          createdAt: "2023-04-15T08:45:00.000Z",
-        },
-        {
-          id: "2",
-          firstName: "Jane",
-          lastName: "Smith",
-          email: "jane.smith@example.com",
-          role: "TEACHER",
-          avatar: "",
-          status: "ACTIVE",
-          lastLogin: new Date(Date.now() - 5 * 3600000).toISOString(),
-          createdAt: "2023-03-10T10:30:00.000Z",
-        },
-        {
-          id: "3",
-          firstName: "Michael",
-          lastName: "Johnson",
-          email: "michael.johnson@example.com",
-          role: "COUNSELOR",
-          avatar: "",
-          status: "INACTIVE",
-          lastLogin: new Date(Date.now() - 72 * 3600000).toISOString(),
-          createdAt: "2023-05-22T14:15:00.000Z",
-        },
-        {
-          id: "4",
-          firstName: "Sarah",
-          lastName: "Williams",
-          email: "sarah.williams@example.com",
-          role: "ADMIN",
-          avatar: "",
-          status: "ACTIVE",
-          lastLogin: new Date(Date.now() - 1 * 3600000).toISOString(),
-          createdAt: "2023-01-05T09:00:00.000Z",
-        },
-        {
-          id: "5",
-          firstName: "David",
-          lastName: "Brown",
-          email: "david.brown@example.com",
-          role: "STUDENT",
-          avatar: "",
-          status: "ACTIVE",
-          lastLogin: new Date(Date.now() - 8 * 3600000).toISOString(),
-          createdAt: "2023-06-30T11:20:00.000Z",
-        },
-      ];
-
-      // Print each user's lastLogin to debug
-      mockUsers.forEach((user) => {
-        console.log(
-          `${user.firstName}'s lastLogin:`,
-          user.lastLogin,
-          typeof user.lastLogin
-        );
-      });
-
-      console.log("Using mock data:", mockUsers);
-      setUsers(mockUsers);
-      setError("Could not fetch user data. Displaying demonstration data.");
+      setError(`Failed to fetch users: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -203,9 +107,7 @@ const UserManagement = () => {
       fetchUsers();
     } catch (err) {
       console.error("Error deleting user:", err);
-      // For demonstration, update local state
-      setUsers(users.filter((u) => u.id !== userId));
-      message.success("User deleted successfully");
+      message.error(`Failed to delete user: ${err.message}`);
     }
   };
 
@@ -225,36 +127,10 @@ const UserManagement = () => {
         }
       );
       message.success(`User ${newStatus.toLowerCase()}`);
-
-      // Update users in the state, ensuring we preserve all existing properties
-      setUsers(
-        users.map((u) =>
-          u.id === record.id
-            ? {
-                ...u,
-                status: newStatus,
-                // Keep the existing lastLogin to avoid changing it
-                lastLogin: u.lastLogin || record.lastLogin,
-              }
-            : u
-        )
-      );
+      fetchUsers();
     } catch (err) {
       console.error("Error updating user status:", err);
-      // For demonstration, update local state
-      setUsers(
-        users.map((u) =>
-          u.id === record.id
-            ? {
-                ...u,
-                status: newStatus,
-                // Keep the existing lastLogin to avoid changing it
-                lastLogin: u.lastLogin || record.lastLogin,
-              }
-            : u
-        )
-      );
-      message.success(`User ${newStatus.toLowerCase()}`);
+      message.error(`Failed to update user status: ${err.message}`);
     }
   };
 
@@ -276,54 +152,27 @@ const UserManagement = () => {
               }
             );
             message.success("User updated successfully");
-
-            // Update local state
-            setUsers(
-              users.map((u) =>
-                u.id === currentUser.id ? { ...u, ...values } : u
-              )
-            );
           } else {
             // Create new user
-            const newUser = {
-              id: String(users.length + 1),
-              ...values,
-              avatar: "",
-              lastLogin: new Date().toISOString(), // Set current time as last login
-              createdAt: new Date().toISOString(),
-              status: "ACTIVE",
-            };
-
-            try {
-              await axios.post(
-                "http://localhost:3000/api/admin/users",
-                values,
-                {
-                  headers: {
-                    Authorization: `Bearer ${user.token}`,
-                    "Content-Type": "application/json",
-                  },
-                }
-              );
-              message.success("User created successfully");
-            } catch (apiErr) {
-              console.error("API error creating user:", apiErr);
-              // Continue with mock data flow
-            }
-
-            // Update local state with new user
-            setUsers([...users, newUser]);
+            await axios.post("http://localhost:3000/api/admin/users", values, {
+              headers: {
+                Authorization: `Bearer ${user.token}`,
+                "Content-Type": "application/json",
+              },
+            });
+            message.success("User created successfully");
           }
 
-          // Debug log
-          console.log("Current users data:", users);
-
+          // Refresh user list from the server
+          fetchUsers();
           setIsModalVisible(false);
           form.resetFields();
         } catch (err) {
           console.error("Error saving user:", err);
           message.error(
-            "Failed to save user. Please check the form and try again."
+            `Failed to save user: ${
+              err.message || "Please check the form and try again."
+            }`
           );
         }
       })

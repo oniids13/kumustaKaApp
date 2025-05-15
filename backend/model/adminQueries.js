@@ -112,6 +112,7 @@ const getAllUsers = async () => {
         avatar: true,
         phone: true,
         createdAt: true,
+        lastLogin: true,
       },
     });
 
@@ -119,7 +120,6 @@ const getAllUsers = async () => {
     return users.map((user) => ({
       ...user,
       status: "ACTIVE", // Default since we don't have this field
-      lastLogin: null, // Default since we don't track this yet
     }));
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -140,6 +140,7 @@ const getUserById = async (id) => {
         avatar: true,
         phone: true,
         createdAt: true,
+        lastLogin: true,
       },
     });
 
@@ -150,7 +151,6 @@ const getUserById = async (id) => {
     return {
       ...user,
       status: "ACTIVE", // Default status
-      lastLogin: null, // We don't track this yet
     };
   } catch (error) {
     console.error("Error fetching user:", error);

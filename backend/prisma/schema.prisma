@@ -7,62 +7,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Core User Models
-
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  salt      String
-  hash      String
-  role      UserRole @default(STUDENT)
-  firstName String
-  lastName  String
-  phone     String
-  avatar    String   @default("https://www.gravatar.com/avatar/default?d=identicon")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String         @id @default(uuid())
+  email            String         @unique
+  salt             String
+  hash             String
+  role             UserRole       @default(STUDENT)
+  firstName        String
+  lastName         String
+  phone            String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  avatar           String         @default("https://www.gravatar.com/avatar/default?d=identicon")
+  lastLogin        DateTime?
+  admin            Admin?
+  comments         Comment[]
+  counselor        Counselor?
+  forumPosts       ForumPost[]
+  sentMessages     Message[]      @relation("SentMessages")
+  student          Student?
+  teacher          Teacher?
+  conversations    Conversation[] @relation("ConversationToUser")
+  receivedMessages Message[]      @relation("ReceivedMessages")
 
-  // Role-specific relations
-  student   Student?
-  teacher   Teacher?
-  counselor Counselor?
-  admin     Admin?
-
-  // Relation fields
-  forumPosts ForumPost[]
-  comments   Comment[]
-  
-  // Communication
-  sentMessages     Message[]        @relation("SentMessages")
-  receivedMessages Message[]        @relation("ReceivedMessages")
-  conversations    Conversation[]
-  
   @@map("users")
 }
 
-enum UserRole {
-  STUDENT
-  TEACHER
-  COUNSELOR
-  ADMIN
-}
-
-// Role-specific Profiles
-
 model Student {
   id                  String              @id @default(uuid())
-  user                User                @relation(fields: [userId], references: [id])
   userId              String              @unique
-  initialAssessment   InitialAssessment?
-  surveys             SurveyResponse[]
-  journals            Journal[]
-  moodEntries         MoodEntry[]
-  interventions       Intervention[]
-  emergencyContacts   EmergencyContact[]
-  reactions           Reaction[]
   quizzes             Quiz[]
   attempts            QuizAttempt[]
+  emergencyContacts   EmergencyContact[]
   goals               Goal[]
+  initialAssessment   InitialAssessment?
+  interventions       Intervention[]
+  journals            Journal[]
+  moodEntries         MoodEntry[]
+  reactions           Reaction[]
+  user                User                @relation(fields: [userId], references: [id])
+  surveys             SurveyResponse[]
   weeklyGoalSummaries WeeklyGoalSummary[]
 
   @@map("students")
@@ -70,12 +54,12 @@ model Student {
 
 model EmergencyContact {
   id           String  @id @default(uuid())
-  student      Student @relation(fields: [studentId], references: [id])
   studentId    String
   name         String
   relationship String
   phone        String
   isPrimary    Boolean @default(false)
+  student      Student @relation(fields: [studentId], references: [id])
 
   @@index([studentId])
   @@map("emergency_contacts")
@@ -83,7 +67,6 @@ model EmergencyContact {
 
 model Goal {
   id          String   @id @default(uuid())
-  student     Student  @relation(fields: [studentId], references: [id])
   studentId   String
   title       String
   isCompleted Boolean  @default(false)
@@ -92,6 +75,7 @@ model Goal {
   description String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  student     Student  @relation(fields: [studentId], references: [id])
 
   @@index([studentId, weekNumber, year])
   @@map("goals")
@@ -99,7 +83,6 @@ model Goal {
 
 model WeeklyGoalSummary {
   id         String     @id @default(uuid())
-  student    Student    @relation(fields: [studentId], references: [id])
   studentId  String
   weekNumber Int
   year       Int
@@ -107,30 +90,25 @@ model WeeklyGoalSummary {
   completed  Int        @default(0)
   percentage Float
   status     GoalStatus
+  student    Student    @relation(fields: [studentId], references: [id])
 
   @@unique([studentId, weekNumber, year])
   @@map("weekly_goal_summaries")
 }
 
-enum GoalStatus {
-  COMPLETED
-  INCOMPLETE
-  EMPTY
-}
-
 model Teacher {
   id        String     @id @default(uuid())
-  user      User       @relation(fields: [userId], references: [id])
   userId    String     @unique
   reactions Reaction[]
+  user      User       @relation(fields: [userId], references: [id])
 
   @@map("teachers")
 }
 
 model Counselor {
   id            String         @id @default(uuid())
-  user          User           @relation(fields: [userId], references: [id])
   userId        String         @unique
+  user          User           @relation(fields: [userId], references: [id])
   interventions Intervention[]
   reports       Report[]
 
@@ -139,21 +117,19 @@ model Counselor {
 
 model Admin {
   id     String @id @default(uuid())
-  user   User   @relation(fields: [userId], references: [id])
   userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
   @@map("admins")
 }
-
-// Mental Health Features
 
 model Survey {
   id          String           @id @default(uuid())
   title       String
   description String?
   questions   Json
-  type        SurveyType       @default(DAILY)
   createdAt   DateTime         @default(now())
+  type        SurveyType       @default(DAILY)
   responses   SurveyResponse[]
 
   @@map("surveys")
@@ -161,47 +137,40 @@ model Survey {
 
 model SurveyResponse {
   id         String   @id @default(uuid())
-  student    Student  @relation(fields: [studentId], references: [id])
   studentId  String
-  survey     Survey   @relation(fields: [surveyId], references: [id])
   surveyId   String
   answers    Json
   score      Float
+  createdAt  DateTime @default(now())
   percentage Float
   zone       String
   phDate     String
-  createdAt  DateTime @default(now())
+  student    Student  @relation(fields: [studentId], references: [id])
+  survey     Survey   @relation(fields: [surveyId], references: [id])
 
   @@index([studentId, phDate])
   @@map("survey_responses")
 }
 
-// For future use, expanding to other types of surveys
-enum SurveyType {
-  DAILY
-  WEEKLY
-  INITIAL
-}
-
 model Journal {
   id        String   @id @default(uuid())
-  student   Student  @relation(fields: [studentId], references: [id])
   studentId String
   content   String
   isPrivate Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  student   Student  @relation(fields: [studentId], references: [id])
 
   @@map("journals")
 }
 
 model MoodEntry {
   id        String   @id @default(uuid())
-  student   Student  @relation(fields: [studentId], references: [id])
   studentId String
   moodLevel Int
   notes     String?
   createdAt DateTime @default(now())
+  student   Student  @relation(fields: [studentId], references: [id])
 
   @@index([studentId, createdAt])
   @@map("mood_entries")
@@ -209,67 +178,59 @@ model MoodEntry {
 
 model InitialAssessment {
   id              String   @id @default(uuid())
-  student         Student  @relation(fields: [studentId], references: [id])
   studentId       String   @unique
   assessmentData  Json
-  answers         Json
-  totalScore      Float
-  depressionScore Float
-  anxietyScore    Float
-  stressScore     Float
   createdAt       DateTime @default(now())
+  anxietyScore    Float
+  depressionScore Float
+  stressScore     Float
+  totalScore      Float
+  answers         Json
+  student         Student  @relation(fields: [studentId], references: [id])
 
   @@map("initial_assessments")
 }
 
-// Counselor Interventions
 model Intervention {
   id          String             @id @default(uuid())
-  counselor   Counselor          @relation(fields: [counselorId], references: [id])
   counselorId String
-  student     Student            @relation(fields: [studentId], references: [id])
   studentId   String
   title       String
   description String
   status      InterventionStatus @default(PENDING)
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
+  counselor   Counselor          @relation(fields: [counselorId], references: [id])
+  student     Student            @relation(fields: [studentId], references: [id])
 
   @@map("interventions")
 }
 
-enum InterventionStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-}
-
-// Discussion Forum
 model ForumPost {
   id          String     @id @default(uuid())
   title       String
   content     String
-  images      Json
-  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId    String
-  comments    Comment[]
-  reactions   Reaction[]
-  isPublished Boolean    @default(false)
   createdAt   DateTime   @default(now())
+  isPublished Boolean    @default(false)
+  images      Json
+  comments    Comment[]
+  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  reactions   Reaction[]
 
   @@map("forum_posts")
 }
 
 model Reaction {
   id        String    @id @default(uuid())
-  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    String
-  student   Student?  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId String?
-  teacher   Teacher?  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   teacherId String?
   type      String    @default("SPARK")
   createdAt DateTime  @default(now())
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  student   Student?  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher   Teacher?  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
   @@unique([postId, type, studentId, teacherId])
   @@map("reactions")
@@ -278,16 +239,15 @@ model Reaction {
 model Comment {
   id        String    @id @default(uuid())
   content   String
-  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    String
-  author    User      @relation(fields: [authorId], references: [id])
   authorId  String
   createdAt DateTime  @default(now())
+  author    User      @relation(fields: [authorId], references: [id])
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@map("comments")
 }
 
-// Resource Library
 model Resource {
   id          String       @id @default(uuid())
   title       String
@@ -299,46 +259,37 @@ model Resource {
   @@map("resources")
 }
 
-enum ResourceType {
-  MEDITAION
-  ARTICLE
-  VIDEO
-  EXERCISE
-}
-
 model Quiz {
   id            String        @id @default(uuid())
-  question      String
-  options       String[] // Array of strings
-  correctAnswer Int // Index of correct option (0-based)
-  points        Int
-  explanation   String?
   createdAt     DateTime      @default(now())
-  student       Student?      @relation(fields: [studentId], references: [id])
   studentId     String?
+  correctAnswer Int
+  explanation   String?
+  options       String[]
+  points        Int
+  question      String
+  student       Student?      @relation(fields: [studentId], references: [id])
   attempts      QuizAttempt[]
 }
 
 model QuizAttempt {
   id             String   @id @default(uuid())
-  quiz           Quiz     @relation(fields: [quizId], references: [id])
   quizId         String
-  student        Student  @relation(fields: [studentId], references: [id])
   studentId      String
-  selectedAnswer Int
   score          Int
   createdAt      DateTime @default(now())
+  selectedAnswer Int
+  quiz           Quiz     @relation(fields: [quizId], references: [id])
+  student        Student  @relation(fields: [studentId], references: [id])
 
   @@index([quizId])
   @@index([studentId])
 }
 
-// Reports for counselors
 model Report {
   id                     String    @id @default(uuid())
-  counselor              Counselor @relation(fields: [counselorId], references: [id], onDelete: Cascade)
   counselorId            String
-  studentId              String? // null means "all students"
+  studentId              String?
   reportType             String
   format                 String
   startDate              DateTime
@@ -347,20 +298,20 @@ model Report {
   includeTables          Boolean   @default(false)
   includeRecommendations Boolean   @default(false)
   createdAt              DateTime  @default(now())
+  counselor              Counselor @relation(fields: [counselorId], references: [id], onDelete: Cascade)
 
   @@index([counselorId])
   @@map("reports")
 }
 
-// Communication
 model Conversation {
-  id          String    @id @default(uuid())
-  title       String?
-  participants User[]
-  messages    Message[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  isGroup     Boolean   @default(false)
+  id           String    @id @default(uuid())
+  title        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  isGroup      Boolean   @default(false)
+  messages     Message[]
+  participants User[]    @relation("ConversationToUser")
 
   @@map("conversations")
 }
@@ -368,15 +319,47 @@ model Conversation {
 model Message {
   id             String       @id @default(uuid())
   content        String
-  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
   senderId       String
-  recipients     User[]       @relation("ReceivedMessages")
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
   conversationId String
   isRead         Boolean      @default(false)
   createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+  recipients     User[]       @relation("ReceivedMessages")
 
   @@index([conversationId])
   @@index([senderId])
   @@map("messages")
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  COUNSELOR
+  ADMIN
+}
+
+enum GoalStatus {
+  COMPLETED
+  INCOMPLETE
+  EMPTY
+}
+
+enum SurveyType {
+  DAILY
+  WEEKLY
+  INITIAL
+}
+
+enum InterventionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum ResourceType {
+  MEDITAION
+  ARTICLE
+  VIDEO
+  EXERCISE
 }

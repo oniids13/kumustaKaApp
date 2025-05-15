@@ -94,6 +94,23 @@ const getUserLogin = async (email, password) => {
   }
 };
 
+const updateUserLastLogin = async (userId) => {
+  try {
+    await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        lastLogin: new Date(),
+      },
+    });
+    return true;
+  } catch (error) {
+    console.error("Error updating user last login:", error);
+    throw error;
+  }
+};
+
 const getUserById = async (id) => {
   if (!id) {
     throw new Error("User ID is required");
@@ -116,4 +133,5 @@ module.exports = {
   createUser,
   getUserLogin,
   getUserById,
+  updateUserLastLogin,
 };

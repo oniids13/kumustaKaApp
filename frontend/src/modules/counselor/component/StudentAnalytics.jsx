@@ -50,10 +50,12 @@ const COLORS = [
   "#0088FE",
 ];
 
-const StudentAnalytics = () => {
+const StudentAnalytics = ({ initialStudentId }) => {
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(
+    initialStudentId || null
+  );
   const [surveyData, setSurveyData] = useState([]);
   const [moodData, setMoodData] = useState([]);
   const [dateRange, setDateRange] = useState([
@@ -80,6 +82,13 @@ const StudentAnalytics = () => {
     }
   }, [selectedStudent, dateRange]);
 
+  // This effect handles the case when initialStudentId is provided after component mount
+  useEffect(() => {
+    if (initialStudentId && initialStudentId !== selectedStudent) {
+      setSelectedStudent(initialStudentId);
+    }
+  }, [initialStudentId]);
+
   const fetchStudents = async () => {
     setLoading(true);
     try {
@@ -94,8 +103,8 @@ const StudentAnalytics = () => {
 
       if (response.data && response.data.students) {
         setStudents(response.data.students);
-        // Auto-select the first student if available
-        if (response.data.students.length > 0) {
+        // Auto-select the first student if no initialStudentId is provided
+        if (!selectedStudent && response.data.students.length > 0) {
           setSelectedStudent(response.data.students[0].id);
         }
       }

@@ -24,6 +24,7 @@ import {
 } from "@ant-design/icons";
 import axios from "axios";
 import moment from "moment";
+import { useNavigate } from "react-router-dom";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -37,6 +38,7 @@ const MentalHealthOverview = () => {
     green: 0,
     total: 0,
   });
+  const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
 
@@ -309,7 +311,7 @@ const MentalHealthOverview = () => {
           size="small"
           icon={<EyeOutlined />}
           onClick={() =>
-            (window.location.href = `/counselor/analytics?studentId=${record.id}`)
+            navigate(`/counselor/analytics?studentId=${record.id}`)
           }
         >
           View Details

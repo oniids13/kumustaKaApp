@@ -69,6 +69,16 @@ const router = createBrowserRouter(
         }
       />
 
+      {/* Add route for counselor/analytics */}
+      <Route
+        path="counselor/analytics"
+        element={
+          <ProtectedRoute roles={["COUNSELOR"]}>
+            <CounselorDashboard />
+          </ProtectedRoute>
+        }
+      />
+
       <Route
         path="teacher"
         element={
