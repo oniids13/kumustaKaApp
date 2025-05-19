@@ -109,45 +109,65 @@ const StudentDashboard = () => {
   useEffect(() => {
     const fetchQuote = async () => {
       if (!isAuthenticated) {
+        console.log("[DEBUG] Not authenticated, skipping quote fetch");
         return;
       }
 
       // Check if quote has already been shown today
       const today = new Date().toDateString();
       const quoteShownToday = localStorage.getItem("quoteShownDate") === today;
-
-      // Get initial login date from localStorage to check if this is a new user
       const firstLogin = localStorage.getItem("firstLoginDate");
       const isNewUser = !firstLogin;
 
+      console.log("[DEBUG] Quote check:", {
+        today,
+        quoteShownToday,
+        firstLogin,
+        isNewUser,
+      });
+
       // For a new user, always show a quote regardless of quoteShownToday
       if (!isNewUser && quoteShownToday) {
-        console.log("Quote already shown today, skipping");
-        return; // Skip showing the quote if already shown today and not a new user
+        console.log("[DEBUG] Quote already shown today, skipping");
+        return;
       }
 
       try {
         // If this is a first login, save the date
         if (isNewUser) {
           localStorage.setItem("firstLoginDate", today);
+          console.log("[DEBUG] New user, saved first login date");
         }
 
-        const response = await axios.get("http://localhost:3000/api/quotes", {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
+        // Add cache busting to prevent multiple calls
+        const cacheBuster = new Date().getTime();
+        const response = await axios.get(
+          `http://localhost:3000/api/quotes?t=${cacheBuster}`,
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+              "Cache-Control": "no-cache",
+            },
+          }
+        );
 
         if (Array.isArray(response.data) && response.data.length > 0) {
           setQuote(response.data[0]);
           setShowQuoteModal(true);
+          console.log("[DEBUG] Setting quote and showing modal");
+        } else {
+          console.log("[DEBUG] No quotes available in response");
         }
       } catch (err) {
-        console.error("Error fetching quote:", err);
-        // Don't show error to user - quotes are non-critical
+        console.error("[ERROR] Error fetching quote:", err);
       }
     };
 
+    // Clear today's quote shown status for testing
+    // localStorage.removeItem("quoteShownDate");
+
     fetchQuote();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated]);
 
   // Handler for when quote modal is closed
   const handleCloseQuoteModal = () => {
@@ -156,19 +176,15 @@ const StudentDashboard = () => {
     // Mark quote as shown for today
     const today = new Date().toDateString();
     localStorage.setItem("quoteShownDate", today);
+    console.log(
+      "[DEBUG] Quote modal closed, marked as shown for today:",
+      today
+    );
   };
 
   useEffect(() => {
     const checkOrCreateAssessment = async () => {
       if (!isAuthenticated) {
-        setLoading(false);
-        return;
-      }
-
-      // Check if user has dismissed the assessment prompt in this session
-      const assessmentPromptSeen =
-        localStorage.getItem("assessmentPromptSeen") === "true";
-      if (assessmentPromptSeen) {
         setLoading(false);
         return;
       }
@@ -220,9 +236,6 @@ const StudentDashboard = () => {
 
     if (takeAssessment) {
       navigate("/student/initial-assessment");
-    } else {
-      // Mark the assessment as seen for this session to prevent it from showing again immediately
-      localStorage.setItem("assessmentPromptSeen", "true");
     }
   };
 
@@ -252,9 +265,10 @@ const StudentDashboard = () => {
 
       {/* Quote Modal */}
       <Modal
-        show={showQuoteModal && quote}
+        show={showQuoteModal}
         onHide={handleCloseQuoteModal}
         centered
+        backdrop="static"
       >
         <Modal.Header closeButton>
           <Modal.Title>✨ Daily Motivation</Modal.Title>
@@ -266,7 +280,10 @@ const StudentDashboard = () => {
               <p className="text-end fw-bold">- {quote.a}</p>
             </>
           ) : (
-            <p>Loading quote...</p>
+            <div className="text-center">
+              <Spinner animation="border" />
+              <p className="mt-2">Loading your daily motivation...</p>
+            </div>
           )}
         </Modal.Body>
         <Modal.Footer>

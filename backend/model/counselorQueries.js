@@ -533,6 +533,33 @@ const generateCsvReport = (data, options) => {
   return csvOutput;
 };
 
+/**
+ * Get student's initial assessment
+ */
+const getStudentInitialAssessment = async (studentId) => {
+  try {
+    const assessment = await prisma.initialAssessment.findUnique({
+      where: { studentId },
+      select: {
+        depressionScore: true,
+        anxietyScore: true,
+        stressScore: true,
+        totalScore: true,
+        createdAt: true,
+      },
+    });
+
+    if (!assessment) {
+      throw new Error("Initial assessment not found");
+    }
+
+    return assessment;
+  } catch (error) {
+    console.error("Error fetching student initial assessment:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   getCounselorByUserId,
   getAllStudents,
@@ -550,4 +577,5 @@ module.exports = {
   generateReportData,
   generatePdfReport,
   generateCsvReport,
+  getStudentInitialAssessment,
 };

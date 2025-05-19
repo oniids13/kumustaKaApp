@@ -3,6 +3,9 @@ const PDFDocument = require("pdfkit");
 const { createObjectCsvStringifier } = require("csv-writer");
 const fs = require("fs");
 const path = require("path");
+const { PrismaClient } = require("@prisma/client");
+
+const prisma = new PrismaClient();
 
 /**
  * Get all students for counselor view
@@ -469,6 +472,24 @@ const downloadReportController = async (req, res) => {
   }
 };
 
+const getStudentInitialAssessment = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    // Get the student's initial assessment using the query function
+    const assessment = await counselorQueries.getStudentInitialAssessment(
+      studentId
+    );
+    return res.status(200).json(assessment);
+  } catch (error) {
+    console.error("Error fetching student initial assessment:", error);
+    if (error.message === "Initial assessment not found") {
+      return res.status(404).json({ message: error.message });
+    }
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   getStudentsController,
   getStudentSurveysController,
@@ -480,4 +501,5 @@ module.exports = {
   generateReportController,
   getReportHistoryController,
   downloadReportController,
+  getStudentInitialAssessment,
 };

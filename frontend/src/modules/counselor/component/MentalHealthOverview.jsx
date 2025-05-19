@@ -93,8 +93,19 @@ const MentalHealthOverview = () => {
                 }
               );
 
+              // Fetch initial assessment data
+              const initialAssessmentResponse = await axios.get(
+                `http://localhost:3000/api/counselor/student/${student.id}/initialAssessment`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${user.token}`,
+                  },
+                }
+              );
+
               const surveys = surveyResponse.data.surveys || [];
               const moods = moodResponse.data.moods || [];
+              const initialAssessment = initialAssessmentResponse.data || null;
 
               // Find latest survey and mood
               const latestSurvey = surveys.length > 0 ? surveys[0] : null;
@@ -128,6 +139,7 @@ const MentalHealthOverview = () => {
                 redFlags,
                 surveys,
                 moods,
+                initialAssessment,
               };
             } catch (error) {
               console.error(
@@ -142,6 +154,7 @@ const MentalHealthOverview = () => {
                 redFlags: 0,
                 surveys: [],
                 moods: [],
+                initialAssessment: null,
                 error: true,
               };
             }
@@ -212,12 +225,57 @@ const MentalHealthOverview = () => {
     return zone === "Red (Needs Attention)" || zone === "Yellow (Moderate)";
   });
 
+  const getAssessmentInterpretation = (assessment) => {
+    if (!assessment) return "No assessment";
+
+    const { depressionScore, anxietyScore, stressScore } = assessment;
+
+    const getLevel = (score) => {
+      if (score >= 20) return "Severe";
+      if (score >= 15) return "Moderate";
+      if (score >= 10) return "Mild";
+      return "Normal";
+    };
+
+    const depressionLevel = getLevel(depressionScore);
+    const anxietyLevel = getLevel(anxietyScore);
+    const stressLevel = getLevel(stressScore);
+
+    return (
+      <div>
+        <div>Depression: {depressionLevel}</div>
+        <div>Anxiety: {anxietyLevel}</div>
+        <div>Stress: {stressLevel}</div>
+      </div>
+    );
+  };
+
   const columns = [
     {
       title: "Student",
       dataIndex: "firstName",
       key: "name",
       render: (_, record) => `${record.firstName} ${record.lastName}`,
+    },
+    {
+      title: "Initial Assessment",
+      key: "initialAssessment",
+      render: (_, record) => {
+        if (!record.initialAssessment) return "Not completed";
+        return (
+          <div>
+            <div>D: {record.initialAssessment.depressionScore}</div>
+            <div>A: {record.initialAssessment.anxietyScore}</div>
+            <div>S: {record.initialAssessment.stressScore}</div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Assessment Interpretation",
+      key: "assessmentInterpretation",
+      render: (_, record) =>
+        getAssessmentInterpretation(record.initialAssessment),
     },
     {
       title: "Current Zone",

@@ -11,6 +11,7 @@ const {
   generateReportController,
   getReportHistoryController,
   downloadReportController,
+  getStudentInitialAssessment,
 } = require("../controller/counselorController");
 
 const counselorRouter = Router();
@@ -96,6 +97,14 @@ counselorRouter.get(
   passport.authenticate("jwt", { session: false }),
   isCounselor,
   downloadReportController
+);
+
+// Add initial assessment endpoint
+counselorRouter.get(
+  "/student/:studentId/initialAssessment",
+  passport.authenticate("jwt", { session: false }),
+  isCounselor,
+  getStudentInitialAssessment
 );
 
 module.exports = counselorRouter;
