@@ -84,20 +84,21 @@ const toggleGoalCompletion = async (goalId) => {
   }
 };
 
-// Getting goals for the current week
-const getWeeklyGoals = async (userId) => {
+// Getting goals for a specific week
+const getWeeklyGoals = async (userId, weekNumber = null) => {
   try {
     const student = await prisma.student.findUnique({
       where: { userId },
       select: { id: true },
     });
 
-    const { weekNumber, year } = getCurrentWeek();
+    const { weekNumber: currentWeek, year } = getCurrentWeek();
+    const targetWeek = weekNumber || currentWeek;
 
     return prisma.goal.findMany({
       where: {
         studentId: student.id,
-        weekNumber,
+        weekNumber: targetWeek,
         year,
       },
       orderBy: {

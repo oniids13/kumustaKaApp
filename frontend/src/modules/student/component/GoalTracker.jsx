@@ -18,6 +18,7 @@ const GoalTracker = () => {
   const [yearlySummary, setYearlySummary] = useState([]);
   const [calendarLoading, setCalendarLoading] = useState(true);
   const [showTooltip, setShowTooltip] = useState(null);
+  const [selectedWeek, setSelectedWeek] = useState(getCurrentWeek());
 
   const user = JSON.parse(localStorage.getItem("userData"));
 
@@ -30,12 +31,12 @@ const GoalTracker = () => {
   const currentWeek = getCurrentWeek();
   const currentYear = new Date().getFullYear();
 
-  // Fetch goals for the current week
-  const fetchGoals = async () => {
+  // Fetch goals for the selected week
+  const fetchGoals = async (weekNumber) => {
     try {
       setLoading(true);
       const response = await axios.get(
-        "http://localhost:3000/api/goals/weekly",
+        `http://localhost:3000/api/goals/weekly?week=${weekNumber}`,
         {
           headers: {
             Authorization: `Bearer ${user.token}`,
@@ -74,9 +75,18 @@ const GoalTracker = () => {
 
   // Load data on component mount
   useEffect(() => {
-    fetchGoals();
+    fetchGoals(selectedWeek);
     fetchYearlySummary();
-  }, []);
+  }, [selectedWeek]);
+
+  // Handle week navigation
+  const handleWeekChange = (direction) => {
+    const newWeek = selectedWeek + direction;
+    // Allow navigation to any week in the current year
+    if (newWeek >= 1 && newWeek <= 52) {
+      setSelectedWeek(newWeek);
+    }
+  };
 
   // Create a new goal
   const handleCreateGoal = async (e) => {
@@ -161,7 +171,7 @@ const GoalTracker = () => {
     if (!yearlySummary || yearlySummary.length === 0) return null;
 
     const currentWeekSummary = yearlySummary.find(
-      (week) => week.weekNumber === currentWeek && week.year === currentYear
+      (week) => week.weekNumber === selectedWeek && week.year === currentYear
     );
 
     return currentWeekSummary;
@@ -312,18 +322,18 @@ const GoalTracker = () => {
         <p>Set up to 5 goals for the week and track your progress</p>
       </div>
 
-      {/* Week navigation (future feature) */}
+      {/* Week navigation */}
       <div className="week-navigation">
         <button
-          disabled={true} // Only showing current week for now
-          onClick={() => {}}
+          onClick={() => handleWeekChange(-1)}
+          disabled={selectedWeek <= 1}
         >
           <FiChevronLeft />
         </button>
-        <h3>Week {currentWeek}</h3>
+        <h3>Week {selectedWeek}</h3>
         <button
-          disabled={true} // Only showing current week for now
-          onClick={() => {}}
+          onClick={() => handleWeekChange(1)}
+          disabled={selectedWeek >= 52}
         >
           <FiChevronRight />
         </button>
@@ -461,7 +471,7 @@ const GoalTracker = () => {
                       <div
                         key={`${monthData.month}-week-${weekNum}`}
                         className={`week-cell ${weekStatus} ${
-                          weekNum === currentWeek ? "current" : ""
+                          weekNum === selectedWeek ? "current" : ""
                         } ${isFirstWeeks ? "first-weeks" : ""}`}
                         onMouseEnter={() => setShowTooltip(weekNum)}
                         onMouseLeave={() => setShowTooltip(null)}

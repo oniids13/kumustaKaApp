@@ -32,7 +32,8 @@ const createGoalController = async (req, res) => {
 const getWeeklyGoalsController = async (req, res) => {
   try {
     const userId = req.user.id;
-    const goals = await getWeeklyGoals(userId);
+    const weekNumber = req.query.week ? parseInt(req.query.week) : null;
+    const goals = await getWeeklyGoals(userId, weekNumber);
     return res.status(200).json(goals);
   } catch (error) {
     console.error("Error fetching weekly goals:", error);
