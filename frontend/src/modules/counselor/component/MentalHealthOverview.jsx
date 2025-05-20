@@ -58,6 +58,16 @@ const MentalHealthOverview = () => {
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
 
+  const standardizeDate = (dateObj) => {
+    // If we have a date object, standardize its format to ensure consistent display
+    if (!dateObj) return null;
+
+    // Create a new moment object from the date with consistent format
+    // Use startOf('day') to ensure we compare dates without time component
+    const momentDate = moment.utc(dateObj).startOf("day");
+    return momentDate;
+  };
+
   useEffect(() => {
     fetchStudentsWithData();
     fetchMoodData();
@@ -78,16 +88,26 @@ const MentalHealthOverview = () => {
 
       if (studentsResponse.data && studentsResponse.data.students) {
         const allStudents = studentsResponse.data.students;
-        setStudents(allStudents);
+        console.log(`Found ${allStudents.length} students in counselor view`);
 
-        // Fetch last 30 days of survey data for all students
-        const startDate = moment().subtract(30, "days").format("YYYY-MM-DD");
-        const endDate = moment().format("YYYY-MM-DD");
+        // Make sure to set the end date to capture all of today's activities
+        const today = moment().endOf("day");
+        const thirtyDaysAgo = moment().subtract(30, "days").startOf("day");
+
+        // Format dates for API consistently
+        const startDate = thirtyDaysAgo.format("YYYY-MM-DD");
+        const endDate = today.format("YYYY-MM-DD");
+
+        console.log(`Using date range: ${startDate} to ${endDate}`);
 
         // Fetch mental health data for students
         const mentalHealthData = await Promise.all(
           allStudents.map(async (student) => {
             try {
+              console.log(
+                `Fetching data for student: ${student.firstName} ${student.lastName} (ID: ${student.id})`
+              );
+
               // Fetch latest survey for the student
               const surveyResponse = await axios.get(
                 `http://localhost:3000/api/counselor/student/${student.id}/surveys`,
@@ -122,13 +142,41 @@ const MentalHealthOverview = () => {
 
               const surveys = surveyResponse.data.surveys || [];
               const moods = moodResponse.data.moods || [];
-              const initialAssessment = initialAssessmentResponse.data || null;
+              let initialAssessment = null;
+
+              // Handle initialAssessment - could be null or have data
+              try {
+                initialAssessment = initialAssessmentResponse.data;
+                if (initialAssessment) {
+                  console.log(
+                    `Found initial assessment for ${student.firstName}: D:${initialAssessment.depressionScore}, A:${initialAssessment.anxietyScore}, S:${initialAssessment.stressScore}`
+                  );
+                }
+              } catch (error) {
+                console.log(
+                  `No initial assessment found for ${student.firstName}:`,
+                  error.message
+                );
+              }
+
+              console.log(
+                `Student ${student.firstName} has ${surveys.length} surveys and ${moods.length} mood entries`
+              );
+
+              // Log details of any mood entries
+              if (moods.length > 0) {
+                const moodLevels = moods.map((m) => m.moodLevel);
+                console.log(
+                  `Mood entries for ${student.firstName}:`,
+                  moodLevels
+                );
+              }
 
               // Find latest survey and mood
               const latestSurvey = surveys.length > 0 ? surveys[0] : null;
               const latestMood = moods.length > 0 ? moods[0] : null;
 
-              // Calculate average mood
+              // Calculate average mood directly from mood entries
               const avgMood =
                 moods.length > 0
                   ? moods.reduce((sum, m) => sum + m.moodLevel, 0) /
@@ -147,6 +195,15 @@ const MentalHealthOverview = () => {
                   redFlags++;
                 }
               });
+
+              // Add red flag from initial assessment if it exists and no other data
+              if (!latestSurvey && !latestMood && initialAssessment) {
+                const { depressionScore, anxietyScore, stressScore } =
+                  initialAssessment;
+                const avgScore =
+                  (depressionScore + anxietyScore + stressScore) / 3;
+                if (avgScore >= 15) redFlags++; // High scores indicate need for attention
+              }
 
               return {
                 ...student,
@@ -182,20 +239,19 @@ const MentalHealthOverview = () => {
         let redCount = 0;
         let yellowCount = 0;
         let greenCount = 0;
+        let unknownCount = 0;
 
         mentalHealthData.forEach((student) => {
-          if (student.latestSurvey) {
-            const zone = student.latestSurvey.zone;
-            if (zone === "Red (Needs Attention)") redCount++;
-            else if (zone === "Yellow (Moderate)") yellowCount++;
-            else if (zone === "Green (Positive)") greenCount++;
-          } else if (student.avgMood !== null) {
-            // Use mood data if no survey
-            if (student.avgMood <= 2) redCount++;
-            else if (student.avgMood <= 3.5) yellowCount++;
-            else greenCount++;
-          }
+          const zone = getStudentZone(student);
+          if (zone === "Red (Needs Attention)") redCount++;
+          else if (zone === "Yellow (Moderate)") yellowCount++;
+          else if (zone === "Green (Positive)") greenCount++;
+          else unknownCount++;
         });
+
+        console.log(
+          `Zone distribution: Red: ${redCount}, Yellow: ${yellowCount}, Green: ${greenCount}, Unknown: ${unknownCount}`
+        );
 
         setZoneStats({
           red: redCount,
@@ -255,9 +311,18 @@ const MentalHealthOverview = () => {
   const getStudentZone = (student) => {
     if (student.latestSurvey) {
       return student.latestSurvey.zone;
-    } else if (student.avgMood !== null) {
+    } else if (student.avgMood !== null && student.avgMood !== undefined) {
       if (student.avgMood <= 2) return "Red (Needs Attention)";
       else if (student.avgMood <= 3.5) return "Yellow (Moderate)";
+      else return "Green (Positive)";
+    } else if (student.initialAssessment) {
+      // Determine zone based on initial assessment if no other data
+      const { depressionScore, anxietyScore, stressScore } =
+        student.initialAssessment;
+      const avgScore = (depressionScore + anxietyScore + stressScore) / 3;
+
+      if (avgScore >= 15) return "Red (Needs Attention)";
+      else if (avgScore >= 10) return "Yellow (Moderate)";
       else return "Green (Positive)";
     }
     return "Unknown";
@@ -349,14 +414,60 @@ const MentalHealthOverview = () => {
       title: "Avg. Mood",
       dataIndex: "avgMood",
       key: "avgMood",
-      render: (avgMood) =>
-        avgMood !== null && avgMood !== undefined
-          ? avgMood.toFixed(1)
-          : "No data",
+      render: (avgMood, record) => {
+        // Check if there are actual mood entries
+        if (record.moods && record.moods.length > 0) {
+          // We have actual mood data from entries
+          const calculatedMood =
+            record.moods.reduce((sum, m) => sum + m.moodLevel, 0) /
+            record.moods.length;
+          return calculatedMood.toFixed(1);
+        }
+        // If the avgMood is calculated but moods array might be missing
+        else if (avgMood !== null && avgMood !== undefined) {
+          return avgMood.toFixed(1);
+        }
+        // If we have an initial assessment but no mood entries
+        else if (record.initialAssessment) {
+          // Convert DASS scores to an approximate mood value (5 is highest mood, 1 is lowest)
+          const { depressionScore, anxietyScore, stressScore } =
+            record.initialAssessment;
+          const avgScore = (depressionScore + anxietyScore + stressScore) / 3;
+          // Higher DASS scores mean worse mental health, so we invert the scale
+          let derivedMood;
+          if (avgScore >= 20) derivedMood = 1.5; // Severe - very low mood
+          else if (avgScore >= 15) derivedMood = 2.0; // Moderate - low mood
+          else if (avgScore >= 10) derivedMood = 3.0; // Mild - moderate mood
+          else derivedMood = 4.0; // Normal - good mood
+
+          // Don't show asterisk for initial assessment data
+          return derivedMood.toFixed(1);
+        }
+        return "No data";
+      },
       sorter: (a, b) => {
-        if (a.avgMood === null || a.avgMood === undefined) return 1;
-        if (b.avgMood === null || b.avgMood === undefined) return -1;
-        return a.avgMood - b.avgMood;
+        // Helper function to get mood value or derive it from assessment
+        const getMoodValue = (record) => {
+          if (record.moods && record.moods.length > 0) {
+            return (
+              record.moods.reduce((sum, m) => sum + m.moodLevel, 0) /
+              record.moods.length
+            );
+          } else if (record.avgMood !== null && record.avgMood !== undefined) {
+            return record.avgMood;
+          } else if (record.initialAssessment) {
+            const { depressionScore, anxietyScore, stressScore } =
+              record.initialAssessment;
+            const avgScore = (depressionScore + anxietyScore + stressScore) / 3;
+            if (avgScore >= 20) return 1.5;
+            else if (avgScore >= 15) return 2.0;
+            else if (avgScore >= 10) return 3.0;
+            else return 4.0;
+          }
+          return -1; // No data available, sort to end
+        };
+
+        return getMoodValue(a) - getMoodValue(b);
       },
     },
     {
@@ -371,46 +482,82 @@ const MentalHealthOverview = () => {
       title: "Last Activity",
       key: "lastActivity",
       render: (_, record) => {
+        // Use our standardization helper for consistent date handling
         const lastSurveyDate = record.latestSurvey
-          ? moment(record.latestSurvey.createdAt)
+          ? standardizeDate(record.latestSurvey.createdAt)
           : null;
         const lastMoodDate = record.latestMood
-          ? moment(record.latestMood.createdAt)
+          ? standardizeDate(record.latestMood.createdAt)
+          : null;
+        const assessmentDate = record.initialAssessment
+          ? standardizeDate(record.initialAssessment.createdAt)
           : null;
 
-        let lastActivityDate = null;
-
-        if (lastSurveyDate && lastMoodDate) {
-          lastActivityDate = moment.max(lastSurveyDate, lastMoodDate);
-        } else if (lastSurveyDate) {
-          lastActivityDate = lastSurveyDate;
-        } else if (lastMoodDate) {
-          lastActivityDate = lastMoodDate;
+        // Log dates to help with debugging
+        if (record.firstName) {
+          console.log(`${record.firstName}'s dates:`, {
+            surveyDate: lastSurveyDate
+              ? lastSurveyDate.format("YYYY-MM-DD")
+              : null,
+            moodDate: lastMoodDate ? lastMoodDate.format("YYYY-MM-DD") : null,
+            assessmentDate: assessmentDate
+              ? assessmentDate.format("YYYY-MM-DD")
+              : null,
+            rawSurvey: record.latestSurvey
+              ? record.latestSurvey.createdAt
+              : null,
+            rawMood: record.latestMood ? record.latestMood.createdAt : null,
+          });
         }
 
-        return lastActivityDate
-          ? lastActivityDate.format("MMM DD, YYYY")
-          : "No activity";
+        // Check if we have actual mood or survey data
+        if (lastMoodDate || lastSurveyDate) {
+          let lastActivityDate;
+
+          if (lastSurveyDate && lastMoodDate) {
+            // Use the most recent date
+            lastActivityDate = moment.max(lastSurveyDate, lastMoodDate);
+          } else if (lastSurveyDate) {
+            lastActivityDate = lastSurveyDate;
+          } else {
+            lastActivityDate = lastMoodDate;
+          }
+
+          // Format date consistently for display (always showing local time)
+          return lastActivityDate.local().format("MMM DD, YYYY");
+        }
+        // If no survey or mood data, but we have assessment data
+        else if (assessmentDate) {
+          // Format assessment date consistently
+          return assessmentDate.local().format("MMM DD, YYYY");
+        }
+
+        return "No activity";
       },
       sorter: (a, b) => {
         const getLastActivity = (record) => {
+          // Use standardizeDate for consistent date handling
           const lastSurveyDate = record.latestSurvey
-            ? new Date(record.latestSurvey.createdAt)
+            ? standardizeDate(record.latestSurvey.createdAt).valueOf()
             : null;
           const lastMoodDate = record.latestMood
-            ? new Date(record.latestMood.createdAt)
+            ? standardizeDate(record.latestMood.createdAt).valueOf()
+            : null;
+          const assessmentDate = record.initialAssessment
+            ? standardizeDate(record.initialAssessment.createdAt).valueOf()
             : null;
 
+          // Return the most recent timestamp (or 0 if no dates available)
           if (lastSurveyDate && lastMoodDate) {
-            return lastSurveyDate > lastMoodDate
-              ? lastSurveyDate
-              : lastMoodDate;
+            return Math.max(lastSurveyDate, lastMoodDate);
           } else if (lastSurveyDate) {
             return lastSurveyDate;
           } else if (lastMoodDate) {
             return lastMoodDate;
+          } else if (assessmentDate) {
+            return assessmentDate;
           }
-          return new Date(0);
+          return 0;
         };
 
         return getLastActivity(b) - getLastActivity(a);
@@ -491,17 +638,71 @@ const MentalHealthOverview = () => {
   }
 
   const hasData = Array.isArray(moodData) && moodData.length > 0;
+  const hasStudentData =
+    students.length > 0 &&
+    students.some((s) => s.initialAssessment || s.latestMood || s.latestSurvey);
 
   if (!hasData) {
-    return (
-      <Alert
-        message="No Data Available"
-        description="There is no mental health data available for the current period."
-        type="info"
-        showIcon
-        style={{ margin: "20px" }}
-      />
+    console.log(
+      "No mood data available, students data:",
+      students.length > 0 ? students.length + " students" : "No students"
     );
+    if (hasStudentData) {
+      return (
+        <div style={{ padding: "20px" }}>
+          <Title level={2}>Mental Health Overview</Title>
+          <Paragraph>
+            Current mental health status of all students in the system
+          </Paragraph>
+
+          <Alert
+            message="Limited Data Available"
+            description={
+              <div>
+                <p>
+                  There is no aggregated mental health data available for the
+                  current period.
+                </p>
+                <p>Individual student data is still available below.</p>
+              </div>
+            }
+            type="info"
+            showIcon
+            style={{ margin: "20px 0" }}
+          />
+
+          {/* All Students */}
+          <div style={{ marginTop: "30px" }}>
+            <Title level={3}>
+              <Space>
+                <LineChartOutlined />
+                All Students' Mental Health Status
+              </Space>
+            </Title>
+
+            <Card>
+              <Table
+                dataSource={students}
+                columns={columns}
+                rowKey="id"
+                pagination={{ pageSize: 10 }}
+              />
+            </Card>
+          </div>
+        </div>
+      );
+    } else {
+      // No students data and no mood data
+      return (
+        <Alert
+          message="No Data Available"
+          description="There is no mental health data available. Please ensure students have completed their mood entries and surveys."
+          type="info"
+          showIcon
+          style={{ margin: "20px" }}
+        />
+      );
+    }
   }
 
   return (

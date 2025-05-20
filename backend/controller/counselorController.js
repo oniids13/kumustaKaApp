@@ -508,36 +508,57 @@ const getDailySubmissionCountsController = async (req, res) => {
 const getTrendsController = async (req, res) => {
   try {
     const { period, startDate, endDate } = req.query;
+    console.log(
+      `Trends request - period: ${period}, startDate: ${startDate}, endDate: ${endDate}`
+    );
 
     // Get counselor ID from user
     const counselor = await counselorQueries.getCounselorByUserId(req.user.id);
 
     if (!counselor) {
+      console.log(`Counselor not found for user ID: ${req.user.id}`);
       return res.status(404).json({
         error: "Counselor profile not found",
       });
     }
+    console.log(`Processing trends request for counselor ID: ${counselor.id}`);
 
     // Get mood trends data
+    console.log("Fetching mood trends data...");
     const moodTrends = await counselorQueries.getMoodTrends(
       period,
       startDate,
       endDate
     );
+    console.log(`Retrieved ${moodTrends.length} mood trend periods`);
 
     // Get daily mood trends
+    console.log("Fetching daily mood trends data...");
     const dailyMoodTrends = await counselorQueries.getDailyMoodTrends(
       startDate,
       endDate
     );
+    console.log(`Retrieved ${dailyMoodTrends.length} daily mood trend entries`);
 
     // Get timeframe trends
+    console.log("Fetching timeframe trends data...");
     const timeframeTrends = await counselorQueries.getTimeframeTrends(
       period,
       startDate,
       endDate
     );
+    console.log("Timeframe trends:", timeframeTrends);
 
+    // If all data is empty, log a warning
+    if (
+      moodTrends.length === 0 &&
+      dailyMoodTrends.length === 0 &&
+      (!timeframeTrends || timeframeTrends.totalEntries === 0)
+    ) {
+      console.log("WARNING: No trends data available for the selected period");
+    }
+
+    console.log("Sending trends response");
     res.status(200).json({
       moodTrends,
       dailyMoodTrends,

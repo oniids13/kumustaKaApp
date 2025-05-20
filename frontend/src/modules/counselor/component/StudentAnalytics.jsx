@@ -5,7 +5,6 @@ import {
   Row,
   Col,
   Select,
-  DatePicker,
   Typography,
   Spin,
   Alert,
@@ -13,6 +12,7 @@ import {
   Tabs,
   Empty,
   Statistic,
+  Radio,
 } from "antd";
 import {
   LineChart,
@@ -38,7 +38,6 @@ import {
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
-const { RangePicker } = DatePicker;
 const { TabPane } = Tabs;
 
 const COLORS = [
@@ -58,10 +57,7 @@ const StudentAnalytics = ({ initialStudentId }) => {
   );
   const [surveyData, setSurveyData] = useState([]);
   const [moodData, setMoodData] = useState([]);
-  const [dateRange, setDateRange] = useState([
-    moment().subtract(30, "days"),
-    moment(),
-  ]);
+  const [periodFilter, setPeriodFilter] = useState("week");
   const [error, setError] = useState(null);
   const [summary, setSummary] = useState({
     averageMood: null,
@@ -80,7 +76,7 @@ const StudentAnalytics = ({ initialStudentId }) => {
     if (selectedStudent) {
       fetchStudentData();
     }
-  }, [selectedStudent, dateRange]);
+  }, [selectedStudent, periodFilter]);
 
   // This effect handles the case when initialStudentId is provided after component mount
   useEffect(() => {
@@ -119,9 +115,19 @@ const StudentAnalytics = ({ initialStudentId }) => {
   const fetchStudentData = async () => {
     setLoading(true);
     try {
-      // Format dates for API request
-      const startDate = dateRange[0].format("YYYY-MM-DD");
-      const endDate = dateRange[1].format("YYYY-MM-DD");
+      // Calculate date range based on the period filter
+      const endDate = moment().format("YYYY-MM-DD");
+      let startDate;
+
+      if (periodFilter === "week") {
+        startDate = moment().subtract(7, "days").format("YYYY-MM-DD");
+      } else if (periodFilter === "month") {
+        startDate = moment().subtract(30, "days").format("YYYY-MM-DD");
+      } else if (periodFilter === "semester") {
+        startDate = moment().subtract(4, "months").format("YYYY-MM-DD");
+      } else {
+        startDate = moment().subtract(7, "days").format("YYYY-MM-DD"); // Default to week
+      }
 
       // Fetch survey data
       const surveyResponse = await axios.get(
@@ -152,7 +158,9 @@ const StudentAnalytics = ({ initialStudentId }) => {
         // Calculate summary statistics
         const calculatedSummary = calculateSummary(
           surveyResponse.data.surveys || [],
-          moodResponse.data.moods || []
+          moodResponse.data.moods || [],
+          startDate,
+          endDate
         );
         setSummary(calculatedSummary);
       }
@@ -164,7 +172,7 @@ const StudentAnalytics = ({ initialStudentId }) => {
     }
   };
 
-  const calculateSummary = (surveys, moods) => {
+  const calculateSummary = (surveys, moods, startDate, endDate) => {
     // Calculate average mood
     let totalMood = 0;
     moods.forEach((mood) => {
@@ -173,7 +181,9 @@ const StudentAnalytics = ({ initialStudentId }) => {
     const avgMood = moods.length > 0 ? totalMood / moods.length : null;
 
     // Calculate survey completion rate
-    const daysInRange = dateRange[1].diff(dateRange[0], "days") + 1;
+    const start = moment(startDate);
+    const end = moment(endDate);
+    const daysInRange = end.diff(start, "days") + 1;
     const surveyCompletionRate = (surveys.length / daysInRange) * 100;
 
     // Get latest zone (if any)
@@ -204,8 +214,8 @@ const StudentAnalytics = ({ initialStudentId }) => {
     setSelectedStudent(value);
   };
 
-  const handleDateRangeChange = (dates) => {
-    setDateRange(dates);
+  const handlePeriodChange = (e) => {
+    setPeriodFilter(e.target.value);
   };
 
   const handleCreateIntervention = () => {
@@ -478,12 +488,14 @@ const StudentAnalytics = ({ initialStudentId }) => {
             </Select>
           </Col>
           <Col span={12}>
-            <Text strong>Date Range:</Text>
-            <RangePicker
-              style={{ width: "100%" }}
-              value={dateRange}
-              onChange={handleDateRangeChange}
-            />
+            <Text strong>Time Period:</Text>
+            <div>
+              <Radio.Group onChange={handlePeriodChange} value={periodFilter}>
+                <Radio.Button value="week">Weekly</Radio.Button>
+                <Radio.Button value="month">Monthly</Radio.Button>
+                <Radio.Button value="semester">Semester</Radio.Button>
+              </Radio.Group>
+            </div>
           </Col>
         </Row>
       </div>

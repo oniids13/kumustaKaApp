@@ -4,7 +4,6 @@ import {
   Button,
   Typography,
   Select,
-  DatePicker,
   Radio,
   Checkbox,
   Form,
@@ -30,7 +29,6 @@ import moment from "moment";
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
-const { RangePicker } = DatePicker;
 
 const Reports = () => {
   const [loading, setLoading] = useState(false);
@@ -96,13 +94,30 @@ const Reports = () => {
   const handleGenerateReport = async (values) => {
     setGenerating(true);
     try {
-      // Format dates for API request
+      // Calculate date range based on period
+      const endDate = moment().format("YYYY-MM-DD");
+      let startDate;
+
+      switch (values.timePeriod) {
+        case "week":
+          startDate = moment().subtract(7, "days").format("YYYY-MM-DD");
+          break;
+        case "month":
+          startDate = moment().subtract(30, "days").format("YYYY-MM-DD");
+          break;
+        case "semester":
+          startDate = moment().subtract(4, "months").format("YYYY-MM-DD");
+          break;
+        default:
+          startDate = moment().subtract(7, "days").format("YYYY-MM-DD");
+      }
+
       const formattedValues = {
         ...values,
-        startDate: values.dateRange[0].format("YYYY-MM-DD"),
-        endDate: values.dateRange[1].format("YYYY-MM-DD"),
+        startDate,
+        endDate,
       };
-      delete formattedValues.dateRange;
+      delete formattedValues.timePeriod;
 
       const response = await axios.post(
         "http://localhost:3000/api/counselor/reports/generate",
@@ -206,7 +221,7 @@ const Reports = () => {
             includeCharts: true,
             includeTables: true,
             includeRecommendations: true,
-            dateRange: [moment().subtract(30, "days"), moment()],
+            timePeriod: "week",
           }}
         >
           <Form.Item
@@ -229,11 +244,15 @@ const Reports = () => {
           </Form.Item>
 
           <Form.Item
-            name="dateRange"
-            label="Date Range"
-            rules={[{ required: true, message: "Please select a date range" }]}
+            name="timePeriod"
+            label="Time Period"
+            rules={[{ required: true, message: "Please select a time period" }]}
           >
-            <RangePicker style={{ width: "100%" }} />
+            <Radio.Group>
+              <Radio.Button value="week">Weekly</Radio.Button>
+              <Radio.Button value="month">Monthly</Radio.Button>
+              <Radio.Button value="semester">Semester</Radio.Button>
+            </Radio.Group>
           </Form.Item>
 
           <Form.Item name="reportType" label="Report Type">
