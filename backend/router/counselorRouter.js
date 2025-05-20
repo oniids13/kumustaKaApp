@@ -13,6 +13,8 @@ const {
   downloadReportController,
   getStudentInitialAssessment,
   getDailySubmissionCountsController,
+  getTrendsController,
+  getDailySubmissionsController,
 } = require("../controller/counselorController");
 
 const counselorRouter = Router();
@@ -114,6 +116,14 @@ counselorRouter.get(
   passport.authenticate("jwt", { session: false }),
   isCounselor,
   getDailySubmissionCountsController
+);
+
+// Add trends endpoint
+counselorRouter.get(
+  "/trends",
+  passport.authenticate("jwt", { session: false }),
+  isCounselor,
+  getTrendsController
 );
 
 module.exports = counselorRouter;

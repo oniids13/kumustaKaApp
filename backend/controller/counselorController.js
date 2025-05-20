@@ -500,7 +500,65 @@ const getDailySubmissionCountsController = async (req, res) => {
   } catch (error) {
     console.error("Error getting daily submission counts:", error);
     res.status(500).json({
-      error: "Failed to get daily submission counts",
+      error: "Failed to get daily submissions data",
+    });
+  }
+};
+
+const getTrendsController = async (req, res) => {
+  try {
+    const { period, startDate, endDate } = req.query;
+
+    // Get counselor ID from user
+    const counselor = await counselorQueries.getCounselorByUserId(req.user.id);
+
+    if (!counselor) {
+      return res.status(404).json({
+        error: "Counselor profile not found",
+      });
+    }
+
+    // Get mood trends data
+    const moodTrends = await counselorQueries.getMoodTrends(
+      period,
+      startDate,
+      endDate
+    );
+
+    // Get daily mood trends
+    const dailyMoodTrends = await counselorQueries.getDailyMoodTrends(
+      startDate,
+      endDate
+    );
+
+    // Get timeframe trends
+    const timeframeTrends = await counselorQueries.getTimeframeTrends(
+      period,
+      startDate,
+      endDate
+    );
+
+    res.status(200).json({
+      moodTrends,
+      dailyMoodTrends,
+      timeframeTrends,
+    });
+  } catch (error) {
+    console.error("Error fetching trends data:", error);
+    res.status(500).json({
+      error: "Failed to fetch trends data",
+    });
+  }
+};
+
+const getDailySubmissionsController = async (req, res) => {
+  try {
+    const counts = await counselorQueries.getDailySubmissionCounts();
+    res.status(200).json(counts);
+  } catch (error) {
+    console.error("Error getting daily submission counts:", error);
+    res.status(500).json({
+      error: "Failed to get daily submissions data",
     });
   }
 };
@@ -518,4 +576,6 @@ module.exports = {
   downloadReportController,
   getStudentInitialAssessment,
   getDailySubmissionCountsController,
+  getTrendsController,
+  getDailySubmissionsController,
 };

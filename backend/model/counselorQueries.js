@@ -2,6 +2,22 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const PDFDocument = require("pdfkit");
 const { createObjectCsvStringifier } = require("csv-writer");
+const { Pool } = require("pg");
+
+// Initialize database connection pool if DATABASE_URL is defined
+let pool = null;
+try {
+  if (process.env.DATABASE_URL) {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+    });
+    console.log("PostgreSQL connection pool initialized");
+  } else {
+    console.log("DATABASE_URL not defined, using Prisma only");
+  }
+} catch (error) {
+  console.error("Error initializing PostgreSQL connection pool:", error);
+}
 
 /**
  * Get counselor by user ID
@@ -604,6 +620,282 @@ const getDailySubmissionCounts = async () => {
   }
 };
 
+const getMoodTrends = async (period, startDate, endDate) => {
+  try {
+    // Calculate date range based on period or custom dates
+    let dateFilter = {};
+
+    if (startDate && endDate) {
+      dateFilter = {
+        createdAt: {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        },
+      };
+    } else {
+      // Default periods if no custom date range
+      const now = new Date();
+
+      switch (period) {
+        case "week":
+          const weekStart = new Date(now);
+          weekStart.setDate(now.getDate() - 7);
+          dateFilter = {
+            createdAt: {
+              gte: weekStart,
+            },
+          };
+          break;
+        case "month":
+          const monthStart = new Date(now);
+          monthStart.setMonth(now.getMonth() - 1);
+          dateFilter = {
+            createdAt: {
+              gte: monthStart,
+            },
+          };
+          break;
+        case "semester":
+          const semesterStart = new Date(now);
+          semesterStart.setMonth(now.getMonth() - 4);
+          dateFilter = {
+            createdAt: {
+              gte: semesterStart,
+            },
+          };
+          break;
+        default:
+          const defaultStart = new Date(now);
+          defaultStart.setMonth(now.getMonth() - 1);
+          dateFilter = {
+            createdAt: {
+              gte: defaultStart,
+            },
+          };
+      }
+    }
+
+    // Fetch survey responses for the period
+    const surveyResponses = await prisma.surveyResponse.findMany({
+      where: {
+        ...dateFilter,
+      },
+      select: {
+        id: true,
+        zone: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    // Process data for mood trends over time using survey responses and zones
+    const moodTrends = processMoodTrendsData(surveyResponses, period);
+
+    return moodTrends;
+  } catch (error) {
+    console.error("Error fetching mood trends:", error);
+    throw error;
+  }
+};
+
+const getDailyMoodTrends = async (startDate, endDate) => {
+  try {
+    // Create date filter if provided
+    let dateFilter = {};
+    if (startDate && endDate) {
+      dateFilter = {
+        createdAt: {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        },
+      };
+    }
+
+    // Fetch mood entries for the period
+    const moodEntries = await prisma.moodEntry.findMany({
+      where: {
+        ...dateFilter,
+      },
+      select: {
+        id: true,
+        moodLevel: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    // Process data for daily mood trends
+    return processDailyMoodTrends(moodEntries);
+  } catch (error) {
+    console.error("Error fetching daily mood trends:", error);
+    throw error;
+  }
+};
+
+const getTimeframeTrends = async (period, startDate, endDate) => {
+  try {
+    // Create date filter if provided
+    let dateFilter = {};
+    if (startDate && endDate) {
+      dateFilter = {
+        createdAt: {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        },
+      };
+    }
+
+    // Fetch mood entries for the period
+    const moodEntries = await prisma.moodEntry.findMany({
+      where: {
+        ...dateFilter,
+      },
+      select: {
+        id: true,
+        moodLevel: true,
+        createdAt: true,
+      },
+    });
+
+    // Calculate total entries and average mood
+    const totalEntries = moodEntries.length;
+    const averageMood =
+      totalEntries > 0
+        ? moodEntries.reduce((sum, entry) => sum + entry.moodLevel, 0) /
+          totalEntries
+        : 0;
+
+    return {
+      totalEntries,
+      averageMood: parseFloat(averageMood.toFixed(2)),
+    };
+  } catch (error) {
+    console.error("Error fetching timeframe trends:", error);
+    throw error;
+  }
+};
+
+// Helper functions
+const processMoodTrendsData = (responses, period) => {
+  if (!responses.length) return [];
+
+  // Group by time period
+  const groupedByPeriod = {};
+
+  // For sorting days of the week properly
+  const dayOrder = {
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+    Sun: 7,
+  };
+
+  responses.forEach((response) => {
+    let key;
+    const date = new Date(response.createdAt);
+
+    switch (period) {
+      case "week":
+        // Group by day of week (short format)
+        key = date
+          .toLocaleDateString("en-US", { weekday: "short" })
+          .slice(0, 3);
+        break;
+      case "month":
+        // Group by week
+        const weekNum = Math.ceil(date.getDate() / 7);
+        key = `Week ${weekNum}`;
+        break;
+      case "semester":
+        // Group by month
+        key = date.toLocaleDateString("en-US", { month: "short" });
+        break;
+      default:
+        // Default to grouping by week
+        const defaultWeekNum = Math.ceil(date.getDate() / 7);
+        key = `Week ${defaultWeekNum}`;
+    }
+
+    if (!groupedByPeriod[key]) {
+      groupedByPeriod[key] = {
+        name: key,
+        "Green (Positive)": 0,
+        "Yellow (Moderate)": 0,
+        "Red (Needs Attention)": 0,
+        count: 0,
+      };
+    }
+
+    // Use the zone data directly from the response
+    if (response.zone) {
+      groupedByPeriod[key][response.zone]++;
+    }
+
+    groupedByPeriod[key].count++;
+  });
+
+  // Convert to array and sort
+  let result = Object.values(groupedByPeriod);
+
+  if (period === "week") {
+    // Sort by day of week
+    result.sort((a, b) => {
+      return dayOrder[a.name] - dayOrder[b.name];
+    });
+  } else if (period === "month") {
+    // Sort by week number
+    result.sort((a, b) => {
+      if (a.name.startsWith("Week") && b.name.startsWith("Week")) {
+        return parseInt(a.name.split(" ")[1]) - parseInt(b.name.split(" ")[1]);
+      }
+      return 0;
+    });
+  }
+
+  return result;
+};
+
+const processDailyMoodTrends = (moodEntries) => {
+  if (!moodEntries.length) return [];
+
+  // Group entries by date
+  const groupedByDate = {};
+
+  moodEntries.forEach((entry) => {
+    const date = new Date(entry.createdAt).toLocaleDateString();
+
+    if (!groupedByDate[date]) {
+      groupedByDate[date] = {
+        date,
+        positive: 0,
+        moderate: 0,
+        needsAttention: 0,
+      };
+    }
+
+    // Categorize mood levels
+    if (entry.moodLevel >= 4) {
+      groupedByDate[date].positive++;
+    } else if (entry.moodLevel >= 2) {
+      groupedByDate[date].moderate++;
+    } else {
+      groupedByDate[date].needsAttention++;
+    }
+  });
+
+  // Convert to array and sort by date
+  return Object.values(groupedByDate).sort(
+    (a, b) => new Date(a.date) - new Date(b.date)
+  );
+};
+
 module.exports = {
   getCounselorByUserId,
   getAllStudents,
@@ -623,4 +915,7 @@ module.exports = {
   generateCsvReport,
   getStudentInitialAssessment,
   getDailySubmissionCounts,
+  getMoodTrends,
+  getDailyMoodTrends,
+  getTimeframeTrends,
 };

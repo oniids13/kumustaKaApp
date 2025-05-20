@@ -25,8 +25,23 @@ import {
 import axios from "axios";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+} from "recharts";
 
 const { Title, Text, Paragraph } = Typography;
+
+// Custom colors for better visualization
+const ZONE_COLORS = {
+  "Green (Positive)": "#52c41a",
+  "Yellow (Moderate)": "#faad14",
+  "Red (Needs Attention)": "#ff4d4f",
+};
 
 const MentalHealthOverview = () => {
   const [loading, setLoading] = useState(true);
@@ -38,12 +53,14 @@ const MentalHealthOverview = () => {
     green: 0,
     total: 0,
   });
+  const [moodData, setMoodData] = useState([]);
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
 
   useEffect(() => {
     fetchStudentsWithData();
+    fetchMoodData();
   }, []);
 
   const fetchStudentsWithData = async () => {
@@ -199,6 +216,42 @@ const MentalHealthOverview = () => {
     }
   };
 
+  const fetchMoodData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(
+        "http://localhost:3000/api/counselor/trends",
+        {
+          params: {
+            period: "week",
+          },
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+
+      console.log("API Response:", response.data);
+
+      if (response.data && response.data.moodTrends) {
+        setMoodData(response.data.moodTrends);
+      } else {
+        console.log("No mood trends data in response");
+        setMoodData([]);
+      }
+    } catch (err) {
+      console.error("Error fetching mood data:", err);
+      setError(
+        err.response?.data?.error ||
+          "Failed to load mood data. Please try again later."
+      );
+      setMoodData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getStudentZone = (student) => {
     if (student.latestSurvey) {
       return student.latestSurvey.zone;
@@ -296,10 +349,13 @@ const MentalHealthOverview = () => {
       title: "Avg. Mood",
       dataIndex: "avgMood",
       key: "avgMood",
-      render: (avgMood) => (avgMood !== null ? avgMood.toFixed(1) : "No data"),
+      render: (avgMood) =>
+        avgMood !== null && avgMood !== undefined
+          ? avgMood.toFixed(1)
+          : "No data",
       sorter: (a, b) => {
-        if (a.avgMood === null) return 1;
-        if (b.avgMood === null) return -1;
+        if (a.avgMood === null || a.avgMood === undefined) return 1;
+        if (b.avgMood === null || b.avgMood === undefined) return -1;
         return a.avgMood - b.avgMood;
       },
     },
@@ -378,6 +434,49 @@ const MentalHealthOverview = () => {
     },
   ];
 
+  const calculateOverallStatus = (data) => {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      console.log("No valid data for calculateOverallStatus");
+      return [];
+    }
+
+    let totalGreen = 0;
+    let totalYellow = 0;
+    let totalRed = 0;
+
+    data.forEach((period) => {
+      if (period) {
+        totalGreen += period["Green (Positive)"] || 0;
+        totalYellow += period["Yellow (Moderate)"] || 0;
+        totalRed += period["Red (Needs Attention)"] || 0;
+      }
+    });
+
+    const total = totalGreen + totalYellow + totalRed;
+    if (total === 0) {
+      console.log("Total count is zero, returning empty array");
+      return [];
+    }
+
+    return [
+      {
+        name: "Positive",
+        value: Math.round((totalGreen / total) * 100),
+        color: ZONE_COLORS["Green (Positive)"],
+      },
+      {
+        name: "Moderate",
+        value: Math.round((totalYellow / total) * 100),
+        color: ZONE_COLORS["Yellow (Moderate)"],
+      },
+      {
+        name: "Needs Attention",
+        value: Math.round((totalRed / total) * 100),
+        color: ZONE_COLORS["Red (Needs Attention)"],
+      },
+    ];
+  };
+
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "50px" }}>
@@ -389,6 +488,20 @@ const MentalHealthOverview = () => {
 
   if (error) {
     return <Alert message={error} type="error" />;
+  }
+
+  const hasData = Array.isArray(moodData) && moodData.length > 0;
+
+  if (!hasData) {
+    return (
+      <Alert
+        message="No Data Available"
+        description="There is no mental health data available for the current period."
+        type="info"
+        showIcon
+        style={{ margin: "20px" }}
+      />
+    );
   }
 
   return (
@@ -455,6 +568,58 @@ const MentalHealthOverview = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Overall Mental Health Status */}
+      <div style={{ marginTop: "30px" }}>
+        <Title level={3}>
+          <Space>
+            <LineChartOutlined />
+            Overall Mental Health Status
+          </Space>
+        </Title>
+
+        <Card>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              {calculateOverallStatus(moodData).length > 0 ? (
+                <Pie
+                  data={calculateOverallStatus(moodData)}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, value }) => `${name}: ${value}%`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {calculateOverallStatus(moodData).map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+              ) : (
+                <text
+                  x="50%"
+                  y="50%"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                >
+                  No data available for chart
+                </text>
+              )}
+              <Tooltip
+                formatter={(value) => `${value}%`}
+                contentStyle={{
+                  backgroundColor: "white",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  padding: "8px",
+                }}
+              />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </Card>
+      </div>
 
       {/* Students Needing Attention */}
       <div style={{ marginTop: "30px" }}>

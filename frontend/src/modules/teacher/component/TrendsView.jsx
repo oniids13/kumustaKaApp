@@ -23,6 +23,8 @@ import {
   Legend,
   ResponsiveContainer,
   Cell,
+  PieChart,
+  Pie,
 } from "recharts";
 
 const { Title, Text } = Typography;
@@ -245,6 +247,41 @@ const TrendsView = () => {
     }));
   };
 
+  const calculateOverallStatus = (data) => {
+    if (!data || !data.length) return [];
+
+    let totalGreen = 0;
+    let totalYellow = 0;
+    let totalRed = 0;
+
+    data.forEach((period) => {
+      totalGreen += period["Green (Positive)"] || 0;
+      totalYellow += period["Yellow (Moderate)"] || 0;
+      totalRed += period["Red (Needs Attention)"] || 0;
+    });
+
+    const total = totalGreen + totalYellow + totalRed;
+    if (total === 0) return [];
+
+    return [
+      {
+        name: "Positive",
+        value: Math.round((totalGreen / total) * 100),
+        color: ZONE_COLORS["Green (Positive)"],
+      },
+      {
+        name: "Moderate",
+        value: Math.round((totalYellow / total) * 100),
+        color: ZONE_COLORS["Yellow (Moderate)"],
+      },
+      {
+        name: "Needs Attention",
+        value: Math.round((totalRed / total) * 100),
+        color: ZONE_COLORS["Red (Needs Attention)"],
+      },
+    ];
+  };
+
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "50px" }}>
@@ -309,6 +346,41 @@ const TrendsView = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Overall Mental Health Status */}
+      <Card
+        title="Overall Mental Health Status"
+        style={{ marginBottom: "30px" }}
+      >
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={calculateOverallStatus(moodData)}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={({ name, value }) => `${name}: ${value}%`}
+              outerRadius={100}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {calculateOverallStatus(moodData).map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip
+              formatter={(value) => `${value}%`}
+              contentStyle={{
+                backgroundColor: "white",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                padding: "8px",
+              }}
+            />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </Card>
 
       <div style={{ marginTop: "20px", marginBottom: "30px" }}>
         <Row gutter={16}>
