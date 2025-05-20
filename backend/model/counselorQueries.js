@@ -560,6 +560,50 @@ const getStudentInitialAssessment = async (studentId) => {
   }
 };
 
+/**
+ * Get daily submission counts for mood entries and surveys
+ */
+const getDailySubmissionCounts = async () => {
+  try {
+    // Get today's date at midnight
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Get tomorrow's date at midnight
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Get mood entry count for today
+    const moodEntriesCount = await prisma.moodEntry.count({
+      where: {
+        createdAt: {
+          gte: today,
+          lt: tomorrow,
+        },
+      },
+    });
+
+    // Get survey response count for today
+    const surveyResponsesCount = await prisma.surveyResponse.count({
+      where: {
+        createdAt: {
+          gte: today,
+          lt: tomorrow,
+        },
+      },
+    });
+
+    return {
+      date: today.toISOString(),
+      moodEntriesCount,
+      surveyResponsesCount,
+    };
+  } catch (error) {
+    console.error("Error getting daily submission counts:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   getCounselorByUserId,
   getAllStudents,
@@ -578,4 +622,5 @@ module.exports = {
   generatePdfReport,
   generateCsvReport,
   getStudentInitialAssessment,
+  getDailySubmissionCounts,
 };

@@ -421,6 +421,28 @@ const generateCsvReport = (reportData, res) => {
   res.end();
 };
 
+/**
+ * Get daily submission counts
+ */
+const getDailySubmissionCountsController = async (req, res) => {
+  try {
+    // Verify user is a teacher
+    if (req.user.role !== "TEACHER") {
+      return res.status(403).json({
+        error: "Access denied: Only teachers can access submission counts",
+      });
+    }
+
+    const submissionCounts = await teacherQueries.getDailySubmissionCounts();
+    res.status(200).json(submissionCounts);
+  } catch (error) {
+    console.error("Error fetching daily submission counts:", error);
+    res.status(500).json({
+      error: "Failed to fetch daily submission counts",
+    });
+  }
+};
+
 module.exports = {
   getTrendsController,
   generateReportController,
@@ -428,4 +450,5 @@ module.exports = {
   getClassroomMoodOverviewController,
   getAcademicPerformanceController,
   getAllStudentsController,
+  getDailySubmissionCountsController,
 };

@@ -9,6 +9,7 @@ const {
   getClassroomMoodOverviewController,
   getAcademicPerformanceController,
   getAllStudentsController,
+  getDailySubmissionCountsController,
 } = require("../controller/teacherController");
 
 // Middleware to check if user is a teacher
@@ -23,6 +24,12 @@ const isTeacher = (req, res, next) => {
 
 // Dashboard data
 router.get("/trends", auth, isTeacher, getTrendsController);
+router.get(
+  "/daily-submissions",
+  auth,
+  isTeacher,
+  getDailySubmissionCountsController
+);
 router.get(
   "/mood-overview",
   auth,

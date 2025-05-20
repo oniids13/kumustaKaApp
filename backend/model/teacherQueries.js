@@ -168,6 +168,9 @@ const getMentalHealthTrends = async (params, teacherId) => {
     // Process data for mood trends over time using survey responses and zones
     const moodTrends = processMoodTrendsData(surveyResponses, period);
 
+    // Process data for daily mood trends
+    const dailyMoodTrends = processDailyMoodTrends(moodEntries);
+
     // Process data for issue categories using survey responses
     const issueCategories = processIssueCategories(surveyResponses);
 
@@ -176,6 +179,7 @@ const getMentalHealthTrends = async (params, teacherId) => {
 
     return {
       moodTrends,
+      dailyMoodTrends,
       issueCategories,
       timeframeTrends,
       totalResponses: moodEntries.length + surveyResponses.length,
@@ -445,6 +449,50 @@ const getAcademicPerformanceIndicators = async (teacherId) => {
   }
 };
 
+/**
+ * Get daily submission counts for mood entries and surveys
+ */
+const getDailySubmissionCounts = async () => {
+  try {
+    // Get today's date at midnight
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Get tomorrow's date at midnight
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Get mood entry count for today
+    const moodEntriesCount = await prisma.moodEntry.count({
+      where: {
+        createdAt: {
+          gte: today,
+          lt: tomorrow,
+        },
+      },
+    });
+
+    // Get survey response count for today
+    const surveyResponsesCount = await prisma.surveyResponse.count({
+      where: {
+        createdAt: {
+          gte: today,
+          lt: tomorrow,
+        },
+      },
+    });
+
+    return {
+      date: today.toISOString(),
+      moodEntriesCount,
+      surveyResponsesCount,
+    };
+  } catch (error) {
+    console.error("Error getting daily submission counts:", error);
+    throw error;
+  }
+};
+
 // Helper functions
 /**
  * Process survey response data into trends over time using zones
@@ -699,6 +747,43 @@ const generateRecommendedActions = (trendsData) => {
   return recommendations.slice(0, 3); // Return top 3 recommendations
 };
 
+/**
+ * Process daily mood trends from mood entries
+ */
+const processDailyMoodTrends = (moodEntries) => {
+  if (!moodEntries.length) return [];
+
+  // Group entries by date
+  const groupedByDate = {};
+
+  moodEntries.forEach((entry) => {
+    const date = new Date(entry.createdAt).toLocaleDateString();
+
+    if (!groupedByDate[date]) {
+      groupedByDate[date] = {
+        date,
+        positive: 0,
+        moderate: 0,
+        needsAttention: 0,
+      };
+    }
+
+    // Categorize mood levels
+    if (entry.moodLevel >= 4) {
+      groupedByDate[date].positive++;
+    } else if (entry.moodLevel >= 2) {
+      groupedByDate[date].moderate++;
+    } else {
+      groupedByDate[date].needsAttention++;
+    }
+  });
+
+  // Convert to array and sort by date
+  return Object.values(groupedByDate).sort(
+    (a, b) => new Date(a.date) - new Date(b.date)
+  );
+};
+
 module.exports = {
   getTeacherByUserId,
   getAllStudents,
@@ -707,4 +792,5 @@ module.exports = {
   getStudentForumActivity,
   getClassroomMoodOverview,
   getAcademicPerformanceIndicators,
+  getDailySubmissionCounts,
 };

@@ -6,6 +6,7 @@ import InterventionPlans from "./component/InterventionPlans";
 import Reports from "./component/Reports";
 import InterventionHistory from "./component/InterventionHistory";
 import MentalHealthOverview from "./component/MentalHealthOverview";
+import DailySubmissions from "./component/DailySubmissions";
 
 // CSS
 import "./styles/CounselorDashboard.css";
@@ -37,7 +38,12 @@ const CounselorDashboard = () => {
   const renderMainContent = () => {
     switch (activeModule) {
       case "dashboard":
-        return <MentalHealthOverview />;
+        return (
+          <>
+            <DailySubmissions />
+            <MentalHealthOverview />
+          </>
+        );
       case "analytics":
         return <StudentAnalytics initialStudentId={studentId} />;
       case "interventions":
@@ -56,7 +62,12 @@ const CounselorDashboard = () => {
       case "history":
         return <InterventionHistory />;
       default:
-        return <MentalHealthOverview />;
+        return (
+          <>
+            <DailySubmissions />
+            <MentalHealthOverview />
+          </>
+        );
     }
   };
 

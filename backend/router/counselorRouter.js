@@ -12,6 +12,7 @@ const {
   getReportHistoryController,
   downloadReportController,
   getStudentInitialAssessment,
+  getDailySubmissionCountsController,
 } = require("../controller/counselorController");
 
 const counselorRouter = Router();
@@ -105,6 +106,14 @@ counselorRouter.get(
   passport.authenticate("jwt", { session: false }),
   isCounselor,
   getStudentInitialAssessment
+);
+
+// Get daily submissions
+counselorRouter.get(
+  "/daily-submissions",
+  passport.authenticate("jwt", { session: false }),
+  isCounselor,
+  getDailySubmissionCountsController
 );
 
 module.exports = counselorRouter;

@@ -490,6 +490,21 @@ const getStudentInitialAssessment = async (req, res) => {
   }
 };
 
+/**
+ * Get daily submission counts for mood entries and surveys
+ */
+const getDailySubmissionCountsController = async (req, res) => {
+  try {
+    const counts = await counselorQueries.getDailySubmissionCounts();
+    res.status(200).json(counts);
+  } catch (error) {
+    console.error("Error getting daily submission counts:", error);
+    res.status(500).json({
+      error: "Failed to get daily submission counts",
+    });
+  }
+};
+
 module.exports = {
   getStudentsController,
   getStudentSurveysController,
@@ -502,4 +517,5 @@ module.exports = {
   getReportHistoryController,
   downloadReportController,
   getStudentInitialAssessment,
+  getDailySubmissionCountsController,
 };
