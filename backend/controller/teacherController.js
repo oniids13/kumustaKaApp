@@ -443,6 +443,34 @@ const getDailySubmissionCountsController = async (req, res) => {
   }
 };
 
+/**
+ * Delete a forum post
+ */
+const deleteForumPostController = async (req, res) => {
+  try {
+    // Verify user is a teacher
+    if (req.user.role !== "TEACHER") {
+      return res.status(403).json({
+        error: "Access denied: Only teachers can delete forum posts",
+      });
+    }
+
+    const { postId } = req.params;
+
+    const deletedPost = await teacherQueries.deleteForumPost(postId);
+
+    res.status(200).json({
+      message: "Post deleted successfully",
+      deletedPost,
+    });
+  } catch (error) {
+    console.error("Error deleting forum post:", error);
+    res.status(error.message === "Post not found" ? 404 : 500).json({
+      error: error.message || "Failed to delete forum post",
+    });
+  }
+};
+
 module.exports = {
   getTrendsController,
   generateReportController,
@@ -451,4 +479,5 @@ module.exports = {
   getAcademicPerformanceController,
   getAllStudentsController,
   getDailySubmissionCountsController,
+  deleteForumPostController,
 };

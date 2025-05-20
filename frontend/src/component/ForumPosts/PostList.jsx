@@ -13,6 +13,10 @@ const PostList = () => {
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
 
+  console.log("PostList rendered - User data:", user);
+  console.log("PostList rendered - User role:", user.role);
+  console.log("PostList rendered - User ID:", user.userId);
+
   const fetchPosts = async () => {
     setLoading(true);
     try {
@@ -106,23 +110,32 @@ const PostList = () => {
   };
 
   const handleDeletePost = async (postId) => {
-    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    if (window.confirm("Are you sure you want to delete this post?")) {
+      try {
+        console.log("Delete request - User role:", user.role);
+        console.log("Delete request - User ID:", user.userId);
+        console.log("Delete request - Post ID:", postId);
 
-    try {
-      await axios.delete(
-        `http://localhost:3000/api/forum/deletePost/${postId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
-      );
-      setPosts([]);
-      setLoading(true);
-      await fetchPosts();
-    } catch (error) {
-      console.error("Error deleting post:", error);
-      alert("Failed to delete post");
+        const response = await axios.delete(
+          `http://localhost:3000/api/forum/deletePost/${postId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          }
+        );
+
+        console.log("Delete response:", response.data);
+        alert("Post deleted successfully");
+        setPosts(posts.filter((post) => post.id !== postId));
+      } catch (error) {
+        console.error("Error deleting post:", error);
+        console.error("Error response:", error.response?.data);
+        alert(
+          error.response?.data?.message ||
+            "Failed to delete post. Please try again."
+        );
+      }
     }
   };
 
@@ -190,6 +203,9 @@ const PostList = () => {
             });
           };
 
+          const canDeletePost =
+            user.role === "TEACHER" || user.userId === post.authorId;
+
           return (
             <div key={post.id} className="card mb-4">
               <div className="card-header bg-white">
@@ -215,16 +231,22 @@ const PostList = () => {
                     </div>
                   </div>
 
-                  {user?.userId === post.authorId && !editingPostId && (
+                  {canDeletePost && !editingPostId && (
                     <div className="d-flex gap-3">
+                      {user.userId === post.authorId && (
+                        <button
+                          onClick={() => setEditingPostId(post.id)}
+                          className="btn btn-sm btn-primary"
+                        >
+                          Edit
+                        </button>
+                      )}
                       <button
-                        onClick={() => setEditingPostId(post.id)}
-                        className="btn btn-sm btn-primary"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeletePost(post.id)}
+                        onClick={() => {
+                          console.log("Delete button clicked");
+                          console.log("Post ID:", post.id);
+                          handleDeletePost(post.id);
+                        }}
                         className="btn btn-sm btn-danger"
                       >
                         Delete

@@ -155,13 +155,34 @@ const deleteForumPostController = async (req, res) => {
   try {
     const postId = req.params.postId;
     const userId = req.user.id;
-    const post = await getForumPost(postId);
+    const userRole = req.user.role;
 
-    if (!post || post.authorId !== userId) {
-      return res.status(403).json({ message: "Unauthorized" });
+    console.log("Delete request - User ID:", userId);
+    console.log("Delete request - User Role:", userRole);
+    console.log("Delete request - Post ID:", postId);
+
+    const post = await getForumPost(postId);
+    console.log("Post data:", post);
+
+    // Allow deletion if user is the author or a teacher
+    if (!post) {
+      console.log("Post not found");
+      return res.status(404).json({
+        message: "Post not found",
+      });
     }
 
+    if (post.authorId !== userId && userRole !== "TEACHER") {
+      console.log("Unauthorized - User is not author or teacher");
+      return res.status(403).json({
+        message:
+          "Unauthorized: Only post authors and teachers can delete posts",
+      });
+    }
+
+    console.log("Authorizing deletion...");
     await deleteForumPost(postId);
+    console.log("Post deleted successfully");
 
     res.status(200).json({ message: "Post deleted successfully" });
   } catch (error) {

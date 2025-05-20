@@ -493,6 +493,46 @@ const getDailySubmissionCounts = async () => {
   }
 };
 
+/**
+ * Delete a forum post
+ * @param {string} postId - ID of the post to delete
+ * @returns {Promise<Object>} Deleted post data
+ */
+const deleteForumPost = async (postId) => {
+  try {
+    // First check if the post exists
+    const post = await prisma.forumPost.findUnique({
+      where: { id: postId },
+      select: {
+        id: true,
+        author: {
+          select: {
+            role: true,
+          },
+        },
+      },
+    });
+
+    if (!post) {
+      throw new Error("Post not found");
+    }
+
+    // Delete the post and its related data (comments, reactions)
+    const deletedPost = await prisma.forumPost.delete({
+      where: { id: postId },
+      include: {
+        comments: true,
+        reactions: true,
+      },
+    });
+
+    return deletedPost;
+  } catch (error) {
+    console.error("Error deleting forum post:", error);
+    throw error;
+  }
+};
+
 // Helper functions
 /**
  * Process survey response data into trends over time using zones
@@ -793,4 +833,5 @@ module.exports = {
   getClassroomMoodOverview,
   getAcademicPerformanceIndicators,
   getDailySubmissionCounts,
+  deleteForumPost,
 };

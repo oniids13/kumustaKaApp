@@ -210,6 +210,21 @@ const getForumPost = async (postId) => {
   try {
     const post = await prisma.forumPost.findUnique({
       where: { id: postId },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        images: true,
+        authorId: true,
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+      },
     });
     return post;
   } catch (error) {

@@ -1,7 +1,5 @@
 const express = require("express");
-const router = express.Router();
-const auth = require("../middleware/auth");
-const checkRole = require("../middleware/checkRole");
+const passport = require("passport");
 const {
   getTrendsController,
   generateReportController,
@@ -11,6 +9,8 @@ const {
   getAllStudentsController,
   getDailySubmissionCountsController,
 } = require("../controller/teacherController");
+
+const router = express.Router();
 
 // Middleware to check if user is a teacher
 const isTeacher = (req, res, next) => {
@@ -23,34 +23,49 @@ const isTeacher = (req, res, next) => {
 };
 
 // Dashboard data
-router.get("/trends", auth, isTeacher, getTrendsController);
+router.get(
+  "/trends",
+  passport.authenticate("jwt", { session: false }),
+  isTeacher,
+  getTrendsController
+);
 router.get(
   "/daily-submissions",
-  auth,
+  passport.authenticate("jwt", { session: false }),
   isTeacher,
   getDailySubmissionCountsController
 );
 router.get(
   "/mood-overview",
-  auth,
+  passport.authenticate("jwt", { session: false }),
   isTeacher,
   getClassroomMoodOverviewController
 );
 router.get(
   "/academic-performance",
-  auth,
+  passport.authenticate("jwt", { session: false }),
   isTeacher,
   getAcademicPerformanceController
 );
 router.get(
   "/forum-activity",
-  auth,
+  passport.authenticate("jwt", { session: false }),
   isTeacher,
   getStudentForumActivityController
 );
-router.get("/students", auth, isTeacher, getAllStudentsController);
+router.get(
+  "/students",
+  passport.authenticate("jwt", { session: false }),
+  isTeacher,
+  getAllStudentsController
+);
 
 // Report generation
-router.post("/reports", auth, isTeacher, generateReportController);
+router.post(
+  "/reports",
+  passport.authenticate("jwt", { session: false }),
+  isTeacher,
+  generateReportController
+);
 
 module.exports = router;
