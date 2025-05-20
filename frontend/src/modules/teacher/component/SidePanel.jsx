@@ -11,6 +11,7 @@ import {
   FaChartLine,
   FaFileAlt,
   FaEnvelope,
+  FaCog,
 } from "react-icons/fa";
 
 const SidePanel = ({ user, activeModule, setActiveModule }) => {
@@ -76,6 +77,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
           )}
           {renderNavButton("trends", <FaChartLine />, "View Trends")}
           {renderNavButton("reports", <FaFileAlt />, "Generate Report")}
+          {renderNavButton("settings", <FaCog />, "Settings")}
         </div>
       </div>
     </div>

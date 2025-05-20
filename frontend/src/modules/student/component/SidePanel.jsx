@@ -11,6 +11,7 @@ import {
   FaEnvelope,
   FaSmile,
   FaThermometerHalf,
+  FaCog,
 } from "react-icons/fa";
 
 import "../styles/SidePanel.css";
@@ -417,6 +418,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
         {renderNavButton("resources", <FaBookOpen />, "Resource Library")}
         {renderNavButton("consent", <FaShieldAlt />, "Privacy and Consent")}
         {renderNavButton("emergency", <FaAddressCard />, "Emergency Contact")}
+        {renderNavButton("settings", <FaCog />, "Settings")}
       </div>
     </>
   );

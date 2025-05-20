@@ -67,6 +67,7 @@ const counselorRouter = require("./router/counselorRouter");
 const adminRouter = require("./router/adminRouter");
 const teacherRouter = require("./router/teacherRouter");
 const communicationRouter = require("./router/communicationRouter");
+const passwordRouter = require("./router/passwordRouter");
 
 app.use(
   cors({
@@ -121,6 +122,7 @@ app.use("/api/counselor", counselorRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/teacher", teacherRouter);
 app.use("/api/communication", communicationRouter);
+app.use("/api/password", passwordRouter);
 
 // Serve static files from the uploads directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

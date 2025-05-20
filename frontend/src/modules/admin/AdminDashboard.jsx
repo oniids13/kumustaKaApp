@@ -6,6 +6,7 @@ import RoleManagement from "./component/RoleManagement";
 import SystemConfiguration from "./component/SystemConfiguration";
 import PrivacySettings from "./component/PrivacySettings";
 import ComplianceMonitoring from "./component/ComplianceMonitoring";
+import AdminResetPassword from "./component/AdminResetPassword";
 
 // CSS
 import "./styles/AdminDashboard.css";
@@ -28,6 +29,8 @@ const AdminDashboard = () => {
         return <PrivacySettings />;
       case "compliance":
         return <ComplianceMonitoring />;
+      case "resetPassword":
+        return <AdminResetPassword />;
       default:
         return <DashboardOverview />;
     }

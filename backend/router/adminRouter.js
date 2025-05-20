@@ -1,69 +1,89 @@
 const express = require("express");
 const router = express.Router();
 const adminController = require("../controller/adminController");
-const auth = require("../middleware/auth");
+const { authenticateToken } = require("../middleware/auth");
 const checkRole = require("../middleware/checkRole");
 
 // System Dashboard
 router.get(
   "/system-stats",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.getSystemStats
 );
 router.get(
   "/recent-activities",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.getRecentActivities
 );
 
 // User Management
-router.get("/users", auth, checkRole(["ADMIN"]), adminController.getAllUsers);
-router.post("/users", auth, checkRole(["ADMIN"]), adminController.createUser);
+router.get(
+  "/users",
+  authenticateToken,
+  checkRole(["ADMIN"]),
+  adminController.getAllUsers
+);
+router.post(
+  "/users",
+  authenticateToken,
+  checkRole(["ADMIN"]),
+  adminController.createUser
+);
 router.get(
   "/users/:id",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.getUserById
 );
 router.put(
   "/users/:id",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.updateUser
 );
 router.delete(
   "/users/:id",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.deleteUser
 );
 router.patch(
   "/users/:id/status",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.updateUserStatus
 );
 
 // Role Management
-router.get("/roles", auth, checkRole(["ADMIN"]), adminController.getAllRoles);
-router.post("/roles", auth, checkRole(["ADMIN"]), adminController.createRole);
+router.get(
+  "/roles",
+  authenticateToken,
+  checkRole(["ADMIN"]),
+  adminController.getAllRoles
+);
+router.post(
+  "/roles",
+  authenticateToken,
+  checkRole(["ADMIN"]),
+  adminController.createRole
+);
 router.get(
   "/roles/:id",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.getRoleById
 );
 router.put(
   "/roles/:id",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.updateRole
 );
 router.delete(
   "/roles/:id",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.deleteRole
 );
@@ -71,13 +91,13 @@ router.delete(
 // System Configuration
 router.get(
   "/settings",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.getSystemSettings
 );
 router.put(
   "/settings",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.updateSystemSettings
 );
@@ -85,13 +105,13 @@ router.put(
 // Privacy Settings
 router.get(
   "/privacy-settings",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.getPrivacySettings
 );
 router.put(
   "/privacy-settings",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.updatePrivacySettings
 );
@@ -99,13 +119,13 @@ router.put(
 // Compliance Monitoring
 router.get(
   "/compliance",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.getComplianceData
 );
 router.get(
   "/security-logs",
-  auth,
+  authenticateToken,
   checkRole(["ADMIN"]),
   adminController.getSecurityLogs
 );

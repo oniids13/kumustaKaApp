@@ -9,6 +9,9 @@ import PostList from "../../component/ForumPosts/PostList";
 // Messaging Component
 import MessagingContainer from "../../component/Messaging/MessagingContainer";
 
+// User Settings Component
+import UserSettings from "../../components/UserSettings";
+
 // CSS
 import "./styles/TeacherModule.css";
 
@@ -34,6 +37,8 @@ const TeacherDashboard = () => {
         return <ReportGenerator />;
       case "messaging":
         return <MessagingContainer />;
+      case "settings":
+        return <UserSettings />;
       case "forum":
       default:
         return (

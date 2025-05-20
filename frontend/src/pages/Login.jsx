@@ -126,6 +126,13 @@ const LoginForm = ({ handleChange, handleLogin, error, isLoading }) => {
           />
         </div>
 
+        <div className="forgot-password">
+          <p>
+            Forgot your password? Please contact an administrator for a password
+            reset.
+          </p>
+        </div>
+
         <button type="submit" disabled={isLoading} className="login-button">
           {isLoading ? (
             <span className="spinner"></span>

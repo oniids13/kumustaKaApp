@@ -12,6 +12,7 @@ import PrivacyConsentSection from "./component/ConsentSection";
 import EmergencyContact from "./component/EmergencyContact";
 import Quiz from "./component/Quiz";
 import GoalTracker from "./component/GoalTracker";
+import UserSettings from "../../components/UserSettings";
 
 // Forum Post Components
 import CreatePostForm from "../../component/ForumPosts/CreatePostForm";
@@ -95,6 +96,8 @@ const StudentDashboard = () => {
         return <GoalTracker />;
       case "messaging":
         return <MessagingContainer />;
+      case "settings":
+        return <UserSettings />;
       case "forum":
       default:
         return (

@@ -6,6 +6,7 @@ import {
   FaTachometerAlt,
   FaDatabase,
   FaUsersCog,
+  FaKey,
 } from "react-icons/fa";
 import "../styles/SidePanel.css";
 
@@ -64,6 +65,14 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
           onClick={() => setActiveModule("compliance")}
         >
           <FaDatabase /> Compliance Monitoring
+        </button>
+        <button
+          className={`nav-button ${
+            activeModule === "resetPassword" ? "active" : ""
+          }`}
+          onClick={() => setActiveModule("resetPassword")}
+        >
+          <FaKey /> Reset User Password
         </button>
       </div>
     </>

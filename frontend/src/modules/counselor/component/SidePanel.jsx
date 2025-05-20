@@ -7,6 +7,7 @@ import {
   FaHistory,
   FaTachometerAlt,
   FaEnvelope,
+  FaCog,
 } from "react-icons/fa";
 import "../styles/SidePanel.css";
 import { Badge } from "react-bootstrap";
@@ -72,6 +73,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
         )}
         {renderNavButton("forum", <FaComments />, "Community Forum")}
         {renderNavButton("history", <FaHistory />, "Intervention History")}
+        {renderNavButton("settings", <FaCog />, "Settings")}
       </div>
     </>
   );

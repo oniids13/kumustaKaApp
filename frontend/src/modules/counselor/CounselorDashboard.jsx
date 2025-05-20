@@ -7,6 +7,7 @@ import Reports from "./component/Reports";
 import InterventionHistory from "./component/InterventionHistory";
 import MentalHealthOverview from "./component/MentalHealthOverview";
 import DailySubmissions from "./component/DailySubmissions";
+import UserSettings from "../../components/UserSettings";
 
 // CSS
 import "./styles/CounselorDashboard.css";
@@ -59,6 +60,8 @@ const CounselorDashboard = () => {
             <PostList key={refreshPosts} />
           </>
         );
+      case "settings":
+        return <UserSettings />;
       case "history":
         return <InterventionHistory />;
       default:
