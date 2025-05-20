@@ -252,15 +252,17 @@ const editCommentController = async (req, res) => {
 const deleteCommentController = async (req, res) => {
   try {
     const { commentId } = req.params;
-
     const userId = req.user.id;
+    const userRole = req.user.role;
 
-    const deletedComment = await deleteComment(commentId, userId);
+    const deletedComment = await deleteComment(commentId, userId, userRole);
 
     return res.status(200).json(deletedComment);
   } catch (error) {
     console.error("Error deleting comment: ", error);
-    return res.status(500);
+    return res
+      .status(500)
+      .json({ message: error.message || "Failed to delete comment" });
   }
 };
 

@@ -315,13 +315,17 @@ const editComment = async (commendId, userId, content) => {
   }
 };
 
-const deleteComment = async (commentId, userId) => {
+const deleteComment = async (commentId, userId, userRole) => {
   try {
     const existingComment = await prisma.comment.findUnique({
       where: { id: commentId },
     });
 
-    if (existingComment.authorId !== userId) {
+    if (!existingComment) {
+      throw new Error("Comment not found");
+    }
+
+    if (existingComment.authorId !== userId && userRole !== "TEACHER") {
       throw new Error("Unauthorized: You can only delete your own comments.");
     }
 

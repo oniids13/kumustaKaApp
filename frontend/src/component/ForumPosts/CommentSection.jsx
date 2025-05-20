@@ -232,37 +232,41 @@ const CommentSection = ({ postId }) => {
                 </small>
               </div>
 
-              {user && user.userId === comment.author.id && (
-                <div className="d-flex align-items-center gap-2 ms-2">
-                  <button
-                    onClick={() => handleEdit(comment)}
-                    className="btn btn-sm btn-outline-primary"
-                    disabled={
-                      loadingStates.edit[comment.id] ||
-                      loadingStates.delete[comment.id]
-                    }
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(comment.id)}
-                    className="btn btn-sm btn-outline-danger"
-                    disabled={loadingStates.delete[comment.id]}
-                  >
-                    {loadingStates.delete[comment.id] ? (
-                      <>
-                        <span
-                          className="spinner-border spinner-border-sm me-2"
-                          role="status"
-                        ></span>
-                        Deleting...
-                      </>
-                    ) : (
-                      "Delete"
+              {user &&
+                (user.role === "TEACHER" ||
+                  user.userId === comment.author.id) && (
+                  <div className="d-flex align-items-center gap-2 ms-2">
+                    {user.userId === comment.author.id && (
+                      <button
+                        onClick={() => handleEdit(comment)}
+                        className="btn btn-sm btn-outline-primary"
+                        disabled={
+                          loadingStates.edit[comment.id] ||
+                          loadingStates.delete[comment.id]
+                        }
+                      >
+                        Edit
+                      </button>
                     )}
-                  </button>
-                </div>
-              )}
+                    <button
+                      onClick={() => handleDelete(comment.id)}
+                      className="btn btn-sm btn-outline-danger"
+                      disabled={loadingStates.delete[comment.id]}
+                    >
+                      {loadingStates.delete[comment.id] ? (
+                        <>
+                          <span
+                            className="spinner-border spinner-border-sm me-2"
+                            role="status"
+                          ></span>
+                          Deleting...
+                        </>
+                      ) : (
+                        "Delete"
+                      )}
+                    </button>
+                  </div>
+                )}
             </div>
           </div>
         ))}
