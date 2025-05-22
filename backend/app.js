@@ -15,6 +15,8 @@ const dotenv = require("dotenv");
 const morgan = require("morgan");
 const path = require("path");
 const { rateLimit } = require("express-rate-limit");
+const helmet = require("helmet");
+const { validateRequestParams } = require("./middleware/securityMiddleware");
 
 // Load Environment variables
 dotenv.config();
@@ -22,10 +24,14 @@ dotenv.config();
 const app = express();
 
 // Set up middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cors());
 app.use(morgan("dev"));
+
+// Security middlewares
+app.use(helmet()); // Set various HTTP headers for security
+app.use(validateRequestParams); // Custom request validation and sanitization includes XSS protection
 
 // Configure more permissive rate limiting for development
 const isProduction = process.env.NODE_ENV === "production";
@@ -68,6 +74,7 @@ const adminRouter = require("./router/adminRouter");
 const teacherRouter = require("./router/teacherRouter");
 const communicationRouter = require("./router/communicationRouter");
 const passwordRouter = require("./router/passwordRouter");
+const healthRouter = require("./router/healthRouter");
 
 app.use(
   cors({
@@ -123,6 +130,7 @@ app.use("/api/admin", adminRouter);
 app.use("/api/teacher", teacherRouter);
 app.use("/api/communication", communicationRouter);
 app.use("/api/password", passwordRouter);
+app.use("/api", healthRouter);
 
 // Serve static files from the uploads directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

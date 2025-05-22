@@ -1,9 +1,24 @@
 import axios from "axios";
+import { sanitizeData, sanitizeUrlParam } from "./sanitizeUtils";
 
 // Create an axios instance with a base URL
 const api = axios.create({
   baseURL: "http://localhost:3000",
 });
+
+// Add a response interceptor to sanitize all response data
+api.interceptors.response.use(
+  (response) => {
+    // Sanitize the response data to prevent XSS
+    if (response.data) {
+      response.data = sanitizeData(response.data);
+    }
+    return response;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 /**
  * Make an API request with automatic retry on rate limit (429) errors
@@ -19,6 +34,19 @@ export const apiRequest = async (
 ) => {
   let retries = 0;
   let delay = initialDelay;
+
+  // Ensure URL parameters are properly sanitized
+  if (config.params) {
+    const sanitizedParams = {};
+    for (const key in config.params) {
+      if (typeof config.params[key] === "string") {
+        sanitizedParams[key] = sanitizeUrlParam(config.params[key]);
+      } else {
+        sanitizedParams[key] = config.params[key];
+      }
+    }
+    config.params = sanitizedParams;
+  }
 
   while (true) {
     try {
