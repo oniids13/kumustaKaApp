@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 const PDFDocument = require("pdfkit");
 const { createObjectCsvStringifier } = require("csv-writer");
 const { Pool } = require("pg");
+const { normalizeZoneName } = require("./surveyQueries");
 
 // Initialize database connection pool if DATABASE_URL is defined
 let pool = null;
@@ -78,19 +79,40 @@ const getAllStudents = async () => {
  */
 const getStudentSurveys = async (studentId, startDate, endDate) => {
   try {
+    // Special debugging for Ana Garcia
+    const isAnaGarcia = studentId === "6926b287-6c08-4c3f-b2cb-bc72a4814ada";
+
     // Create date filter if provided
     let dateFilter = {};
     if (startDate && endDate) {
+      const adjustedEndDate = new Date(endDate);
+      adjustedEndDate.setHours(23, 59, 59, 999); // Include all of end date
+
       dateFilter = {
         createdAt: {
           gte: new Date(startDate),
-          lte: new Date(endDate),
+          lte: adjustedEndDate,
         },
       };
+
+      if (isAnaGarcia) {
+        console.log("Ana Garcia - Date filter:", {
+          startDate,
+          endDate,
+          adjustedStartDate: new Date(startDate).toISOString(),
+          adjustedEndDate: adjustedEndDate.toISOString(),
+          now: new Date().toISOString(),
+        });
+      }
     }
 
+    console.log(
+      `Fetching surveys for student ${studentId} with date filter:`,
+      dateFilter
+    );
+
     // Fetch surveys for this student
-    return await prisma.surveyResponse.findMany({
+    const surveys = await prisma.surveyResponse.findMany({
       where: {
         studentId,
         ...dateFilter,
@@ -112,6 +134,53 @@ const getStudentSurveys = async (studentId, startDate, endDate) => {
         },
       },
     });
+
+    console.log(`Found ${surveys.length} surveys for student ${studentId}`);
+    if (surveys.length > 0) {
+      console.log(`Latest survey zone: ${surveys[0].zone || "No zone data"}`);
+
+      if (isAnaGarcia) {
+        // Log the most recent survey dates for Ana
+        console.log("Ana Garcia - Survey dates:");
+        surveys.slice(0, 3).forEach((survey, index) => {
+          console.log(
+            `  Survey ${index + 1}: ${survey.createdAt.toISOString()} - Zone: ${
+              survey.zone || "No zone"
+            }`
+          );
+        });
+
+        // Check if there are any surveys that might be today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const todaySurveys = surveys.filter((survey) => {
+          return survey.createdAt >= today && survey.createdAt < tomorrow;
+        });
+
+        console.log(
+          `Ana Garcia - Surveys from today (${today.toISOString()} to ${tomorrow.toISOString()}): ${
+            todaySurveys.length
+          }`
+        );
+        if (todaySurveys.length > 0) {
+          console.log(
+            "Today's surveys:",
+            todaySurveys.map((s) => s.createdAt.toISOString())
+          );
+        }
+      }
+    }
+
+    // Normalize zone names for all surveys
+    const normalizedSurveys = surveys.map((survey) => ({
+      ...survey,
+      zone: normalizeZoneName(survey.zone),
+    }));
+
+    return normalizedSurveys;
   } catch (error) {
     console.error("Error fetching student surveys:", error);
     throw error;
@@ -123,19 +192,40 @@ const getStudentSurveys = async (studentId, startDate, endDate) => {
  */
 const getStudentMoods = async (studentId, startDate, endDate) => {
   try {
+    // Special debugging for Ana Garcia
+    const isAnaGarcia = studentId === "6926b287-6c08-4c3f-b2cb-bc72a4814ada";
+
     // Create date filter if provided
     let dateFilter = {};
     if (startDate && endDate) {
+      const adjustedEndDate = new Date(endDate);
+      adjustedEndDate.setHours(23, 59, 59, 999); // Include all of end date
+
       dateFilter = {
         createdAt: {
           gte: new Date(startDate),
-          lte: new Date(endDate),
+          lte: adjustedEndDate,
         },
       };
+
+      if (isAnaGarcia) {
+        console.log("Ana Garcia - Mood date filter:", {
+          startDate,
+          endDate,
+          adjustedStartDate: new Date(startDate).toISOString(),
+          adjustedEndDate: adjustedEndDate.toISOString(),
+          now: new Date().toISOString(),
+        });
+      }
     }
 
+    console.log(
+      `Fetching mood entries for student ${studentId} with date filter:`,
+      dateFilter
+    );
+
     // Fetch mood entries for this student
-    return await prisma.moodEntry.findMany({
+    const moods = await prisma.moodEntry.findMany({
       where: {
         studentId,
         ...dateFilter,
@@ -150,6 +240,49 @@ const getStudentMoods = async (studentId, startDate, endDate) => {
         createdAt: true,
       },
     });
+
+    console.log(`Found ${moods.length} mood entries for student ${studentId}`);
+
+    if (moods.length > 0) {
+      const moodLevels = moods.slice(0, 3).map((m) => m.moodLevel);
+      console.log(`Latest mood levels: ${moodLevels.join(", ")}`);
+
+      if (isAnaGarcia) {
+        // Log the most recent mood dates for Ana
+        console.log("Ana Garcia - Mood entry dates:");
+        moods.slice(0, 3).forEach((mood, index) => {
+          console.log(
+            `  Mood ${index + 1}: ${mood.createdAt.toISOString()} - Level: ${
+              mood.moodLevel
+            }`
+          );
+        });
+
+        // Check if there are any mood entries that might be today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const todayMoods = moods.filter((mood) => {
+          return mood.createdAt >= today && mood.createdAt < tomorrow;
+        });
+
+        console.log(
+          `Ana Garcia - Mood entries from today (${today.toISOString()} to ${tomorrow.toISOString()}): ${
+            todayMoods.length
+          }`
+        );
+        if (todayMoods.length > 0) {
+          console.log(
+            "Today's moods:",
+            todayMoods.map((m) => m.createdAt.toISOString())
+          );
+        }
+      }
+    }
+
+    return moods;
   } catch (error) {
     console.error("Error fetching student mood entries:", error);
     throw error;
@@ -687,7 +820,10 @@ const getMoodTrends = async (period, startDate, endDate) => {
       }
     }
 
-    console.log("Fetching survey responses with date filter:", dateFilter);
+    console.log("Fetching survey responses with date filter:", {
+      start: dateFilter.createdAt.gte.toISOString(),
+      end: dateFilter.createdAt.lte.toISOString(),
+    });
 
     // Fetch survey responses for the period
     const surveyResponses = await prisma.surveyResponse.findMany({
@@ -715,70 +851,48 @@ const getMoodTrends = async (period, startDate, endDate) => {
       },
     });
 
-    console.log(`Found ${surveyResponses.length} survey responses`);
-    if (surveyResponses.length > 0) {
-      console.log(
-        "Sample survey response:",
-        JSON.stringify(surveyResponses[0], null, 2)
-      );
-      console.log(
-        "Student names in survey data:",
-        surveyResponses
-          .map((r) =>
-            r.student?.user
-              ? `${r.student.user.firstName} ${r.student.user.lastName}`
-              : `Unknown (ID: ${r.studentId})`
-          )
-          .join(", ")
-      );
-    } else {
-      // If no surveys, try to fetch records directly from student table
-      console.log(
-        "No survey responses found, checking for students with recent activity"
-      );
-      const studentsWithActivity = await prisma.student.findMany({
-        select: {
-          id: true,
-          user: {
-            select: {
-              firstName: true,
-              lastName: true,
+    // Fetch mood entries for the same period
+    const moodEntries = await prisma.moodEntry.findMany({
+      where: {
+        ...dateFilter,
+      },
+      select: {
+        id: true,
+        moodLevel: true,
+        createdAt: true,
+        studentId: true,
+        student: {
+          select: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
             },
           },
-          moodEntries: {
-            take: 1,
-            orderBy: { createdAt: "desc" },
-          },
-          surveyResponses: {
-            take: 1,
-            orderBy: { createdAt: "desc" },
-          },
-          initialAssessment: true,
         },
-        where: {
-          OR: [
-            { moodEntries: { some: {} } },
-            { surveyResponses: { some: {} } },
-            { initialAssessment: { isNot: null } },
-          ],
-        },
-      });
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
 
+    console.log(
+      `Found ${surveyResponses.length} survey responses and ${moodEntries.length} mood entries`
+    );
+
+    if (surveyResponses.length > 0) {
       console.log(
-        `Found ${studentsWithActivity.length} students with activity`
+        "Sample survey response date:",
+        new Date(surveyResponses[0].createdAt).toISOString()
       );
-      if (studentsWithActivity.length > 0) {
-        // We need to generate at least minimal mood trends data
-        return [
-          {
-            name: "Today",
-            "Green (Positive)": 0,
-            "Yellow (Moderate)": 1, // At least show something in chart
-            "Red (Needs Attention)": 0,
-            count: 1,
-          },
-        ];
-      }
+    }
+
+    if (moodEntries.length > 0) {
+      console.log(
+        "Sample mood entry date:",
+        new Date(moodEntries[0].createdAt).toISOString()
+      );
     }
 
     // Process data for mood trends over time using survey responses and zones
@@ -1059,6 +1173,27 @@ const processMoodTrendsData = (responses, period) => {
     Sun: 7,
   };
 
+  // Get current day of week for reference
+  const now = new Date();
+  const currentDayName = now
+    .toLocaleDateString("en-US", { weekday: "short" })
+    .slice(0, 3);
+  console.log(`Current day of week: ${currentDayName}`);
+
+  // Initialize all days of week if in weekly view to ensure we have entries for each day
+  if (period === "week") {
+    const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    dayNames.forEach((day) => {
+      groupedByPeriod[day] = {
+        name: day,
+        "Green (Positive)": 0,
+        "Yellow (Moderate)": 0,
+        "Red (Needs Attention)": 0,
+        count: 0,
+      };
+    });
+  }
+
   responses.forEach((response) => {
     if (!response || !response.createdAt) {
       console.log("Skipping response with missing createdAt:", response);
@@ -1067,6 +1202,7 @@ const processMoodTrendsData = (responses, period) => {
 
     let key;
     const date = new Date(response.createdAt);
+    console.log(`Processing response with date: ${date.toISOString()}`);
 
     switch (period) {
       case "week":
@@ -1074,6 +1210,7 @@ const processMoodTrendsData = (responses, period) => {
         key = date
           .toLocaleDateString("en-US", { weekday: "short" })
           .slice(0, 3);
+        console.log(`Grouped to day: ${key}`);
         break;
       case "month":
         // Group by week
@@ -1100,10 +1237,20 @@ const processMoodTrendsData = (responses, period) => {
       };
     }
 
-    // Use the zone data directly from the response
+    // Map the zone value to the correct category
     if (response.zone) {
-      if (groupedByPeriod[key][response.zone] !== undefined) {
-        groupedByPeriod[key][response.zone]++;
+      if (response.zone === "Green" || response.zone === "Green (Positive)") {
+        groupedByPeriod[key]["Green (Positive)"]++;
+      } else if (
+        response.zone === "Yellow" ||
+        response.zone === "Yellow (Moderate)"
+      ) {
+        groupedByPeriod[key]["Yellow (Moderate)"]++;
+      } else if (
+        response.zone === "Red" ||
+        response.zone === "Red (Needs Attention)"
+      ) {
+        groupedByPeriod[key]["Red (Needs Attention)"]++;
       } else {
         console.log(
           `Warning: Unknown zone value '${response.zone}' for response ID ${response.id}`
@@ -1118,7 +1265,10 @@ const processMoodTrendsData = (responses, period) => {
 
   // Convert to array and sort
   let result = Object.values(groupedByPeriod);
-  console.log(`Grouped data into ${result.length} periods`);
+  console.log(
+    `Grouped data into ${result.length} periods:`,
+    result.map((r) => r.name)
+  );
 
   if (period === "week") {
     // Sort by day of week

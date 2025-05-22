@@ -33,6 +33,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { createStyles } from "antd-style";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -42,6 +43,14 @@ const ZONE_COLORS = {
   "Yellow (Moderate)": "#faad14",
   "Red (Needs Attention)": "#ff4d4f",
 };
+
+// Create component styles
+const useStyles = createStyles(() => ({
+  noDataRow: {
+    backgroundColor: "#fafafa",
+    opacity: 0.8,
+  },
+}));
 
 const MentalHealthOverview = () => {
   const [loading, setLoading] = useState(true);
@@ -57,6 +66,8 @@ const MentalHealthOverview = () => {
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
+
+  const { styles } = useStyles();
 
   const standardizeDate = (dateObj) => {
     // If we have a date object, standardize its format to ensure consistent display
@@ -104,9 +115,16 @@ const MentalHealthOverview = () => {
         const mentalHealthData = await Promise.all(
           allStudents.map(async (student) => {
             try {
-              console.log(
-                `Fetching data for student: ${student.firstName} ${student.lastName} (ID: ${student.id})`
-              );
+              // Check if this is our target student
+              const isTargetStudent =
+                student.id === "6926b287-6c08-4c3f-b2cb-bc72a4814ada";
+
+              if (isTargetStudent) {
+                console.log("==== DEBUGGING TARGET STUDENT ====");
+                console.log(
+                  `Processing student: ${student.firstName} ${student.lastName} (ID: ${student.id})`
+                );
+              }
 
               // Fetch latest survey for the student
               const surveyResponse = await axios.get(
@@ -144,12 +162,69 @@ const MentalHealthOverview = () => {
               const moods = moodResponse.data.moods || [];
               let initialAssessment = null;
 
+              if (isTargetStudent) {
+                console.log(`Survey data received: ${surveys.length} items`);
+                console.log(`Mood data received: ${moods.length} items`);
+
+                if (surveys.length > 0) {
+                  console.log("Latest survey:", {
+                    id: surveys[0].id,
+                    zone: surveys[0].zone,
+                    createdAt: surveys[0].createdAt,
+                  });
+                }
+
+                if (moods.length > 0) {
+                  console.log("Latest mood:", {
+                    id: moods[0].id,
+                    moodLevel: moods[0].moodLevel,
+                    type: typeof moods[0].moodLevel,
+                    createdAt: moods[0].createdAt,
+                  });
+
+                  // Check all mood entries for validity
+                  const validMoods = moods.filter(
+                    (m) => typeof m.moodLevel === "number"
+                  );
+                  console.log(
+                    `Valid mood entries: ${validMoods.length} out of ${moods.length}`
+                  );
+                  if (validMoods.length === 0 && moods.length > 0) {
+                    console.log("Sample invalid mood entry:", moods[0]);
+                  }
+                }
+              }
+
               // Handle initialAssessment - could be null or have data
               try {
                 initialAssessment = initialAssessmentResponse.data;
+
+                // Validate assessment data
                 if (initialAssessment) {
+                  const { depressionScore, anxietyScore, stressScore } =
+                    initialAssessment;
+                  const validScores =
+                    typeof depressionScore === "number" &&
+                    typeof anxietyScore === "number" &&
+                    typeof stressScore === "number";
+
+                  if (!validScores) {
+                    console.warn(
+                      `Warning: Invalid assessment scores for ${student.firstName}:`,
+                      JSON.stringify({
+                        depressionScore,
+                        anxietyScore,
+                        stressScore,
+                      })
+                    );
+                  } else {
+                    console.log(
+                      `Found initial assessment for ${student.firstName}: D:${depressionScore}, A:${anxietyScore}, S:${stressScore}`
+                    );
+                  }
+                } else {
                   console.log(
-                    `Found initial assessment for ${student.firstName}: D:${initialAssessment.depressionScore}, A:${initialAssessment.anxietyScore}, S:${initialAssessment.stressScore}`
+                    `No initial assessment data for ${student.firstName}`
                   );
                 }
               } catch (error) {
@@ -159,61 +234,50 @@ const MentalHealthOverview = () => {
                 );
               }
 
-              console.log(
-                `Student ${student.firstName} has ${surveys.length} surveys and ${moods.length} mood entries`
-              );
+              if (isTargetStudent) {
+                // Call getStudentZone for target student and log its results
+                const enrichedStudent = {
+                  ...student,
+                  latestSurvey: surveys.length > 0 ? surveys[0] : null,
+                  latestMood: moods.length > 0 ? moods[0] : null,
+                  avgMood:
+                    moods.length > 0
+                      ? moods.reduce((sum, m) => sum + m.moodLevel, 0) /
+                        moods.length
+                      : null,
+                  redFlags: 0, // We'll calculate this later
+                  surveys,
+                  moods,
+                  initialAssessment,
+                  hasData:
+                    surveys.length > 0 ||
+                    moods.length > 0 ||
+                    !!initialAssessment,
+                };
 
-              // Log details of any mood entries
-              if (moods.length > 0) {
-                const moodLevels = moods.map((m) => m.moodLevel);
+                // Calculate zone for debugging
+                const calculatedZone = getStudentZone(enrichedStudent);
                 console.log(
-                  `Mood entries for ${student.firstName}:`,
-                  moodLevels
+                  `Calculated zone for target student: ${calculatedZone}`
                 );
-              }
-
-              // Find latest survey and mood
-              const latestSurvey = surveys.length > 0 ? surveys[0] : null;
-              const latestMood = moods.length > 0 ? moods[0] : null;
-
-              // Calculate average mood directly from mood entries
-              const avgMood =
-                moods.length > 0
-                  ? moods.reduce((sum, m) => sum + m.moodLevel, 0) /
-                    moods.length
-                  : null;
-
-              // Count red flags
-              let redFlags = 0;
-              surveys.forEach((survey) => {
-                if (survey.zone === "Red (Needs Attention)") {
-                  redFlags++;
-                }
-              });
-              moods.forEach((mood) => {
-                if (mood.moodLevel <= 2) {
-                  redFlags++;
-                }
-              });
-
-              // Add red flag from initial assessment if it exists and no other data
-              if (!latestSurvey && !latestMood && initialAssessment) {
-                const { depressionScore, anxietyScore, stressScore } =
-                  initialAssessment;
-                const avgScore =
-                  (depressionScore + anxietyScore + stressScore) / 3;
-                if (avgScore >= 15) redFlags++; // High scores indicate need for attention
+                console.log("==== END DEBUGGING TARGET STUDENT ====");
               }
 
               return {
                 ...student,
-                latestSurvey,
-                latestMood,
-                avgMood,
-                redFlags,
+                latestSurvey: surveys.length > 0 ? surveys[0] : null,
+                latestMood: moods.length > 0 ? moods[0] : null,
+                avgMood:
+                  moods.length > 0
+                    ? moods.reduce((sum, m) => sum + m.moodLevel, 0) /
+                      moods.length
+                    : null,
+                redFlags: 0,
                 surveys,
                 moods,
                 initialAssessment,
+                hasData:
+                  surveys.length > 0 || moods.length > 0 || !!initialAssessment,
               };
             } catch (error) {
               console.error(
@@ -230,6 +294,7 @@ const MentalHealthOverview = () => {
                 moods: [],
                 initialAssessment: null,
                 error: true,
+                hasData: false,
               };
             }
           })
@@ -309,23 +374,121 @@ const MentalHealthOverview = () => {
   };
 
   const getStudentZone = (student) => {
-    if (student.latestSurvey) {
-      return student.latestSurvey.zone;
-    } else if (student.avgMood !== null && student.avgMood !== undefined) {
-      if (student.avgMood <= 2) return "Red (Needs Attention)";
-      else if (student.avgMood <= 3.5) return "Yellow (Moderate)";
-      else return "Green (Positive)";
-    } else if (student.initialAssessment) {
-      // Determine zone based on initial assessment if no other data
-      const { depressionScore, anxietyScore, stressScore } =
-        student.initialAssessment;
-      const avgScore = (depressionScore + anxietyScore + stressScore) / 3;
+    console.log(
+      `Calculating zone for student: ${student.firstName} ${student.lastName}`
+    );
+    console.log(
+      `Data available: ${JSON.stringify({
+        hasSurveys: student.surveys && student.surveys.length > 0,
+        surveyCount: student.surveys?.length || 0,
+        hasMoods: student.moods && student.moods.length > 0,
+        moodCount: student.moods?.length || 0,
+        hasInitialAssessment: !!student.initialAssessment,
+      })}`
+    );
 
-      if (avgScore >= 15) return "Red (Needs Attention)";
-      else if (avgScore >= 10) return "Yellow (Moderate)";
+    // Check if this is the problematic student
+    const isAnaGarcia = student.id === "6926b287-6c08-4c3f-b2cb-bc72a4814ada";
+    if (isAnaGarcia) {
+      console.log("SPECIAL DEBUGGING FOR ANA GARCIA");
+      if (student.surveys && student.surveys.length > 0) {
+        console.log("Survey data for Ana Garcia:");
+        const latestSurvey = student.surveys[0];
+        console.log(JSON.stringify(latestSurvey, null, 2));
+
+        // Fix the survey zone format if needed
+        if (latestSurvey.zone === "Yellow") {
+          console.log("Converting 'Yellow' to 'Yellow (Moderate)'");
+          // Don't mutate the original object directly to avoid side effects
+          return "Yellow (Moderate)";
+        } else if (latestSurvey.zone === "Red") {
+          console.log("Converting 'Red' to 'Red (Needs Attention)'");
+          return "Red (Needs Attention)";
+        } else if (latestSurvey.zone === "Green") {
+          console.log("Converting 'Green' to 'Green (Positive)'");
+          return "Green (Positive)";
+        }
+      }
+    }
+
+    // First check if the student has a recent survey with zone information
+    if (student.latestSurvey && student.latestSurvey.zone) {
+      // Fix inconsistent zone naming
+      const rawZone = student.latestSurvey.zone;
+      let normalizedZone = rawZone;
+
+      // Convert simple color names to full zone names
+      if (rawZone === "Yellow") normalizedZone = "Yellow (Moderate)";
+      else if (rawZone === "Red") normalizedZone = "Red (Needs Attention)";
+      else if (rawZone === "Green") normalizedZone = "Green (Positive)";
+
+      console.log(
+        `Student ${student.firstName} has survey zone: ${normalizedZone}`
+      );
+      return normalizedZone;
+    }
+    // If no survey but has mood data, calculate zone from mood level
+    else if (student.moods && student.moods.length > 0) {
+      // Validate mood data - ensure we have valid mood levels (numbers)
+      const validMoods = student.moods.filter(
+        (m) => typeof m.moodLevel === "number"
+      );
+
+      if (validMoods.length === 0) {
+        console.log(
+          `Student ${student.firstName} has mood entries but all values are invalid`
+        );
+        return "No Data";
+      }
+
+      // Calculate average mood directly from valid entries
+      const avgMood =
+        validMoods.reduce((sum, m) => sum + m.moodLevel, 0) / validMoods.length;
+      console.log(
+        `Student ${
+          student.firstName
+        } has calculated mood zone from avg mood: ${avgMood.toFixed(2)}`
+      );
+
+      if (avgMood <= 2) return "Red (Needs Attention)";
+      else if (avgMood <= 3.5) return "Yellow (Moderate)";
       else return "Green (Positive)";
     }
-    return "Unknown";
+    // If no survey or mood but has initial assessment, use that
+    else if (student.initialAssessment) {
+      const { depressionScore, anxietyScore, stressScore } =
+        student.initialAssessment;
+
+      // Ensure we have valid scores
+      if (
+        typeof depressionScore === "number" &&
+        typeof anxietyScore === "number" &&
+        typeof stressScore === "number"
+      ) {
+        const avgScore = (depressionScore + anxietyScore + stressScore) / 3;
+        console.log(
+          `Student ${
+            student.firstName
+          } has assessment zone from avg score: ${avgScore.toFixed(2)}`
+        );
+
+        if (avgScore >= 15) return "Red (Needs Attention)";
+        else if (avgScore >= 10) return "Yellow (Moderate)";
+        else return "Green (Positive)";
+      } else {
+        console.log(
+          `Student ${student.firstName} has invalid assessment scores:`,
+          JSON.stringify({ depressionScore, anxietyScore, stressScore })
+        );
+        return "Invalid Data";
+      }
+    }
+
+    // If we reach here, we couldn't determine the zone
+    console.log(
+      `Student ${student.firstName} has no valid data for zone calculation`
+    );
+    return "No Data";
   };
 
   const formatZone = (zone) => {
@@ -335,7 +498,8 @@ const MentalHealthOverview = () => {
       return <Tag color="gold">Yellow (Moderate)</Tag>;
     if (zone === "Green (Positive)")
       return <Tag color="green">Green (Positive)</Tag>;
-    return <Tag>Unknown</Tag>;
+    if (zone === "Invalid Data") return <Tag color="default">Invalid Data</Tag>;
+    return <Tag color="default">No Data Available</Tag>;
   };
 
   const redAndYellowStudents = students.filter((student) => {
@@ -398,13 +562,40 @@ const MentalHealthOverview = () => {
     {
       title: "Current Zone",
       key: "zone",
-      render: (_, record) => formatZone(getStudentZone(record)),
+      render: (_, record) => {
+        const zone = getStudentZone(record);
+        // Include information about why the zone might be unknown
+        if (zone === "No Data" || zone === "Invalid Data") {
+          return (
+            <div>
+              {formatZone(zone)}
+              <div
+                style={{ fontSize: "11px", color: "#999", marginTop: "4px" }}
+              >
+                {!record.surveys?.length &&
+                  !record.moods?.length &&
+                  !record.initialAssessment &&
+                  "No survey, mood or assessment data"}
+                {!record.surveys?.length &&
+                  !record.moods?.length &&
+                  record.initialAssessment &&
+                  "Based on assessment data only"}
+                {record.moods?.length > 0 &&
+                  record.moods.every((m) => typeof m.moodLevel !== "number") &&
+                  "Mood data available but values are invalid"}
+              </div>
+            </div>
+          );
+        }
+        return formatZone(zone);
+      },
       sorter: (a, b) => {
         const zoneOrder = {
           "Red (Needs Attention)": 3,
           "Yellow (Moderate)": 2,
           "Green (Positive)": 1,
-          Unknown: 0,
+          "Invalid Data": 0,
+          "No Data": 0,
         };
         return zoneOrder[getStudentZone(a)] - zoneOrder[getStudentZone(b)];
       },
@@ -482,6 +673,19 @@ const MentalHealthOverview = () => {
       title: "Last Activity",
       key: "lastActivity",
       render: (_, record) => {
+        // Additional debugging for Ana Garcia
+        const isAnaGarcia =
+          record.id === "6926b287-6c08-4c3f-b2cb-bc72a4814ada";
+
+        if (isAnaGarcia) {
+          console.log("==== DEBUGGING ANA GARCIA'S LAST ACTIVITY ====");
+          console.log("Raw data:", {
+            latestSurvey: record.latestSurvey,
+            latestMood: record.latestMood,
+            initialAssessment: record.initialAssessment,
+          });
+        }
+
         // Use our standardization helper for consistent date handling
         const lastSurveyDate = record.latestSurvey
           ? standardizeDate(record.latestSurvey.createdAt)
@@ -494,8 +698,8 @@ const MentalHealthOverview = () => {
           : null;
 
         // Log dates to help with debugging
-        if (record.firstName) {
-          console.log(`${record.firstName}'s dates:`, {
+        if (isAnaGarcia) {
+          console.log("Standardized dates:", {
             surveyDate: lastSurveyDate
               ? lastSurveyDate.format("YYYY-MM-DD")
               : null,
@@ -508,6 +712,15 @@ const MentalHealthOverview = () => {
               : null,
             rawMood: record.latestMood ? record.latestMood.createdAt : null,
           });
+
+          // Check today's date in various formats
+          const now = new Date();
+          const todayMoment = moment();
+          console.log("Today's date:", {
+            jsDate: now.toISOString(),
+            moment: todayMoment.format("YYYY-MM-DD"),
+            momentUTC: todayMoment.utc().format("YYYY-MM-DD"),
+          });
         }
 
         // Check if we have actual mood or survey data
@@ -517,21 +730,54 @@ const MentalHealthOverview = () => {
           if (lastSurveyDate && lastMoodDate) {
             // Use the most recent date
             lastActivityDate = moment.max(lastSurveyDate, lastMoodDate);
+            if (isAnaGarcia) {
+              console.log(
+                `Max date between survey ${lastSurveyDate.format(
+                  "YYYY-MM-DD"
+                )} and mood ${lastMoodDate.format(
+                  "YYYY-MM-DD"
+                )} is: ${lastActivityDate.format("YYYY-MM-DD")}`
+              );
+            }
           } else if (lastSurveyDate) {
             lastActivityDate = lastSurveyDate;
+            if (isAnaGarcia) {
+              console.log(
+                `Using survey date: ${lastActivityDate.format("YYYY-MM-DD")}`
+              );
+            }
           } else {
             lastActivityDate = lastMoodDate;
+            if (isAnaGarcia) {
+              console.log(
+                `Using mood date: ${lastActivityDate.format("YYYY-MM-DD")}`
+              );
+            }
           }
 
           // Format date consistently for display (always showing local time)
-          return lastActivityDate.local().format("MMM DD, YYYY");
+          const formattedDate = lastActivityDate.local().format("MMM DD, YYYY");
+          if (isAnaGarcia) {
+            console.log(`Final formatted date: ${formattedDate}`);
+            console.log("==== END DEBUGGING ANA GARCIA'S LAST ACTIVITY ====");
+          }
+          return formattedDate;
         }
         // If no survey or mood data, but we have assessment data
         else if (assessmentDate) {
           // Format assessment date consistently
-          return assessmentDate.local().format("MMM DD, YYYY");
+          const formattedDate = assessmentDate.local().format("MMM DD, YYYY");
+          if (isAnaGarcia) {
+            console.log(`Using assessment date: ${formattedDate}`);
+            console.log("==== END DEBUGGING ANA GARCIA'S LAST ACTIVITY ====");
+          }
+          return formattedDate;
         }
 
+        if (isAnaGarcia) {
+          console.log("No activity data found");
+          console.log("==== END DEBUGGING ANA GARCIA'S LAST ACTIVITY ====");
+        }
         return "No activity";
       },
       sorter: (a, b) => {
@@ -686,6 +932,10 @@ const MentalHealthOverview = () => {
                 columns={columns}
                 rowKey="id"
                 pagination={{ pageSize: 10 }}
+                rowClassName={(record) => {
+                  // If the student has no data, add a special class
+                  return !record.hasData ? styles.noDataRow : "";
+                }}
               />
             </Card>
           </div>
@@ -778,6 +1028,13 @@ const MentalHealthOverview = () => {
             Overall Mental Health Status
           </Space>
         </Title>
+        <Text
+          type="secondary"
+          style={{ display: "block", marginBottom: "16px" }}
+        >
+          Distribution of survey responses and mood entries (one entry per
+          student per day)
+        </Text>
 
         <Card>
           <ResponsiveContainer width="100%" height={300}>
@@ -860,6 +1117,10 @@ const MentalHealthOverview = () => {
             columns={columns}
             rowKey="id"
             pagination={{ pageSize: 10 }}
+            rowClassName={(record) => {
+              // If the student has no data, add a special class
+              return !record.hasData ? styles.noDataRow : "";
+            }}
           />
         </Card>
       </div>

@@ -91,7 +91,7 @@ const CustomTooltip = ({ active, payload, label }) => {
             fontSize: "13px",
           }}
         >
-          Total: {total}
+          Total Responses: {total}
         </p>
       </div>
     );
@@ -428,7 +428,7 @@ const TrendsView = () => {
                       }}
                     >
                       Distribution of student responses across mental health
-                      zones
+                      zones (students may have multiple daily entries)
                     </Text>
                   </div>
                   <Select
@@ -463,7 +463,7 @@ const TrendsView = () => {
                   />
                   <YAxis
                     label={{
-                      value: "Number of Students",
+                      value: "Number of Responses",
                       angle: -90,
                       position: "insideLeft",
                       style: { textAnchor: "middle", fontSize: 12 },
@@ -524,7 +524,8 @@ const TrendsView = () => {
                       marginTop: "4px",
                     }}
                   >
-                    Daily distribution of student moods
+                    Daily distribution of mood entries (one entry per student
+                    per day)
                   </Text>
                 </div>
               }
@@ -542,6 +543,12 @@ const TrendsView = () => {
                     axisLine={{ stroke: "#d9d9d9" }}
                   />
                   <YAxis
+                    label={{
+                      value: "Number of Entries",
+                      angle: -90,
+                      position: "insideLeft",
+                      style: { textAnchor: "middle", fontSize: 12 },
+                    }}
                     tick={{ fontSize: 12 }}
                     tickLine={false}
                     axisLine={{ stroke: "#d9d9d9" }}

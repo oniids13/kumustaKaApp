@@ -148,10 +148,54 @@ function getDateFilter(period) {
   }
 }
 
+/**
+ * Helper function to ensure consistent zone naming
+ * This normalizes zone names to include descriptions in parentheses
+ */
+const normalizeZoneName = (zone) => {
+  if (!zone) return null;
+
+  // Convert simple color names to full zone names
+  if (zone === "Yellow") return "Yellow (Moderate)";
+  if (zone === "Red") return "Red (Needs Attention)";
+  if (zone === "Green") return "Green (Positive)";
+
+  // Return the original if it already has the full format
+  return zone;
+};
+
+// Update this function to normalize zone names in the response
+const getSurveyResponseById = async (responseId) => {
+  try {
+    const response = await prisma.surveyResponse.findUnique({
+      where: { id: responseId },
+      include: {
+        student: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    if (response) {
+      // Normalize the zone name for consistent frontend display
+      response.zone = normalizeZoneName(response.zone);
+    }
+
+    return response;
+  } catch (error) {
+    console.error("Error fetching survey response:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   createSurvey,
   getDailySurvey,
   createSurveyResponse,
   getTodaysResponse,
   getSurveyResponses,
+  normalizeZoneName,
+  getSurveyResponseById,
 };

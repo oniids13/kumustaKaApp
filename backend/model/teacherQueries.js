@@ -72,54 +72,71 @@ const getMentalHealthTrends = async (params, teacherId) => {
     let dateFilter = {};
 
     if (startDate && endDate) {
+      // When using custom date range, include full end day
+      const adjustedEndDate = new Date(endDate);
+      adjustedEndDate.setHours(23, 59, 59, 999); // Set to end of day
+
       dateFilter = {
         createdAt: {
           gte: new Date(startDate),
-          lte: new Date(endDate),
+          lte: adjustedEndDate,
         },
       };
     } else {
       // Default periods if no custom date range
       const now = new Date();
+      // Set current time to end of day to include all of today's entries
+      const endOfToday = new Date(now);
+      endOfToday.setHours(23, 59, 59, 999);
 
       switch (period) {
         case "week":
           const weekStart = new Date(now);
           weekStart.setDate(now.getDate() - 7);
+          weekStart.setHours(0, 0, 0, 0); // Start of day 7 days ago
           dateFilter = {
             createdAt: {
               gte: weekStart,
+              lte: endOfToday,
             },
           };
           break;
         case "month":
           const monthStart = new Date(now);
           monthStart.setMonth(now.getMonth() - 1);
+          monthStart.setHours(0, 0, 0, 0); // Start of day 1 month ago
           dateFilter = {
             createdAt: {
               gte: monthStart,
+              lte: endOfToday,
             },
           };
           break;
         case "semester":
           const semesterStart = new Date(now);
           semesterStart.setMonth(now.getMonth() - 4);
+          semesterStart.setHours(0, 0, 0, 0); // Start of day 4 months ago
           dateFilter = {
             createdAt: {
               gte: semesterStart,
+              lte: endOfToday,
             },
           };
           break;
         default:
           const defaultStart = new Date(now);
           defaultStart.setMonth(now.getMonth() - 1);
+          defaultStart.setHours(0, 0, 0, 0); // Start of day 1 month ago
           dateFilter = {
             createdAt: {
               gte: defaultStart,
+              lte: endOfToday,
             },
           };
       }
     }
+
+    console.log("Date filter for fetching trends:", dateFilter);
 
     // Fetch mood entry data for time of day reporting
     const moodEntries = await prisma.moodEntry.findMany({
@@ -165,28 +182,28 @@ const getMentalHealthTrends = async (params, teacherId) => {
       },
     });
 
+    console.log(
+      `Found ${moodEntries.length} mood entries and ${surveyResponses.length} survey responses`
+    );
+
     // Process data for mood trends over time using survey responses and zones
     const moodTrends = processMoodTrendsData(surveyResponses, period);
 
-    // Process data for daily mood trends
+    // Process daily mood trends data
     const dailyMoodTrends = processDailyMoodTrends(moodEntries);
 
-    // Process data for issue categories using survey responses
-    const issueCategories = processIssueCategories(surveyResponses);
-
-    // Process data for time of day reporting
+    // Process time of day reporting data
     const timeframeTrends = processTimeframeData(moodEntries);
 
+    // Format response with all trend data
     return {
       moodTrends,
       dailyMoodTrends,
-      issueCategories,
       timeframeTrends,
-      totalResponses: moodEntries.length + surveyResponses.length,
     };
   } catch (error) {
     console.error("Error fetching mental health trends:", error);
-    throw new Error("Failed to fetch mental health trends data");
+    throw error;
   }
 };
 
@@ -538,7 +555,14 @@ const deleteForumPost = async (postId) => {
  * Process survey response data into trends over time using zones
  */
 const processMoodTrendsData = (responses, period) => {
-  if (!responses.length) return [];
+  console.log(
+    `Processing ${responses.length} survey responses for mood trends`
+  );
+
+  if (!responses || !responses.length) {
+    console.log("No responses to process, returning empty array");
+    return [];
+  }
 
   // Group by time period
   const groupedByPeriod = {};
@@ -554,9 +578,36 @@ const processMoodTrendsData = (responses, period) => {
     Sun: 7,
   };
 
+  // Get current day of week for reference
+  const now = new Date();
+  const currentDayName = now
+    .toLocaleDateString("en-US", { weekday: "short" })
+    .slice(0, 3);
+  console.log(`Current day of week: ${currentDayName}`);
+
+  // Initialize all days of week if in weekly view to ensure we have entries for each day
+  if (period === "week") {
+    const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    dayNames.forEach((day) => {
+      groupedByPeriod[day] = {
+        name: day,
+        "Green (Positive)": 0,
+        "Yellow (Moderate)": 0,
+        "Red (Needs Attention)": 0,
+        count: 0,
+      };
+    });
+  }
+
   responses.forEach((response) => {
+    if (!response || !response.createdAt) {
+      console.log("Skipping response with missing createdAt:", response);
+      return; // Skip this response
+    }
+
     let key;
     const date = new Date(response.createdAt);
+    console.log(`Processing response with date: ${date.toISOString()}`);
 
     switch (period) {
       case "week":
@@ -564,6 +615,7 @@ const processMoodTrendsData = (responses, period) => {
         key = date
           .toLocaleDateString("en-US", { weekday: "short" })
           .slice(0, 3);
+        console.log(`Grouped to day: ${key}`);
         break;
       case "month":
         // Group by week
@@ -591,8 +643,28 @@ const processMoodTrendsData = (responses, period) => {
     }
 
     // Use the zone data directly from the response
-    if (response.zone) {
-      groupedByPeriod[key][response.zone]++;
+    if (response.zone === "Green") {
+      groupedByPeriod[key]["Green (Positive)"]++;
+    } else if (response.zone === "Yellow") {
+      groupedByPeriod[key]["Yellow (Moderate)"]++;
+    } else if (response.zone === "Red") {
+      groupedByPeriod[key]["Red (Needs Attention)"]++;
+    } else {
+      // If zone isn't one of the expected values, try to determine from percentage
+      if (response.percentage !== undefined) {
+        const percentage = parseFloat(response.percentage);
+        if (percentage >= 0.8) {
+          groupedByPeriod[key]["Green (Positive)"]++;
+        } else if (percentage >= 0.6) {
+          groupedByPeriod[key]["Yellow (Moderate)"]++;
+        } else {
+          groupedByPeriod[key]["Red (Needs Attention)"]++;
+        }
+      } else {
+        console.log(
+          `Warning: Missing zone data for response ID ${response.id}`
+        );
+      }
     }
 
     groupedByPeriod[key].count++;
@@ -600,23 +672,27 @@ const processMoodTrendsData = (responses, period) => {
 
   // Convert to array and sort
   let result = Object.values(groupedByPeriod);
+  console.log(
+    `Grouped data into ${result.length} periods:`,
+    result.map((r) => r.name)
+  );
 
   if (period === "week") {
     // Sort by day of week
     result.sort((a, b) => {
-      return dayOrder[a.name] - dayOrder[b.name];
+      return (dayOrder[a.name] || 0) - (dayOrder[b.name] || 0);
     });
   } else if (period === "month") {
     // Sort by week number
     result.sort((a, b) => {
       if (a.name.startsWith("Week") && b.name.startsWith("Week")) {
-        return parseInt(a.name.split(" ")[1]) - parseInt(b.name.split(" ")[1]);
+        return (
+          parseInt(a.name.split(" ")[1] || "0") -
+          parseInt(b.name.split(" ")[1] || "0")
+        );
       }
       return 0;
     });
-  } else if (period === "semester") {
-    // Sort by month (not implemented yet, would need a month order mapping)
-    // Default sorting is fine for now
   }
 
   return result;

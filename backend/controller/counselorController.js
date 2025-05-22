@@ -46,12 +46,26 @@ const getStudentSurveysController = async (req, res) => {
       return res.status(400).json({ error: "Student ID is required" });
     }
 
+    console.log(`[DEBUG] Fetching surveys for student ${studentId}`);
+    console.log(`[DEBUG] Date range: ${startDate} to ${endDate}`);
+
     // Fetch surveys for this student
     const surveys = await counselorQueries.getStudentSurveys(
       studentId,
       startDate,
       endDate
     );
+
+    console.log(
+      `[DEBUG] Found ${surveys.length} surveys for student ${studentId}`
+    );
+    if (surveys.length > 0) {
+      console.log(`[DEBUG] Latest survey data: 
+        - ID: ${surveys[0].id}
+        - Zone: ${surveys[0].zone || "No zone"}
+        - Created At: ${surveys[0].createdAt}
+      `);
+    }
 
     res.status(200).json({ surveys });
   } catch (error) {
@@ -75,12 +89,26 @@ const getStudentMoodsController = async (req, res) => {
       return res.status(400).json({ error: "Student ID is required" });
     }
 
+    console.log(`[DEBUG] Fetching mood entries for student ${studentId}`);
+    console.log(`[DEBUG] Date range: ${startDate} to ${endDate}`);
+
     // Fetch mood entries for this student
     const moods = await counselorQueries.getStudentMoods(
       studentId,
       startDate,
       endDate
     );
+
+    console.log(
+      `[DEBUG] Found ${moods.length} mood entries for student ${studentId}`
+    );
+    if (moods.length > 0) {
+      console.log(`[DEBUG] Latest mood data:
+        - ID: ${moods[0].id}
+        - Mood Level: ${moods[0].moodLevel} (type: ${typeof moods[0].moodLevel})
+        - Created At: ${moods[0].createdAt}
+      `);
+    }
 
     res.status(200).json({ moods });
   } catch (error) {

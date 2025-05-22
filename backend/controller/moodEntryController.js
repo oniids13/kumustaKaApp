@@ -9,6 +9,19 @@ const createMoodEntryController = async (req, res) => {
   const userId = req.user.id;
   const { moodLevel, notes, forceCreate } = req.body;
 
+  // Get client timezone info
+  const clientTime = req.headers["x-client-time"]
+    ? new Date(req.headers["x-client-time"])
+    : null;
+  const clientTimezone = req.headers["x-client-timezone"] || "Not provided";
+
+  console.log(`[DEBUG] Creating mood entry for user ${userId}:
+    - Server time: ${new Date().toISOString()}
+    - Client time: ${clientTime ? clientTime.toISOString() : "Not provided"}
+    - Client timezone: ${clientTimezone}
+    - Mood level: ${moodLevel}
+    - Force create: ${forceCreate === true}`);
+
   try {
     if (!userId) {
       return res.status(403).json({ error: "Unauthorized" });
@@ -21,13 +34,18 @@ const createMoodEntryController = async (req, res) => {
       forceCreate === true
     );
 
+    // Save submission info to help debug timezone issues
+    console.log(
+      `[INFO] Successfully created mood entry with ID: ${newMoodEntry.id}`
+    );
+
     return res.status(201).json({
       success: true,
       message: "Mood entry recorded",
       data: newMoodEntry,
     });
   } catch (error) {
-    console.error("Error creating mood entry");
+    console.error("Error creating mood entry:", error);
     if (error.message.includes("already submitted")) {
       return res.status(400).json({
         success: false,
@@ -90,7 +108,7 @@ const checkTodaySubmissionController = async (req, res) => {
     );
 
     // Get the entry result - only call this once
-    const result = await checkTodaySubmission(userId);
+    const result = await checkTodaySubmission(userId, clientTime);
     const { entry, debugInfo } = result || { entry: null, debugInfo: {} };
 
     // Allow overriding if forceCheck is true

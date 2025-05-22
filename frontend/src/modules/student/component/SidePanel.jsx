@@ -10,7 +10,6 @@ import {
   FaBullseye,
   FaEnvelope,
   FaSmile,
-  FaThermometerHalf,
   FaCog,
 } from "react-icons/fa";
 
@@ -89,6 +88,10 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
         "[DEBUG] No submission in localStorage, checking with API..."
       );
 
+      // Include client-side time information in the request
+      const clientTime = new Date();
+      const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
       // Always use cache busting to ensure fresh data
       const cacheBuster = new Date().getTime();
       const url = `http://localhost:3000/api/moodEntry/checkToday?t=${cacheBuster}`;
@@ -96,6 +99,8 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${user.token}`,
+          "X-Client-Time": clientTime.toISOString(),
+          "X-Client-Timezone": clientTimezone,
         },
         timeout: 8000, // Add reasonable timeout
       });
@@ -155,6 +160,10 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
     try {
       console.log("[INFO] Submitting mood entry with level:", moodRating);
 
+      // Include client-side time information in the request
+      const clientTime = new Date();
+      const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
       const response = await axios.post(
         "http://localhost:3000/api/moodEntry/newMoodEntry",
         {
@@ -165,6 +174,8 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
           headers: {
             Authorization: `Bearer ${user.token}`,
             "Content-Type": "application/json",
+            "X-Client-Time": clientTime.toISOString(),
+            "X-Client-Timezone": clientTimezone,
           },
         }
       );
@@ -231,28 +242,6 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
     return () => clearInterval(intervalId);
   }, []);
 
-  // Add additional effect to track state changes
-  useEffect(() => {
-    console.log(`[INFO] hasSubmittedToday changed to: ${hasSubmittedToday}`);
-
-    // If state shows submitted but localStorage doesn't, update localStorage
-    if (hasSubmittedToday && !checkLocalStorageMoodSubmission()) {
-      console.log(
-        "[DEBUG] State shows submitted but localStorage does not - syncing"
-      );
-      saveMoodSubmissionToStorage();
-    }
-  }, [hasSubmittedToday]);
-
-  // Add logging to track component rendering
-  console.log(
-    `[RENDER] SidePanel rendering with hasSubmittedToday=${hasSubmittedToday}`
-  );
-
-  // Double-check with localStorage for rendering decision
-  const finalSubmittedState =
-    hasSubmittedToday || checkLocalStorageMoodSubmission();
-
   // Set up notification checking
   useEffect(() => {
     // Set up notification checks
@@ -260,24 +249,8 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
     return cleanup;
   }, []);
 
-  // Add synchronization effect to ensure UI consistency
-  useEffect(() => {
-    // If state shows submitted, ensure localStorage is in sync
-    if (hasSubmittedToday) {
-      saveMoodSubmissionToStorage();
-    }
-
-    console.log(`[DEBUG] Mood submission state updated: ${hasSubmittedToday}`);
-  }, [hasSubmittedToday]);
-
   // Navigation Buttons
   const renderNavButton = (module, icon, label, count) => {
-    console.log(
-      `[DEBUG] Rendering button for module: ${module}, active: ${
-        activeModule === module
-      }`
-    );
-
     return (
       <button
         className={`nav-button ${activeModule === module ? "active" : ""}`}
@@ -314,13 +287,6 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
         {errorMessage && (
           <div className="alert alert-danger">{errorMessage}</div>
         )}
-
-        {/* Debug output to see state value during rendering */}
-        <div style={{ display: "none" }}>
-          Current state: hasSubmittedToday={String(hasSubmittedToday)}
-          localStorage check={String(checkLocalStorageMoodSubmission())}
-          Final state used for rendering={String(finalSubmittedState)}
-        </div>
 
         {hasSubmittedToday ? (
           <div className="already-submitted alert alert-success text-center rounded shadow">

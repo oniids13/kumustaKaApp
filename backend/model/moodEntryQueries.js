@@ -2,12 +2,15 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { getTodayRange, getDateOfWeek } = require("../utils/dateUtils");
 
-const checkTodaySubmission = async (userId) => {
-  const dateRange = getTodayRange();
+const checkTodaySubmission = async (userId, clientTime = null) => {
+  // If client time is provided, use it for better timezone accuracy
+  const dateRange = getTodayRange(clientTime);
   const { todayStart, todayEnd, debugInfo } = dateRange;
 
   console.log(
-    `[DEBUG] Checking mood for user ${userId} between ${todayStart.toISOString()} and ${todayEnd.toISOString()}`
+    `[DEBUG] Checking mood for user ${userId} between ${todayStart.toISOString()} and ${todayEnd.toISOString()}
+    Client time provided: ${clientTime ? "Yes" : "No"}
+    ${clientTime ? `Client time: ${clientTime.toISOString()}` : ""}`
   );
 
   try {
@@ -34,13 +37,18 @@ const checkTodaySubmission = async (userId) => {
       select: {
         id: true,
         moodLevel: true,
+        notes: true,
         createdAt: true,
       },
     });
 
     console.log(
       `[DEBUG] Mood entry result for student ${student.id}: ${
-        entry ? `Found entry (ID: ${entry.id})` : "No entry found"
+        entry
+          ? `Found entry (ID: ${
+              entry.id
+            }, Created: ${entry.createdAt.toISOString()})`
+          : "No entry found"
       }`
     );
 
@@ -79,6 +87,12 @@ const createMoodEntry = async (
       // Get the date range within the transaction
       const { todayStart, todayEnd } = getTodayRange();
 
+      console.log(
+        `[DEBUG] Creating mood entry for student ${student.id} with date range:
+        - Start: ${todayStart.toISOString()}
+        - End: ${todayEnd.toISOString()}`
+      );
+
       // Only check for existing entries if forceCreate is false
       if (!forceCreate) {
         // Check for existing entry within the transaction
@@ -94,7 +108,9 @@ const createMoodEntry = async (
 
         if (existingEntry) {
           console.log(
-            `[INFO] User ${userId} already has a mood entry for today (ID: ${existingEntry.id})`
+            `[INFO] User ${userId} already has a mood entry for today (ID: ${
+              existingEntry.id
+            }, Created: ${existingEntry.createdAt.toISOString()})`
           );
           throw new Error("Already submitted mood entry today");
         }
@@ -120,7 +136,9 @@ const createMoodEntry = async (
       });
 
       console.log(
-        `[INFO] Successfully created mood entry with ID: ${moodEntry.id}`
+        `[INFO] Successfully created mood entry with ID: ${
+          moodEntry.id
+        }, Created: ${moodEntry.createdAt.toISOString()}`
       );
       return moodEntry;
     });

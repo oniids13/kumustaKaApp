@@ -4,10 +4,13 @@
   "description": "backend for kumustaka App",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "seed": "npx prisma db seed"
   },
   "prisma": {
-    "seed": "node prisma/seed-resources.js"
+    "seed": "node prisma/seed.js"
   },
   "keywords": [
     "mental",
@@ -43,6 +46,7 @@
     "pg": "^8.14.1"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.8.0",
     "prisma": "^6.7.0"
   }
 }
