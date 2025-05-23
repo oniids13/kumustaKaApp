@@ -111,37 +111,29 @@ const MoodTracker = () => {
     );
 
     const fetchMoodData = async () => {
+      if (!user?.token) {
+        console.error("No user token available for API request");
+        return;
+      }
+
       try {
         console.log("[DEBUG] Fetching mood data for week:", weekNumber);
         setLoading(true);
         setError(null);
 
-        if (!user?.token) {
-          console.error("[ERROR] No user token available for API request");
-          setError("Authentication error. Please log in again.");
-          setLoading(false);
-          return;
-        }
-
-        const apiUrl = `http://localhost:3000/api/moodEntry/weeklyMoodEntries/${weekNumber}`;
-        console.log("[DEBUG] API URL:", apiUrl);
-
-        const response = await axios.get(apiUrl, {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-          timeout: 10000, // Add timeout to prevent hanging requests
-        });
+        const response = await axios.get(
+          `http://localhost:3000/api/student/mood/week/${weekNumber}`,
+          {
+            headers: { Authorization: `Bearer ${user.token}` },
+          }
+        );
 
         console.log("[DEBUG] Final axios response:", response);
-        const receivedData = Array.isArray(response.data) ? response.data : [];
-        console.log(
-          "[DEBUG] Setting mood data with length:",
-          receivedData.length
-        );
-        setMoodData(receivedData);
+        if (response.data && response.data.moods) {
+          setMoodData(response.data.moods);
+        }
       } catch (error) {
-        console.error("[ERROR] Mood tracker fetch error:", error);
+        console.error("Error fetching mood data:", error);
         setMoodData([]);
         setError(
           "Failed to load mood data: " +
@@ -157,22 +149,34 @@ const MoodTracker = () => {
   }, [weekNumber, user?.token]); // Use user?.token instead of user
 
   // Process mood data for the chart
-  const moodLevelsByDay = Array(7).fill(null);
-  try {
-    moodData.forEach((entry) => {
-      if (!entry) return;
-      const date = new Date(entry.createdAt);
-      const dayIndex = date.getDay(); // Sunday = 0 ... Saturday = 6
-      console.log(
-        `[DEBUG] Processing entry for ${date.toDateString()}, day index: ${dayIndex}`
-      );
-      moodLevelsByDay[dayIndex] = entry.moodLevel;
-    });
-    console.log("[DEBUG] Final moodLevelsByDay:", moodLevelsByDay);
-  } catch (e) {
-    console.error("[ERROR] Error processing mood entries:", e);
-    setChartError("Error processing mood data: " + e.message);
-  }
+  const processMoodData = (moods) => {
+    try {
+      const moodLevelsByDay = {
+        Monday: [],
+        Tuesday: [],
+        Wednesday: [],
+        Thursday: [],
+        Friday: [],
+        Saturday: [],
+        Sunday: [],
+      };
+
+      moods.forEach((mood) => {
+        const date = new Date(mood.createdAt);
+        const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+        if (moodLevelsByDay[dayName]) {
+          moodLevelsByDay[dayName].push(mood.moodLevel);
+        }
+      });
+
+      return moodLevelsByDay;
+    } catch (e) {
+      console.error("Error processing mood entries:", e);
+      return {};
+    }
+  };
+
+  const moodLevelsByDay = processMoodData(moodData);
 
   // Render the mood chart
   const renderMoodChart = () => {
@@ -263,8 +267,8 @@ const MoodTracker = () => {
               <div key={day} className="mood-day-card">
                 <div className="day-label">{day}</div>
                 <div className="mood-emoji">
-                  {moodLevelsByDay[index]
-                    ? ["😢", "😞", "😐", "🙂", "😀"][moodLevelsByDay[index] - 1]
+                  {moodLevelsByDay[day]
+                    ? ["😢", "😞", "😐", "🙂", "😀"][moodLevelsByDay[day] - 1]
                     : "—"}
                 </div>
               </div>

@@ -73,7 +73,11 @@ const InterventionPlans = () => {
       );
 
       if (response.data && response.data.interventions) {
-        setInterventions(response.data.interventions);
+        // Filter out completed interventions
+        const activeInterventions = response.data.interventions.filter(
+          (intervention) => intervention.status !== "COMPLETED"
+        );
+        setInterventions(activeInterventions);
       }
     } catch (err) {
       console.error("Error fetching interventions:", err);
@@ -260,7 +264,6 @@ const InterventionPlans = () => {
       filters: [
         { text: "Pending", value: "PENDING" },
         { text: "In Progress", value: "IN_PROGRESS" },
-        { text: "Completed", value: "COMPLETED" },
       ],
       onFilter: (value, record) => record.status === value,
     },
@@ -337,9 +340,9 @@ const InterventionPlans = () => {
         }}
       >
         <div>
-          <Title level={2}>Intervention Plans</Title>
+          <Title level={2}>Active Intervention Plans</Title>
           <Text type="secondary">
-            Create and manage intervention plans for students
+            Manage ongoing and pending intervention plans for students
           </Text>
         </div>
         <Button

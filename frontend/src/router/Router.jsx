@@ -23,6 +23,9 @@ import AdminDashboard from "../modules/admin/AdminDashboard";
 // Student Module Pages
 import InitialAssessmentPage from "../modules/student/component/InitialAssessment";
 
+// Counselor Module Pages
+import CreateIntervention from "../modules/counselor/component/CreateIntervention";
+
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<MainContent />} errorElement={<ErrorPage />}>
@@ -75,6 +78,16 @@ const router = createBrowserRouter(
         element={
           <ProtectedRoute roles={["COUNSELOR"]}>
             <CounselorDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Add route for creating interventions */}
+      <Route
+        path="counselor/interventions/create"
+        element={
+          <ProtectedRoute roles={["COUNSELOR"]}>
+            <CreateIntervention />
           </ProtectedRoute>
         }
       />

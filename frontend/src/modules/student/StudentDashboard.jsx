@@ -41,12 +41,6 @@ const StudentDashboard = () => {
 
   const [activeModule, setActiveModule] = useState("forum");
   const [refreshPosts, setRefreshPosts] = useState(false);
-
-  // Add debug logging for activeModule changes
-  useEffect(() => {
-    console.log("[DEBUG] Active module changed to:", activeModule);
-  }, [activeModule]);
-
   const [quote, setQuote] = useState(null);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [dashboardError, setDashboardError] = useState(null);
@@ -110,28 +104,19 @@ const StudentDashboard = () => {
   };
 
   useEffect(() => {
-    const fetchQuote = async () => {
-      if (!isAuthenticated) {
-        console.log("[DEBUG] Not authenticated, skipping quote fetch");
-        return;
-      }
+    if (!isAuthenticated) {
+      return;
+    }
 
+    const fetchQuote = async () => {
       // Check if quote has already been shown today
       const today = new Date().toDateString();
       const quoteShownToday = localStorage.getItem("quoteShownDate") === today;
       const firstLogin = localStorage.getItem("firstLoginDate");
       const isNewUser = !firstLogin;
 
-      console.log("[DEBUG] Quote check:", {
-        today,
-        quoteShownToday,
-        firstLogin,
-        isNewUser,
-      });
-
       // For a new user, always show a quote regardless of quoteShownToday
       if (!isNewUser && quoteShownToday) {
-        console.log("[DEBUG] Quote already shown today, skipping");
         return;
       }
 
@@ -139,7 +124,6 @@ const StudentDashboard = () => {
         // If this is a first login, save the date
         if (isNewUser) {
           localStorage.setItem("firstLoginDate", today);
-          console.log("[DEBUG] New user, saved first login date");
         }
 
         // Add cache busting to prevent multiple calls
@@ -157,17 +141,11 @@ const StudentDashboard = () => {
         if (Array.isArray(response.data) && response.data.length > 0) {
           setQuote(response.data[0]);
           setShowQuoteModal(true);
-          console.log("[DEBUG] Setting quote and showing modal");
-        } else {
-          console.log("[DEBUG] No quotes available in response");
         }
       } catch (err) {
-        console.error("[ERROR] Error fetching quote:", err);
+        console.error("Error fetching quote:", err);
       }
     };
-
-    // Clear today's quote shown status for testing
-    // localStorage.removeItem("quoteShownDate");
 
     fetchQuote();
   }, [isAuthenticated]);
@@ -175,14 +153,9 @@ const StudentDashboard = () => {
   // Handler for when quote modal is closed
   const handleCloseQuoteModal = () => {
     setShowQuoteModal(false);
-
     // Mark quote as shown for today
     const today = new Date().toDateString();
     localStorage.setItem("quoteShownDate", today);
-    console.log(
-      "[DEBUG] Quote modal closed, marked as shown for today:",
-      today
-    );
   };
 
   useEffect(() => {

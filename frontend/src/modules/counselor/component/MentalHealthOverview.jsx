@@ -300,23 +300,30 @@ const MentalHealthOverview = () => {
           })
         );
 
-        // Calculate zone statistics
+        // Calculate zone statistics and red flags for each student
         let redCount = 0;
         let yellowCount = 0;
         let greenCount = 0;
-        let unknownCount = 0;
 
-        mentalHealthData.forEach((student) => {
+        // Calculate red flags for each student
+        const mentalHealthDataWithFlags = mentalHealthData.map((student) => {
+          let redFlags = 0;
+          if (student.surveys && student.surveys.length > 0) {
+            redFlags += student.surveys.filter(
+              (survey) => survey.zone === "Red (Needs Attention)"
+            ).length;
+          }
+          if (student.moods && student.moods.length > 0) {
+            redFlags += student.moods.filter(
+              (mood) => mood.moodLevel <= 2
+            ).length;
+          }
           const zone = getStudentZone(student);
           if (zone === "Red (Needs Attention)") redCount++;
           else if (zone === "Yellow (Moderate)") yellowCount++;
           else if (zone === "Green (Positive)") greenCount++;
-          else unknownCount++;
+          return { ...student, redFlags };
         });
-
-        console.log(
-          `Zone distribution: Red: ${redCount}, Yellow: ${yellowCount}, Green: ${greenCount}, Unknown: ${unknownCount}`
-        );
 
         setZoneStats({
           red: redCount,
@@ -325,7 +332,7 @@ const MentalHealthOverview = () => {
           total: mentalHealthData.length,
         });
 
-        setStudents(mentalHealthData);
+        setStudents(mentalHealthDataWithFlags);
       }
     } catch (err) {
       console.error("Error fetching students data:", err);
@@ -504,7 +511,7 @@ const MentalHealthOverview = () => {
 
   const redAndYellowStudents = students.filter((student) => {
     const zone = getStudentZone(student);
-    return zone === "Red (Needs Attention)" || zone === "Yellow (Moderate)";
+    return zone === "Red (Needs Attention)";
   });
 
   const getAssessmentInterpretation = (assessment) => {
@@ -1111,7 +1118,7 @@ const MentalHealthOverview = () => {
         <Title level={3}>
           <Space>
             <WarningOutlined style={{ color: "#f5222d" }} />
-            Students Needing Attention
+            Students Needing Immediate Attention
           </Space>
         </Title>
 
@@ -1125,7 +1132,7 @@ const MentalHealthOverview = () => {
             />
           </Card>
         ) : (
-          <Empty description="No students in red or yellow zone" />
+          <Empty description="No students in red zone requiring immediate attention" />
         )}
       </div>
 

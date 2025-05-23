@@ -35,6 +35,7 @@ import {
   FaCheckCircle,
   FaMehBlank,
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -67,6 +68,7 @@ const StudentAnalytics = ({ initialStudentId }) => {
   });
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchStudents();
@@ -219,8 +221,9 @@ const StudentAnalytics = ({ initialStudentId }) => {
   };
 
   const handleCreateIntervention = () => {
-    // Redirect or open intervention creation modal
-    window.location.href = `/counselor/interventions/create?studentId=${selectedStudent}`;
+    if (selectedStudent) {
+      navigate(`/counselor/interventions/create?studentId=${selectedStudent}`);
+    }
   };
 
   if (loading && !selectedStudent) {
