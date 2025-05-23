@@ -26,10 +26,6 @@ function getPHTime(date = new Date()) {
     )
   );
 
-  console.log(
-    `[DEBUG] PH Time calculation: UTC ${inputDate.toISOString()} -> PH ${phDate.toISOString()}`
-  );
-
   return phDate;
 }
 

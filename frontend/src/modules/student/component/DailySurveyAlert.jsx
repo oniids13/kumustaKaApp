@@ -93,7 +93,7 @@ const DailySurveyAlert = () => {
           <Button
             variant="outline-secondary"
             size="sm"
-            className="me-2"
+            className="me-2 my-2"
             onClick={checkSurveyStatus}
             aria-label="Refresh survey status"
           >

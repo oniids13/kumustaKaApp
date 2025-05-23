@@ -92,14 +92,17 @@ const getMentalHealthTrends = async (params, teacherId) => {
       switch (period) {
         case "week":
           const weekStart = new Date(now);
-          weekStart.setDate(now.getDate() - 7);
-          weekStart.setHours(0, 0, 0, 0); // Start of day 7 days ago
+          weekStart.setDate(now.getDate() - 6); // Changed from -7 to -6 to include today + 6 previous days
+          weekStart.setHours(0, 0, 0, 0); // Start of day 6 days ago
           dateFilter = {
             createdAt: {
               gte: weekStart,
               lte: endOfToday,
             },
           };
+          console.log(
+            `Week filter: ${weekStart.toISOString()} to ${endOfToday.toISOString()}`
+          );
           break;
         case "month":
           const monthStart = new Date(now);
@@ -642,29 +645,43 @@ const processMoodTrendsData = (responses, period) => {
       };
     }
 
-    // Use the zone data directly from the response
-    if (response.zone === "Green") {
-      groupedByPeriod[key]["Green (Positive)"]++;
-    } else if (response.zone === "Yellow") {
-      groupedByPeriod[key]["Yellow (Moderate)"]++;
-    } else if (response.zone === "Red") {
-      groupedByPeriod[key]["Red (Needs Attention)"]++;
-    } else {
-      // If zone isn't one of the expected values, try to determine from percentage
-      if (response.percentage !== undefined) {
-        const percentage = parseFloat(response.percentage);
-        if (percentage >= 0.8) {
-          groupedByPeriod[key]["Green (Positive)"]++;
-        } else if (percentage >= 0.6) {
-          groupedByPeriod[key]["Yellow (Moderate)"]++;
-        } else {
-          groupedByPeriod[key]["Red (Needs Attention)"]++;
-        }
+    // Map the zone value to the correct category
+    if (response.zone) {
+      // Handle both formats: "Green" and "Green (Positive)"
+      if (response.zone === "Green" || response.zone === "Green (Positive)") {
+        groupedByPeriod[key]["Green (Positive)"]++;
+      } else if (
+        response.zone === "Yellow" ||
+        response.zone === "Yellow (Moderate)"
+      ) {
+        groupedByPeriod[key]["Yellow (Moderate)"]++;
+      } else if (
+        response.zone === "Red" ||
+        response.zone === "Red (Needs Attention)"
+      ) {
+        groupedByPeriod[key]["Red (Needs Attention)"]++;
       } else {
+        // If zone isn't one of the expected values, try to determine from percentage
         console.log(
-          `Warning: Missing zone data for response ID ${response.id}`
+          `Warning: Unknown zone value '${response.zone}' for response ID ${response.id}`
         );
+        if (response.percentage !== undefined) {
+          const percentage = parseFloat(response.percentage);
+          if (percentage >= 0.8) {
+            groupedByPeriod[key]["Green (Positive)"]++;
+          } else if (percentage >= 0.6) {
+            groupedByPeriod[key]["Yellow (Moderate)"]++;
+          } else {
+            groupedByPeriod[key]["Red (Needs Attention)"]++;
+          }
+        } else {
+          console.log(
+            `Warning: Missing zone data for response ID ${response.id}`
+          );
+        }
       }
+    } else {
+      console.log(`Warning: Missing zone data for response ID ${response.id}`);
     }
 
     groupedByPeriod[key].count++;

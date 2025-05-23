@@ -12,7 +12,7 @@ import PrivacyConsentSection from "./component/ConsentSection";
 import EmergencyContact from "./component/EmergencyContact";
 import Quiz from "./component/Quiz";
 import GoalTracker from "./component/GoalTracker";
-import UserSettings from "../../components/UserSettings";
+import UserSettings from "../../component/UserSettings";
 
 // Forum Post Components
 import CreatePostForm from "../../component/ForumPosts/CreatePostForm";

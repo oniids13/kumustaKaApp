@@ -352,6 +352,18 @@ const TrendsView = () => {
         title="Overall Mental Health Status"
         style={{ marginBottom: "30px" }}
       >
+        <Text
+          type="secondary"
+          style={{ display: "block", marginBottom: "16px" }}
+        >
+          Distribution of survey responses and mood entries based on{" "}
+          {periodFilter === "week"
+            ? "weekly"
+            : periodFilter === "month"
+            ? "monthly"
+            : "semester"}{" "}
+          aggregated data
+        </Text>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie

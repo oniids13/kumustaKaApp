@@ -86,7 +86,6 @@ app.use(
 async function initializeApp() {
   try {
     await ensureDailySurveyExists();
-    console.log("Daily survey ready");
   } catch (error) {
     console.error("Failed to initialize daily survey:", error);
   }
@@ -140,9 +139,7 @@ initializeApp();
 // Every Sunday at 11:30 PM
 cron.schedule("30 23 * * 0", async () => {
   try {
-    console.log("Running weekly goal summary update....");
     await sundayNightUpdate();
-    console.log("Weekly goal summary update completed successfully");
   } catch (error) {
     console.error("Failed to run weekly goal summary update:", error);
   }
@@ -151,9 +148,7 @@ cron.schedule("30 23 * * 0", async () => {
 // Every Monday at 12:05 AM
 cron.schedule("5 0 * * 1", async () => {
   try {
-    console.log("Running weekly goal reset....");
     await mondayMorningReset();
-    console.log("Weekly goal reset completed successfully");
   } catch (error) {
     console.error("Failed to run weekly goal reset:", error);
   }
@@ -162,19 +157,11 @@ cron.schedule("5 0 * * 1", async () => {
 // Add debugging middleware to log all requests
 app.use((req, res, next) => {
   const startTime = new Date();
-  console.log(
-    `[${startTime.toISOString()}] ${req.method} ${req.originalUrl} - Started`
-  );
 
   // Capture response finish event
   res.on("finish", () => {
     const endTime = new Date();
     const duration = endTime - startTime;
-    console.log(
-      `[${endTime.toISOString()}] ${req.method} ${
-        req.originalUrl
-      } - Finished in ${duration}ms with status ${res.statusCode}`
-    );
   });
 
   next();

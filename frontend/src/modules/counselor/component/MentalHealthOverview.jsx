@@ -13,6 +13,7 @@ import {
   Button,
   Space,
   Empty,
+  Select,
 } from "antd";
 import {
   WarningOutlined,
@@ -36,6 +37,7 @@ import {
 import { createStyles } from "antd-style";
 
 const { Title, Text, Paragraph } = Typography;
+const { Option } = Select;
 
 // Custom colors for better visualization
 const ZONE_COLORS = {
@@ -63,6 +65,7 @@ const MentalHealthOverview = () => {
     total: 0,
   });
   const [moodData, setMoodData] = useState([]);
+  const [periodFilter, setPeriodFilter] = useState("week");
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
@@ -82,7 +85,7 @@ const MentalHealthOverview = () => {
   useEffect(() => {
     fetchStudentsWithData();
     fetchMoodData();
-  }, []);
+  }, [periodFilter]);
 
   const fetchStudentsWithData = async () => {
     setLoading(true);
@@ -99,7 +102,6 @@ const MentalHealthOverview = () => {
 
       if (studentsResponse.data && studentsResponse.data.students) {
         const allStudents = studentsResponse.data.students;
-        console.log(`Found ${allStudents.length} students in counselor view`);
 
         // Make sure to set the end date to capture all of today's activities
         const today = moment().endOf("day");
@@ -108,8 +110,6 @@ const MentalHealthOverview = () => {
         // Format dates for API consistently
         const startDate = thirtyDaysAgo.format("YYYY-MM-DD");
         const endDate = today.format("YYYY-MM-DD");
-
-        console.log(`Using date range: ${startDate} to ${endDate}`);
 
         // Fetch mental health data for students
         const mentalHealthData = await Promise.all(
@@ -345,7 +345,7 @@ const MentalHealthOverview = () => {
         "http://localhost:3000/api/counselor/trends",
         {
           params: {
-            period: "week",
+            period: periodFilter,
           },
           headers: {
             Authorization: `Bearer ${user.token}`,
@@ -870,6 +870,11 @@ const MentalHealthOverview = () => {
     ];
   };
 
+  // Add period change handler
+  const handlePeriodChange = (value) => {
+    setPeriodFilter(value);
+  };
+
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "50px" }}>
@@ -1020,6 +1025,23 @@ const MentalHealthOverview = () => {
         </Col>
       </Row>
 
+      {/* Period Filter Controls */}
+      <div style={{ marginTop: "20px", marginBottom: "30px" }}>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Select
+              defaultValue={periodFilter}
+              style={{ width: 120 }}
+              onChange={handlePeriodChange}
+            >
+              <Option value="week">Weekly</Option>
+              <Option value="month">Monthly</Option>
+              <Option value="semester">Semester</Option>
+            </Select>
+          </Col>
+        </Row>
+      </div>
+
       {/* Overall Mental Health Status */}
       <div style={{ marginTop: "30px" }}>
         <Title level={3}>
@@ -1032,8 +1054,13 @@ const MentalHealthOverview = () => {
           type="secondary"
           style={{ display: "block", marginBottom: "16px" }}
         >
-          Distribution of survey responses and mood entries (one entry per
-          student per day)
+          Distribution of survey responses and mood entries based on{" "}
+          {periodFilter === "week"
+            ? "weekly"
+            : periodFilter === "month"
+            ? "monthly"
+            : "semester"}{" "}
+          aggregated data
         </Text>
 
         <Card>

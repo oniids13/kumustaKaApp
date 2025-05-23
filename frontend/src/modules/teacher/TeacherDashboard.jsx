@@ -10,7 +10,7 @@ import PostList from "../../component/ForumPosts/PostList";
 import MessagingContainer from "../../component/Messaging/MessagingContainer";
 
 // User Settings Component
-import UserSettings from "../../components/UserSettings";
+import UserSettings from "../../component/UserSettings";
 
 // CSS
 import "./styles/TeacherModule.css";

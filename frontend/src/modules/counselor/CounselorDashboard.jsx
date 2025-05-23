@@ -7,7 +7,7 @@ import Reports from "./component/Reports";
 import InterventionHistory from "./component/InterventionHistory";
 import MentalHealthOverview from "./component/MentalHealthOverview";
 import DailySubmissions from "./component/DailySubmissions";
-import UserSettings from "../../components/UserSettings";
+import UserSettings from "../../component/UserSettings";
 
 // CSS
 import "./styles/CounselorDashboard.css";

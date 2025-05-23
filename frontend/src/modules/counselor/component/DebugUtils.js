@@ -13,26 +13,10 @@ export async function debugStudentZone(studentId) {
   const token = userData.token;
 
   if (!token) {
-    console.error("No authentication token found");
     return;
   }
 
   try {
-    console.log(`Debugging zone calculation for student ${studentId}`);
-
-    // Get today's date and 30 days ago for consistent testing
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    thirtyDaysAgo.setHours(0, 0, 0, 0);
-
-    // Format dates for API
-    const startDate = formatDate(thirtyDaysAgo);
-    const endDate = formatDate(today);
-
-    console.log(`Using date range: ${startDate} to ${endDate}`);
-
     // Fetch all data for this student
     const [surveyResponse, moodResponse, assessmentResponse] =
       await Promise.all([
@@ -60,61 +44,13 @@ export async function debugStudentZone(studentId) {
           .catch(() => null),
       ]);
 
-    // Log the raw data
-    console.log("Raw survey data:", surveyResponse);
-    console.log("Raw mood data:", moodResponse);
-    console.log("Raw assessment data:", assessmentResponse);
-
     // Extract the data from the responses
     const surveys = surveyResponse.surveys || [];
     const moods = moodResponse.moods || [];
     const assessment = assessmentResponse;
 
-    console.log(
-      `Found ${surveys.length} surveys and ${moods.length} mood entries`
-    );
-
-    // Check survey zones
-    if (surveys.length > 0) {
-      console.log("Survey zones:");
-      surveys.slice(0, 5).forEach((survey, index) => {
-        console.log(
-          `  Survey ${index + 1}: ${
-            survey.zone || "No zone"
-          } (${typeof survey.zone})`
-        );
-      });
-    }
-
-    // Check mood levels
-    if (moods.length > 0) {
-      console.log("Mood levels:");
-      moods.slice(0, 5).forEach((mood, index) => {
-        console.log(
-          `  Mood ${index + 1}: ${mood.moodLevel} (${typeof mood.moodLevel})`
-        );
-      });
-
-      // Calculate average mood
-      const validMoods = moods.filter((m) => typeof m.moodLevel === "number");
-      if (validMoods.length > 0) {
-        const avgMood =
-          validMoods.reduce((sum, m) => sum + m.moodLevel, 0) /
-          validMoods.length;
-        console.log(`Average mood level: ${avgMood.toFixed(2)}`);
-        console.log(
-          `This would put them in: ${
-            avgMood <= 2 ? "Red" : avgMood <= 3.5 ? "Yellow" : "Green"
-          } zone`
-        );
-      } else {
-        console.log("No valid mood entries found");
-      }
-    }
-
     // Calculate zone
     let zone = calculateZone(surveys, moods, assessment);
-    console.log(`Calculated zone: ${zone}`);
 
     return {
       surveys,
@@ -123,7 +59,7 @@ export async function debugStudentZone(studentId) {
       zone,
     };
   } catch (error) {
-    console.error("Error debugging student zone:", error);
+    return;
   }
 }
 
