@@ -10,6 +10,7 @@ import {
   Progress,
   List,
   Timeline,
+  Pagination,
 } from "antd";
 import {
   UserOutlined,
@@ -40,12 +41,20 @@ const DashboardOverview = () => {
     memoryUsage: 38,
   });
   const [recentActivities, setRecentActivities] = useState([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalActivities, setTotalActivities] = useState(0);
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  useEffect(() => {
+    fetchRecentActivities(currentPage, pageSize);
+  }, [currentPage, pageSize]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -60,18 +69,8 @@ const DashboardOverview = () => {
         }
       );
 
-      const activitiesResponse = await axios.get(
-        "http://localhost:3000/api/admin/recent-activities",
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
-      );
-
-      if (statsResponse.data && activitiesResponse.data) {
+      if (statsResponse.data) {
         setSystemStats(statsResponse.data);
-        setRecentActivities(activitiesResponse.data.activities || []);
       }
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
@@ -88,6 +87,31 @@ const DashboardOverview = () => {
         memoryUsage: 38,
       });
 
+      setError("Could not fetch live data. Displaying demonstration data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRecentActivities = async (page = 1, limit = 10) => {
+    setActivitiesLoading(true);
+    try {
+      const activitiesResponse = await axios.get(
+        `http://localhost:3000/api/admin/recent-activities?page=${page}&limit=${limit}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+
+      if (activitiesResponse.data) {
+        setRecentActivities(activitiesResponse.data.activities || []);
+        setTotalActivities(activitiesResponse.data.pagination?.totalActivities || 0);
+      }
+    } catch (err) {
+      console.error("Error fetching recent activities:", err);
+      // Use mock data for demonstration
       setRecentActivities([
         {
           id: 1,
@@ -125,10 +149,16 @@ const DashboardOverview = () => {
           details: "Multiple failed attempts from IP 203.0.113.42",
         },
       ]);
-
-      setError("Could not fetch live data. Displaying demonstration data.");
+      setTotalActivities(50); // Mock total for demonstration
     } finally {
-      setLoading(false);
+      setActivitiesLoading(false);
+    }
+  };
+
+  const handlePageChange = (page, size) => {
+    setCurrentPage(page);
+    if (size !== pageSize) {
+      setPageSize(size);
     }
   };
 
@@ -227,7 +257,8 @@ const DashboardOverview = () => {
         </Col>
       </Row>
 
-      {/* System Health */}
+      {/* System Health - Commented out for future use */}
+      {/*
       <Title level={3} style={{ marginTop: "30px" }}>
         System Health
       </Title>
@@ -289,28 +320,48 @@ const DashboardOverview = () => {
           </Card>
         </Col>
       </Row>
+      */}
 
       {/* Recent Activities */}
       <Title level={3} style={{ marginTop: "30px" }}>
         Recent System Activities
+        <Text type="secondary" style={{ fontSize: "14px", marginLeft: "10px" }}>
+          (Page {currentPage} of {Math.ceil(totalActivities / pageSize)} - Total: {totalActivities})
+        </Text>
       </Title>
       <Card>
-        <Timeline mode="left">
-          {recentActivities.map((activity) => (
-            <Timeline.Item
-              key={activity.id}
-              label={moment(activity.timestamp).format("MMM DD, HH:mm")}
-              dot={getActivityIcon(activity.action)}
-              color={getActivityColor(activity.action)}
-            >
-              <div style={{ fontWeight: "bold" }}>{activity.action}</div>
-              <div>
-                <Text type="secondary">By {activity.username}</Text>
-              </div>
-              <div>{activity.details}</div>
-            </Timeline.Item>
-          ))}
-        </Timeline>
+        <Spin spinning={activitiesLoading}>
+          <Timeline mode="left">
+            {recentActivities.map((activity) => (
+              <Timeline.Item
+                key={activity.id}
+                label={moment(activity.timestamp).format("MMM DD, HH:mm")}
+                dot={getActivityIcon(activity.action)}
+                color={getActivityColor(activity.action)}
+              >
+                <div style={{ fontWeight: "bold" }}>{activity.action}</div>
+                <div>
+                  <Text type="secondary">By {activity.username}</Text>
+                </div>
+                <div>{activity.details}</div>
+              </Timeline.Item>
+            ))}
+          </Timeline>
+        </Spin>
+
+        <Pagination
+          current={currentPage}
+          total={totalActivities}
+          pageSize={pageSize}
+          onChange={handlePageChange}
+          onShowSizeChange={handlePageChange}
+          showSizeChanger
+          showQuickJumper
+          showTotal={(total, range) =>
+            `${range[0]}-${range[1]} of ${total} activities`
+          }
+          style={{ marginTop: "20px", textAlign: "center" }}
+        />
       </Card>
     </div>
   );

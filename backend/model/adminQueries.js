@@ -42,25 +42,30 @@ const getSystemStats = async () => {
   }
 };
 
-const getRecentActivities = async () => {
+const getRecentActivities = async (page = 1, limit = 10) => {
   try {
+    const skip = (page - 1) * limit;
+
     // Get recent forum posts
     const recentPosts = await prisma.forumPost.findMany({
-      take: 5,
+      take: Math.ceil(limit / 3), // Distribute the limit among different activity types
+      skip: Math.ceil(skip / 3),
       orderBy: { createdAt: "desc" },
       include: { author: true },
     });
 
     // Get recent mood entries
     const recentMoodEntries = await prisma.moodEntry.findMany({
-      take: 5,
+      take: Math.ceil(limit / 3),
+      skip: Math.ceil(skip / 3),
       orderBy: { createdAt: "desc" },
       include: { student: { include: { user: true } } },
     });
 
     // Get recent survey responses
     const recentSurveyResponses = await prisma.surveyResponse.findMany({
-      take: 5,
+      take: Math.ceil(limit / 3),
+      skip: Math.ceil(skip / 3),
       orderBy: { createdAt: "desc" },
       include: { student: { include: { user: true } } },
     });
@@ -90,9 +95,25 @@ const getRecentActivities = async () => {
       })),
     ]
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-      .slice(0, 10);
+      .slice(0, limit);
 
-    return { activities };
+    // Get total counts for pagination
+    const totalPosts = await prisma.forumPost.count();
+    const totalMoodEntries = await prisma.moodEntry.count();
+    const totalSurveyResponses = await prisma.surveyResponse.count();
+    const totalActivities = totalPosts + totalMoodEntries + totalSurveyResponses;
+
+    return { 
+      activities,
+      pagination: {
+        currentPage: page,
+        limit,
+        totalActivities,
+        totalPages: Math.ceil(totalActivities / limit),
+        hasNextPage: page < Math.ceil(totalActivities / limit),
+        hasPrevPage: page > 1
+      }
+    };
   } catch (error) {
     console.error("Error fetching recent activities:", error);
     throw error;

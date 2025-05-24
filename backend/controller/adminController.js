@@ -13,7 +13,10 @@ exports.getSystemStats = async (req, res) => {
 
 exports.getRecentActivities = async (req, res) => {
   try {
-    const activities = await adminQueries.getRecentActivities();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    
+    const activities = await adminQueries.getRecentActivities(page, limit);
     res.status(200).json(activities);
   } catch (error) {
     console.error("Error fetching recent activities:", error);
