@@ -7,10 +7,10 @@ const isWeekend = () => {
   return day === 0 || day === 6;
 };
 
-const getDailyQuestions = async (userId) => {
+const getDailyQuestions = async (userId, skipWeekendCheck = false) => {
   try {
-    // Check if it's weekend
-    if (isWeekend()) {
+    // Check if it's weekend (unless skip is requested)
+    if (!skipWeekendCheck && isWeekend()) {
       return []; // No quizzes on weekends
     }
 
@@ -21,6 +21,10 @@ const getDailyQuestions = async (userId) => {
       where: { userId },
       select: { id: true },
     });
+
+    if (!student) {
+      throw new Error("Student not found");
+    }
 
     // Check if student already attempted today
     const existingAttempts = await prisma.quizAttempt.findMany({

@@ -66,7 +66,6 @@ const MoodTracker = () => {
   const [moodData, setMoodData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [chartError, setChartError] = useState(null);
 
   // Get user data safely
   const getUserData = () => {
@@ -122,15 +121,15 @@ const MoodTracker = () => {
         setError(null);
 
         const response = await axios.get(
-          `http://localhost:3000/api/student/mood/week/${weekNumber}`,
+          `http://localhost:3000/api/moodEntry/weeklyMoodEntries/${weekNumber}`,
           {
             headers: { Authorization: `Bearer ${user.token}` },
           }
         );
 
         console.log("[DEBUG] Final axios response:", response);
-        if (response.data && response.data.moods) {
-          setMoodData(response.data.moods);
+        if (response.data && Array.isArray(response.data)) {
+          setMoodData(response.data);
         }
       } catch (error) {
         console.error("Error fetching mood data:", error);
@@ -151,50 +150,62 @@ const MoodTracker = () => {
   // Process mood data for the chart
   const processMoodData = (moods) => {
     try {
-      const moodLevelsByDay = {
-        Monday: [],
-        Tuesday: [],
-        Wednesday: [],
-        Thursday: [],
-        Friday: [],
-        Saturday: [],
-        Sunday: [],
-      };
+      // Create array for exactly 7 days (Sun-Sat)
+      const daysOfWeek = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const weekData = new Array(7).fill(null);
 
       moods.forEach((mood) => {
         const date = new Date(mood.createdAt);
         const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
-        if (moodLevelsByDay[dayName]) {
-          moodLevelsByDay[dayName].push(mood.moodLevel);
+        const dayIndex = daysOfWeek.indexOf(dayName);
+
+        if (dayIndex !== -1) {
+          // If multiple entries for same day, use the latest one
+          if (
+            weekData[dayIndex] === null ||
+            new Date(mood.createdAt) > new Date(weekData[dayIndex].createdAt)
+          ) {
+            weekData[dayIndex] = mood.moodLevel;
+          }
         }
       });
 
-      return moodLevelsByDay;
+      return weekData;
     } catch (e) {
       console.error("Error processing mood entries:", e);
-      return {};
+      return new Array(7).fill(null);
     }
   };
 
-  const moodLevelsByDay = processMoodData(moodData);
+  const weeklyMoodData = processMoodData(moodData);
 
   // Render the mood chart
   const renderMoodChart = () => {
-    if (chartError) {
-      return renderSimpleMoodVisualization();
-    }
-
     try {
       const chartData = {
         labels: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
         datasets: [
           {
             label: "Mood Level",
-            data: moodLevelsByDay,
+            data: weeklyMoodData,
             borderColor: "#4a6baf",
             backgroundColor: "rgba(74, 107, 175, 0.2)",
             tension: 0.3,
             fill: true,
+            pointBackgroundColor: "#4a6baf",
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            spanGaps: false, // Don't connect points where data is missing
           },
         ],
       };
@@ -209,11 +220,24 @@ const MoodTracker = () => {
         },
         scales: {
           y: {
-            min: 1,
+            min: 0.5,
             max: 5.5,
             ticks: {
               stepSize: 1,
-              callback: (value) => ["😢", "😞", "😐", "🙂", "😀"][value - 1],
+              callback: (value) => {
+                if (value >= 1 && value <= 5) {
+                  return ["😢", "😞", "😐", "🙂", "😀"][value - 1];
+                }
+                return "";
+              },
+            },
+            grid: {
+              color: "rgba(0,0,0,0.1)",
+            },
+          },
+          x: {
+            grid: {
+              color: "rgba(0,0,0,0.1)",
             },
           },
         },
@@ -234,7 +258,7 @@ const MoodTracker = () => {
           tooltip: {
             callbacks: {
               label: (ctx) =>
-                ctx.raw
+                ctx.raw !== null
                   ? `Mood: ${
                       ["Very Low", "Low", "Neutral", "Good", "Excellent"][
                         ctx.raw - 1
@@ -267,8 +291,8 @@ const MoodTracker = () => {
               <div key={day} className="mood-day-card">
                 <div className="day-label">{day}</div>
                 <div className="mood-emoji">
-                  {moodLevelsByDay[day]
-                    ? ["😢", "😞", "😐", "🙂", "😀"][moodLevelsByDay[day] - 1]
+                  {weeklyMoodData[index]
+                    ? ["😢", "😞", "😐", "🙂", "😀"][weeklyMoodData[index] - 1]
                     : "—"}
                 </div>
               </div>

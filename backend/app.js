@@ -158,10 +158,20 @@ cron.schedule("5 0 * * 1", async () => {
 app.use((req, res, next) => {
   const startTime = new Date();
 
+  console.log(`[${startTime.toISOString()}] ${req.method} ${req.url}`);
+  if (req.query && Object.keys(req.query).length > 0) {
+    console.log("Query params:", req.query);
+  }
+
   // Capture response finish event
   res.on("finish", () => {
     const endTime = new Date();
     const duration = endTime - startTime;
+    console.log(
+      `[${endTime.toISOString()}] ${req.method} ${req.url} - ${
+        res.statusCode
+      } (${duration}ms)`
+    );
   });
 
   next();

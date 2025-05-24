@@ -13,6 +13,8 @@ const Quiz = () => {
   const [dailyCompleted, setDailyCompleted] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isWeekend, setIsWeekend] = useState(false);
+  const [weekendMessage, setWeekendMessage] = useState("");
 
   const user = JSON.parse(localStorage.getItem("userData"));
 
@@ -48,7 +50,15 @@ const Quiz = () => {
             "http://localhost:3000/api/quizzes/dailyQuestions",
             { headers: { Authorization: `Bearer ${user.token}` } }
           );
-          setQuestions(questionsRes.data);
+
+          // Check if response indicates weekend
+          if (questionsRes.data.isWeekend) {
+            setIsWeekend(true);
+            setWeekendMessage(questionsRes.data.message);
+            setQuestions([]);
+          } else {
+            setQuestions(questionsRes.data);
+          }
         }
       } catch (err) {
         setError(err.response?.data?.error || "Failed to load quiz");
@@ -164,6 +174,54 @@ const Quiz = () => {
             </>
           )}
           <p>Come back tomorrow for new questions.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isWeekend) {
+    return (
+      <div className="container mt-5 text-center">
+        <div className="card p-4">
+          <div className="mb-3" style={{ fontSize: "3rem" }}>
+            🌞
+          </div>
+          <h3>Weekend Break!</h3>
+          <p className="lead">{weekendMessage}</p>
+          <p className="text-muted">
+            Mental health quizzes will be available again on Monday.
+          </p>
+          <div className="mt-3">
+            <small className="text-muted">
+              Use this time to relax, spend time with friends and family, or
+              enjoy your hobbies!
+            </small>
+          </div>
+
+          {/* Testing/Debug button */}
+          <div className="mt-4 border-top pt-3">
+            <small className="text-muted d-block mb-2">Testing Mode:</small>
+            <button
+              className="btn btn-outline-primary btn-sm"
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  const questionsRes = await axios.get(
+                    "http://localhost:3000/api/quizzes/dailyQuestions?skipWeekendCheck=true",
+                    { headers: { Authorization: `Bearer ${user.token}` } }
+                  );
+                  setQuestions(questionsRes.data);
+                  setIsWeekend(false);
+                } catch (err) {
+                  setError(err.response?.data?.error || "Failed to load quiz");
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            >
+              Load Quiz for Testing
+            </button>
+          </div>
         </div>
       </div>
     );
