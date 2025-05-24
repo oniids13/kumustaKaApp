@@ -10,6 +10,13 @@ const loginController = async (req, res) => {
   const user = await getUserLogin(email, password);
 
   if (!user || !user.id) {
+    // Check if it's a status-related message
+    if (user && user.message) {
+      if (user.message.includes("deactivated")) {
+        return res.status(403).json({ message: user.message });
+      }
+      return res.status(401).json({ message: user.message });
+    }
     return res.status(401).json({ message: "Invalid email or password" });
   }
 

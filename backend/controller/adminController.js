@@ -118,22 +118,24 @@ exports.updateUserStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    // Since we don't have a status field in the User model,
-    // we'll acknowledge the request but explain in the comments
-    // that it's not actually changing anything in the database
+    // Validate status value
+    if (!["ACTIVE", "INACTIVE"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
 
-    // In a real implementation, you would:
-    // await adminQueries.updateUserStatus(id, status);
+    const updatedUser = await adminQueries.updateUserStatus(id, status);
 
     res.status(200).json({
-      message: "User status update acknowledged",
-      user: {
-        id,
-        status,
-      },
+      message: "User status updated successfully",
+      user: updatedUser,
     });
   } catch (error) {
     console.error("Error updating user status:", error);
+
+    if (error.message === "User not found") {
+      return res.status(404).json({ message: error.message });
+    }
+
     res.status(500).json({ message: "Failed to update user status" });
   }
 };

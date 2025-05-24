@@ -74,11 +74,17 @@ const getUserLogin = async (email, password) => {
         lastName: true,
         phone: true,
         role: true,
+        status: true,
         avatar: true,
       },
     });
     if (!user) {
       return { message: "User not found" };
+    }
+
+    // Check if user account is active
+    if (user.status !== "ACTIVE") {
+      return { message: "Account is deactivated. Please contact administrator." };
     }
 
     const isValid = validPassword(password, user.hash, user.salt);

@@ -90,6 +90,7 @@ const UserManagement = () => {
       firstName: record.firstName,
       lastName: record.lastName,
       email: record.email,
+      phone: record.phone,
       role: record.role,
       status: record.status,
     });
@@ -455,6 +456,14 @@ const UserManagement = () => {
             ]}
           >
             <Input placeholder="Enter email address" />
+          </Form.Item>
+
+          <Form.Item
+            name="phone"
+            label="Phone Number"
+            rules={[{ required: false }]}
+          >
+            <Input placeholder="Enter phone number" />
           </Form.Item>
 
           {!isEditMode && (

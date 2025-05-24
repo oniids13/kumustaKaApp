@@ -40,7 +40,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
         >
           <FaUsers /> User Management
         </button>
-        <button
+        {/* <button
           className={`nav-button ${activeModule === "roles" ? "active" : ""}`}
           onClick={() => setActiveModule("roles")}
         >
@@ -65,7 +65,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
           onClick={() => setActiveModule("compliance")}
         >
           <FaDatabase /> Compliance Monitoring
-        </button>
+        </button> */}
         <button
           className={`nav-button ${
             activeModule === "resetPassword" ? "active" : ""

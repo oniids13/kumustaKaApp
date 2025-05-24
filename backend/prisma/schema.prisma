@@ -13,6 +13,7 @@ model User {
   salt             String
   hash             String
   role             UserRole       @default(STUDENT)
+  status           UserStatus     @default(ACTIVE)
   firstName        String
   lastName         String
   phone            String
@@ -45,7 +46,7 @@ model Student {
   journals            Journal[]
   moodEntries         MoodEntry[]
   reactions           Reaction[]
-  user                User                @relation(fields: [userId], references: [id])
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   surveys             SurveyResponse[]
   weeklyGoalSummaries WeeklyGoalSummary[]
 
@@ -59,7 +60,7 @@ model EmergencyContact {
   relationship String
   phone        String
   isPrimary    Boolean @default(false)
-  student      Student @relation(fields: [studentId], references: [id])
+  student      Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([studentId])
   @@map("emergency_contacts")
@@ -75,7 +76,7 @@ model Goal {
   description String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  student     Student  @relation(fields: [studentId], references: [id])
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([studentId, weekNumber, year])
   @@map("goals")
@@ -90,7 +91,7 @@ model WeeklyGoalSummary {
   completed  Int        @default(0)
   percentage Float
   status     GoalStatus
-  student    Student    @relation(fields: [studentId], references: [id])
+  student    Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, weekNumber, year])
   @@map("weekly_goal_summaries")
@@ -100,7 +101,7 @@ model Teacher {
   id        String     @id @default(uuid())
   userId    String     @unique
   reactions Reaction[]
-  user      User       @relation(fields: [userId], references: [id])
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("teachers")
 }
@@ -108,7 +109,7 @@ model Teacher {
 model Counselor {
   id            String         @id @default(uuid())
   userId        String         @unique
-  user          User           @relation(fields: [userId], references: [id])
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   interventions Intervention[]
   reports       Report[]
 
@@ -118,7 +119,7 @@ model Counselor {
 model Admin {
   id     String @id @default(uuid())
   userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("admins")
 }
@@ -145,7 +146,7 @@ model SurveyResponse {
   percentage Float
   zone       String
   phDate     String
-  student    Student  @relation(fields: [studentId], references: [id])
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   survey     Survey   @relation(fields: [surveyId], references: [id])
 
   @@index([studentId, phDate])
@@ -159,7 +160,7 @@ model Journal {
   isPrivate Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  student   Student  @relation(fields: [studentId], references: [id])
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@map("journals")
 }
@@ -170,7 +171,7 @@ model MoodEntry {
   moodLevel Int
   notes     String?
   createdAt DateTime @default(now())
-  student   Student  @relation(fields: [studentId], references: [id])
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([studentId, createdAt])
   @@map("mood_entries")
@@ -186,7 +187,7 @@ model InitialAssessment {
   stressScore     Float
   totalScore      Float
   answers         Json
-  student         Student  @relation(fields: [studentId], references: [id])
+  student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@map("initial_assessments")
 }
@@ -201,7 +202,7 @@ model Intervention {
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   counselor   Counselor          @relation(fields: [counselorId], references: [id])
-  student     Student            @relation(fields: [studentId], references: [id])
+  student     Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@map("interventions")
 }
@@ -242,7 +243,7 @@ model Comment {
   postId    String
   authorId  String
   createdAt DateTime  @default(now())
-  author    User      @relation(fields: [authorId], references: [id])
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@map("comments")
@@ -268,7 +269,7 @@ model Quiz {
   options       String[]
   points        Int
   question      String
-  student       Student?      @relation(fields: [studentId], references: [id])
+  student       Student?      @relation(fields: [studentId], references: [id], onDelete: Cascade)
   attempts      QuizAttempt[]
 }
 
@@ -279,8 +280,8 @@ model QuizAttempt {
   score          Int
   createdAt      DateTime @default(now())
   selectedAnswer Int
-  quiz           Quiz     @relation(fields: [quizId], references: [id])
-  student        Student  @relation(fields: [studentId], references: [id])
+  quiz           Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  student        Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([quizId])
   @@index([studentId])
@@ -337,6 +338,11 @@ enum UserRole {
   TEACHER
   COUNSELOR
   ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
 }
 
 enum GoalStatus {

@@ -130,6 +130,7 @@ const getAllUsers = async () => {
         lastName: true,
         email: true,
         role: true,
+        status: true,
         avatar: true,
         phone: true,
         createdAt: true,
@@ -137,11 +138,8 @@ const getAllUsers = async () => {
       },
     });
 
-    // Transform to match expected format
-    return users.map((user) => ({
-      ...user,
-      status: "ACTIVE", // Default since we don't have this field
-    }));
+    // Return users with status field
+    return users;
   } catch (error) {
     console.error("Error fetching users:", error);
     throw error;
@@ -158,6 +156,7 @@ const getUserById = async (id) => {
         lastName: true,
         email: true,
         role: true,
+        status: true,
         avatar: true,
         phone: true,
         createdAt: true,
@@ -169,10 +168,7 @@ const getUserById = async (id) => {
       return null;
     }
 
-    return {
-      ...user,
-      status: "ACTIVE", // Default status
-    };
+    return user;
   } catch (error) {
     console.error("Error fetching user:", error);
     throw error;
@@ -181,7 +177,7 @@ const getUserById = async (id) => {
 
 const createUser = async (userData) => {
   try {
-    const { firstName, lastName, email, password, role, phone } = userData;
+    const { firstName, lastName, email, password, role, phone, status = "ACTIVE" } = userData;
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -204,6 +200,7 @@ const createUser = async (userData) => {
         salt,
         hash,
         role,
+        status,
         phone: phone || "",
         // Create the role-specific profile based on role
         ...(role === "STUDENT" && {
@@ -233,7 +230,7 @@ const createUser = async (userData) => {
       lastName: newUser.lastName,
       email: newUser.email,
       role: newUser.role,
-      status: "ACTIVE", // Default status
+      status: newUser.status,
       createdAt: newUser.createdAt,
     };
   } catch (error) {
@@ -244,7 +241,7 @@ const createUser = async (userData) => {
 
 const updateUser = async (id, userData) => {
   try {
-    const { firstName, lastName, email, phone } = userData;
+    const { firstName, lastName, email, phone, status } = userData;
 
     const existingUser = await prisma.user.findUnique({
       where: { id },
@@ -273,19 +270,24 @@ const updateUser = async (id, userData) => {
         lastName,
         email,
         phone: phone || existingUser.phone,
+        // Only update status if it's provided
+        ...(status && { status }),
         // Role changes would require more complex logic to handle profile models
         // For simplicity, we won't allow role changes for now
       },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        status: true,
+        phone: true,
+        createdAt: true,
+      },
     });
 
-    return {
-      id: updatedUser.id,
-      firstName: updatedUser.firstName,
-      lastName: updatedUser.lastName,
-      email: updatedUser.email,
-      role: updatedUser.role,
-      status: "ACTIVE", // Default status
-    };
+    return updatedUser;
   } catch (error) {
     console.error("Error updating user:", error);
     throw error;
@@ -308,14 +310,68 @@ const deleteUser = async (id) => {
       throw new Error("User not found");
     }
 
-    // Delete user (cascading will handle related records)
-    await prisma.user.delete({
-      where: { id },
+    // Use a transaction to handle deletions
+    // Most relationships now have cascade deletes configured, so we only need to handle a few manually
+    await prisma.$transaction(async (tx) => {
+      // Delete user's forum posts first (this will cascade to delete comments and reactions on those posts)
+      const userPosts = await tx.forumPost.findMany({ where: { authorId: id } });
+      for (const post of userPosts) {
+        await tx.reaction.deleteMany({ where: { postId: post.id } });
+        await tx.comment.deleteMany({ where: { postId: post.id } });
+      }
+      await tx.forumPost.deleteMany({ where: { authorId: id } });
+
+      // Delete messages sent by the user
+      await tx.message.deleteMany({ where: { senderId: id } });
+
+      // Delete the user - cascade deletes will handle:
+      // - Student/Teacher/Counselor/Admin records (onDelete: Cascade)
+      // - All student-related data (goals, surveys, journals, etc.) (onDelete: Cascade)
+      // - Comments authored by user (onDelete: Cascade)
+      // - Reactions by user (onDelete: Cascade)
+      await tx.user.delete({ where: { id } });
     });
 
     return true;
   } catch (error) {
     console.error("Error deleting user:", error);
+    throw error;
+  }
+};
+
+const updateUserStatus = async (id, status) => {
+  try {
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!existingUser) {
+      throw new Error("User not found");
+    }
+
+    // Update the user status
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        status: status,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        status: true,
+        avatar: true,
+        phone: true,
+        createdAt: true,
+        lastLogin: true,
+      },
+    });
+
+    return updatedUser;
+  } catch (error) {
+    console.error("Error updating user status:", error);
     throw error;
   }
 };
@@ -631,4 +687,5 @@ module.exports = {
   getSecurityLogs,
   getSystemSettings,
   getPrivacySettings,
+  updateUserStatus,
 };
