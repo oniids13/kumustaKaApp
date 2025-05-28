@@ -347,6 +347,25 @@ const TrendsView = () => {
         </Col>
       </Row>
 
+      <div style={{ marginTop: "20px", marginBottom: "30px" }}>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Select
+              defaultValue={periodFilter}
+              style={{ width: 120 }}
+              onChange={handlePeriodChange}
+            >
+              <Option value="week">Weekly</Option>
+              <Option value="month">Monthly</Option>
+              <Option value="semester">Semester</Option>
+            </Select>
+          </Col>
+          <Col span={12}>
+            <RangePicker onChange={handleDateRangeChange} />
+          </Col>
+        </Row>
+      </div>
+
       {/* Overall Mental Health Status */}
       <Card
         title="Overall Mental Health Status"
@@ -393,25 +412,6 @@ const TrendsView = () => {
           </PieChart>
         </ResponsiveContainer>
       </Card>
-
-      <div style={{ marginTop: "20px", marginBottom: "30px" }}>
-        <Row gutter={16}>
-          <Col span={12}>
-            <Select
-              defaultValue={periodFilter}
-              style={{ width: 120 }}
-              onChange={handlePeriodChange}
-            >
-              <Option value="week">Weekly</Option>
-              <Option value="month">Monthly</Option>
-              <Option value="semester">Semester</Option>
-            </Select>
-          </Col>
-          <Col span={12}>
-            <RangePicker onChange={handleDateRangeChange} />
-          </Col>
-        </Row>
-      </div>
 
       {/* Mental Health Zone Distribution */}
       {moodData.length > 0 && (

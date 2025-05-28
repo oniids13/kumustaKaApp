@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Table, Card, Typography, Tag, Space, Empty, Spin, Alert } from "antd";
+import {
+  Table,
+  Card,
+  Typography,
+  Tag,
+  Space,
+  Empty,
+  Spin,
+  Alert,
+  Button,
+  Modal,
+  Descriptions,
+  Avatar,
+} from "antd";
+import { EyeOutlined, UserOutlined } from "@ant-design/icons";
 import axios from "axios";
 import moment from "moment";
 
@@ -16,6 +30,8 @@ const InterventionHistory = () => {
   const [interventions, setInterventions] = useState([]);
   const [students, setStudents] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedIntervention, setSelectedIntervention] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
 
@@ -77,6 +93,20 @@ const InterventionHistory = () => {
       : "Unknown Student";
   };
 
+  const getStudent = (studentId) => {
+    return students.find((s) => s.id === studentId);
+  };
+
+  const handleViewIntervention = (intervention) => {
+    setSelectedIntervention(intervention);
+    setModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setSelectedIntervention(null);
+  };
+
   const columns = [
     {
       title: "Student",
@@ -94,6 +124,11 @@ const InterventionHistory = () => {
       dataIndex: "description",
       key: "description",
       ellipsis: true,
+      render: (text) => (
+        <div style={{ maxWidth: 200 }}>
+          {text.length > 50 ? `${text.substring(0, 50)}...` : text}
+        </div>
+      ),
     },
     {
       title: "Status",
@@ -117,6 +152,20 @@ const InterventionHistory = () => {
       render: (date) => moment(date).format("MMM DD, YYYY"),
       sorter: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
     },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Button
+          type="primary"
+          icon={<EyeOutlined />}
+          size="small"
+          onClick={() => handleViewIntervention(record)}
+        >
+          View
+        </Button>
+      ),
+    },
   ];
 
   if (loading && interventions.length === 0) {
@@ -131,6 +180,10 @@ const InterventionHistory = () => {
   if (error) {
     return <Alert message={error} type="error" />;
   }
+
+  const student = selectedIntervention
+    ? getStudent(selectedIntervention.studentId)
+    : null;
 
   return (
     <div style={{ padding: "20px" }}>
@@ -148,6 +201,7 @@ const InterventionHistory = () => {
             columns={columns}
             rowKey="id"
             pagination={{ pageSize: 10 }}
+            scroll={{ x: 800 }}
           />
         </Card>
       ) : (
@@ -156,6 +210,117 @@ const InterventionHistory = () => {
           image={Empty.PRESENTED_IMAGE_SIMPLE}
         />
       )}
+
+      {/* Detailed View Modal */}
+      <Modal
+        title="Intervention Plan Details"
+        open={modalVisible}
+        onCancel={handleCloseModal}
+        footer={[
+          <Button key="close" onClick={handleCloseModal}>
+            Close
+          </Button>,
+        ]}
+        width={700}
+      >
+        {selectedIntervention && (
+          <div>
+            {/* Student Information Header */}
+            <Card style={{ marginBottom: 16, background: "#f0f2f5" }}>
+              <Space align="center" size="large">
+                <Avatar
+                  size={48}
+                  src={student?.avatar}
+                  icon={<UserOutlined />}
+                  style={{ backgroundColor: "#1890ff" }}
+                />
+                <div>
+                  <Title level={4} style={{ margin: 0 }}>
+                    {student
+                      ? `${student.firstName} ${student.lastName}`
+                      : "Unknown Student"}
+                  </Title>
+                  {student?.email && (
+                    <Text type="secondary">{student.email}</Text>
+                  )}
+                </div>
+              </Space>
+            </Card>
+
+            {/* Intervention Details */}
+            <Descriptions
+              title="Intervention Information"
+              bordered
+              column={1}
+              size="middle"
+            >
+              <Descriptions.Item label="Title">
+                {selectedIntervention.title}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Status">
+                <Tag
+                  color={statusColors[selectedIntervention.status] || "default"}
+                >
+                  {selectedIntervention.status}
+                </Tag>
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Description">
+                <div
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    maxHeight: "200px",
+                    overflowY: "auto",
+                  }}
+                >
+                  {selectedIntervention.description}
+                </div>
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Created Date">
+                {moment(selectedIntervention.createdAt).format(
+                  "MMMM DD, YYYY [at] h:mm A"
+                )}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Last Updated">
+                {moment(selectedIntervention.updatedAt).format(
+                  "MMMM DD, YYYY [at] h:mm A"
+                )}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Duration">
+                {moment(selectedIntervention.updatedAt).diff(
+                  moment(selectedIntervention.createdAt),
+                  "days"
+                )}{" "}
+                days
+              </Descriptions.Item>
+            </Descriptions>
+
+            {/* Additional Information */}
+            <Card
+              title="Intervention Summary"
+              style={{ marginTop: 16 }}
+              size="small"
+            >
+              <Text type="secondary">
+                This intervention plan was created on{" "}
+                {moment(selectedIntervention.createdAt).format("MMMM DD, YYYY")}{" "}
+                and completed on{" "}
+                {moment(selectedIntervention.updatedAt).format("MMMM DD, YYYY")}
+                . Total duration:{" "}
+                {moment(selectedIntervention.updatedAt).diff(
+                  moment(selectedIntervention.createdAt),
+                  "days"
+                )}{" "}
+                days.
+              </Text>
+            </Card>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

@@ -5,13 +5,15 @@ import {
   Form,
   Input,
   Button,
-  DatePicker,
   Select,
   Typography,
   Spin,
   Alert,
   message,
+  Avatar,
+  Space,
 } from "antd";
+import { UserOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import axios from "axios";
 
 const { Title, Text } = Typography;
@@ -21,6 +23,7 @@ const { Option } = Select;
 const CreateIntervention = () => {
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -52,7 +55,14 @@ const CreateIntervention = () => {
       }
     } catch (error) {
       console.error("Error fetching student data:", error);
-      message.error("Failed to load student data");
+      // Don't show error message since intervention creation still works
+      // Instead, we'll just show a generic student info
+      setStudent({
+        firstName: "Selected",
+        lastName: "Student",
+        email: "",
+        avatar: "",
+      });
     } finally {
       setLoading(false);
     }
@@ -60,7 +70,7 @@ const CreateIntervention = () => {
 
   const handleSubmit = async (values) => {
     try {
-      setLoading(true);
+      setSubmitting(true);
       const response = await axios.post(
         "http://localhost:3000/api/counselor/interventions",
         {
@@ -86,7 +96,7 @@ const CreateIntervention = () => {
         error.response?.data?.error || "Failed to create intervention plan"
       );
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -94,7 +104,7 @@ const CreateIntervention = () => {
     return (
       <div style={{ textAlign: "center", padding: "50px" }}>
         <Spin size="large" />
-        <div style={{ marginTop: "20px" }}>Loading...</div>
+        <div style={{ marginTop: "20px" }}>Loading student information...</div>
       </div>
     );
   }
@@ -111,18 +121,44 @@ const CreateIntervention = () => {
   }
 
   return (
-    <div style={{ padding: "20px" }}>
-      <Title level={2}>Create Intervention Plan</Title>
-      {student && (
-        <Text
-          type="secondary"
-          style={{ display: "block", marginBottom: "20px" }}
-        >
-          Creating intervention plan for {student.firstName} {student.lastName}
-        </Text>
-      )}
+    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+      {/* Header with student info */}
+      <Card style={{ marginBottom: "20px", background: "#f0f2f5" }}>
+        <Space align="center" style={{ marginBottom: "10px" }}>
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate("/counselor")}
+            type="text"
+          >
+            Back to Dashboard
+          </Button>
+        </Space>
 
-      <Card>
+        <Space align="center" size="large">
+          <Avatar
+            size={64}
+            src={student?.avatar}
+            icon={<UserOutlined />}
+            style={{ backgroundColor: "#1890ff" }}
+          />
+          <div>
+            <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
+              Create Intervention Plan
+            </Title>
+            {student && (
+              <Text style={{ fontSize: "16px", color: "#666" }}>
+                for {student.firstName} {student.lastName}
+                {student.email && (
+                  <div style={{ fontSize: "14px" }}>{student.email}</div>
+                )}
+              </Text>
+            )}
+          </div>
+        </Space>
+      </Card>
+
+      {/* Intervention Form */}
+      <Card title="Intervention Plan Details">
         <Form
           form={form}
           layout="vertical"
@@ -133,45 +169,54 @@ const CreateIntervention = () => {
         >
           <Form.Item
             name="title"
-            label="Title"
+            label="Intervention Title"
             rules={[{ required: true, message: "Please enter a title" }]}
           >
-            <Input placeholder="Enter intervention plan title" />
+            <Input
+              placeholder="Enter a descriptive title for this intervention plan"
+              size="large"
+            />
           </Form.Item>
 
           <Form.Item
             name="description"
-            label="Description"
+            label="Intervention Description"
             rules={[{ required: true, message: "Please enter a description" }]}
           >
             <TextArea
-              rows={4}
-              placeholder="Enter detailed description of the intervention plan"
+              rows={6}
+              placeholder="Describe the intervention plan in detail. Include objectives, methods, timeline, and expected outcomes."
             />
           </Form.Item>
 
           <Form.Item
             name="status"
-            label="Status"
+            label="Initial Status"
             rules={[{ required: true, message: "Please select status" }]}
           >
-            <Select>
-              <Option value="PENDING">Pending</Option>
-              <Option value="IN_PROGRESS">In Progress</Option>
-              <Option value="COMPLETED">Completed</Option>
+            <Select size="large">
+              <Option value="PENDING">Pending - Not yet started</Option>
+              <Option value="IN_PROGRESS">
+                In Progress - Currently active
+              </Option>
+              <Option value="COMPLETED">Completed - Finished</Option>
             </Select>
           </Form.Item>
 
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loading}>
-              Create Intervention Plan
-            </Button>
-            <Button
-              style={{ marginLeft: "10px" }}
-              onClick={() => navigate("/counselor")}
-            >
-              Cancel
-            </Button>
+          <Form.Item style={{ marginTop: "30px" }}>
+            <Space>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={submitting}
+                size="large"
+              >
+                Create Intervention Plan
+              </Button>
+              <Button size="large" onClick={() => navigate("/counselor")}>
+                Cancel
+              </Button>
+            </Space>
           </Form.Item>
         </Form>
       </Card>

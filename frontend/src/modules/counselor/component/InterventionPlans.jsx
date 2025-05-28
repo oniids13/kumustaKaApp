@@ -393,6 +393,7 @@ const InterventionPlans = () => {
               placeholder="Select a student"
               showSearch
               optionFilterProp="children"
+              disabled={isEditing}
             >
               {students.map((student) => (
                 <Option key={student.id} value={student.id}>

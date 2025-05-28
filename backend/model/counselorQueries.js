@@ -1395,6 +1395,45 @@ const processDailyMoodTrends = (moodEntries) => {
   return result;
 };
 
+/**
+ * Get individual student by ID
+ */
+const getStudentById = async (studentId) => {
+  try {
+    const student = await prisma.student.findUnique({
+      where: {
+        id: studentId,
+      },
+      select: {
+        id: true,
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    if (!student) {
+      return null;
+    }
+
+    // Format the student data
+    return {
+      id: student.id,
+      firstName: student.user.firstName,
+      lastName: student.user.lastName,
+      email: student.user.email,
+      avatar: student.user.avatar,
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   getCounselorByUserId,
   getAllStudents,
@@ -1417,4 +1456,5 @@ module.exports = {
   getMoodTrends,
   getDailyMoodTrends,
   getTimeframeTrends,
+  getStudentById,
 };
