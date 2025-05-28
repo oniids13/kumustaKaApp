@@ -6,8 +6,10 @@
 /**
  * Test the zone calculation for a specific student
  * @param {string} studentId - The ID of the student to check
+ * @param {string} startDate - Start date in YYYY-MM-DD format
+ * @param {string} endDate - End date in YYYY-MM-DD format
  */
-export async function debugStudentZone(studentId) {
+export async function debugStudentZone(studentId, startDate, endDate) {
   // Get auth token from localStorage
   const userData = JSON.parse(localStorage.getItem("userData")) || {};
   const token = userData.token;
@@ -59,7 +61,8 @@ export async function debugStudentZone(studentId) {
       zone,
     };
   } catch (error) {
-    return;
+    console.error("Error in debugStudentZone:", error);
+    return null;
   }
 }
 
@@ -122,8 +125,10 @@ function calculateZone(surveys, moods, assessment) {
 
 /**
  * Format date as YYYY-MM-DD
+ * @param {Date} date - The date to format
+ * @returns {string} Formatted date string
  */
-function formatDate(date) {
+export function formatDate(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -133,4 +138,5 @@ function formatDate(date) {
 // Export a global debug object for easier console access
 window.MentalHealthDebug = {
   debugStudentZone,
+  formatDate,
 };

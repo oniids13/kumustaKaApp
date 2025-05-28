@@ -3,8 +3,6 @@ import axios from "axios";
 import {
   Form,
   Button,
-  Select,
-  Checkbox,
   Card,
   Typography,
   Row,
@@ -14,21 +12,14 @@ import {
   message,
   Radio,
 } from "antd";
-import {
-  FileTextOutlined,
-  DownloadOutlined,
-  LineChartOutlined,
-} from "@ant-design/icons";
+import { DownloadOutlined } from "@ant-design/icons";
 import moment from "moment";
 
-const { Title, Text, Paragraph } = Typography;
-const { Option } = Select;
+const { Title, Paragraph } = Typography;
 
 const ReportGenerator = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [previewData, setPreviewData] = useState(null);
-  const [reportFormat, setReportFormat] = useState("pdf");
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
 
@@ -40,23 +31,30 @@ const ReportGenerator = () => {
       let startDate;
 
       switch (values.timePeriod) {
-        case "week":
-          startDate = moment().subtract(7, "days").format("YYYY-MM-DD");
+        case "1month":
+          startDate = moment().subtract(1, "month").format("YYYY-MM-DD");
           break;
-        case "month":
-          startDate = moment().subtract(30, "days").format("YYYY-MM-DD");
+        case "3months":
+          startDate = moment().subtract(3, "months").format("YYYY-MM-DD");
           break;
-        case "semester":
-          startDate = moment().subtract(4, "months").format("YYYY-MM-DD");
+        case "6months":
+          startDate = moment().subtract(6, "months").format("YYYY-MM-DD");
+          break;
+        case "12months":
+          startDate = moment().subtract(12, "months").format("YYYY-MM-DD");
           break;
         default:
-          startDate = moment().subtract(7, "days").format("YYYY-MM-DD");
+          startDate = moment().subtract(1, "month").format("YYYY-MM-DD");
       }
 
       const response = await axios.post(
         "http://localhost:3000/api/teacher/reports",
         {
-          ...values,
+          reportType: "trends",
+          includeCharts: true,
+          includeTables: false,
+          includeRecommendations: false,
+          outputFormat: "pdf",
           startDate,
           endDate,
         },
@@ -64,40 +62,35 @@ const ReportGenerator = () => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-          responseType: reportFormat === "pdf" ? "blob" : "json",
+          responseType: "blob",
         }
       );
 
-      if (reportFormat === "pdf" || reportFormat === "csv") {
-        // Create a blob from the response data
-        const blob = new Blob([response.data], {
-          type: reportFormat === "pdf" ? "application/pdf" : "text/csv",
-        });
+      // Create a blob from the response data
+      const blob = new Blob([response.data], {
+        type: "application/pdf",
+      });
 
-        // Create a link element to trigger the download
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute(
-          "download",
-          `mental_health_report_${new Date()
-            .toISOString()
-            .slice(0, 10)}.${reportFormat}`
-        );
-        document.body.appendChild(link);
-        link.click();
+      // Create a link element to trigger the download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `mental_health_trends_report_${new Date()
+          .toISOString()
+          .slice(0, 10)}.pdf`
+      );
+      document.body.appendChild(link);
+      link.click();
 
-        // Clean up
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(link);
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
 
-        message.success(
-          `Report successfully downloaded as ${reportFormat.toUpperCase()}`
-        );
-      } else if (reportFormat === "preview") {
-        setPreviewData(response.data);
-        message.success("Report preview generated");
-      }
+      message.success(
+        "Mental health trends report successfully downloaded as PDF"
+      );
     } catch (error) {
       console.error("Error generating report:", error);
       message.error("Failed to generate report. Please try again.");
@@ -106,56 +99,23 @@ const ReportGenerator = () => {
     }
   };
 
-  const handleReportFormatChange = (value) => {
-    setReportFormat(value);
-    // Clear preview data when format changes
-    if (value !== "preview") {
-      setPreviewData(null);
-    }
-  };
-
-  // Mock preview data
-  const mockPreviewData = {
-    title: "Mental Health Trends Report",
-    period: "October 1, 2023 - November 30, 2023",
-    summary: {
-      totalResponses: 120,
-      averageMood: "Neutral",
-      topIssues: ["Academic Stress", "Social Anxiety", "Sleep Problems"],
-      recommendedActions: [
-        "Consider scheduling stress management workshops",
-        "Provide more opportunities for social interaction in a supportive environment",
-        "Share resources about sleep hygiene and its importance for mental health",
-      ],
-    },
-    charts: [
-      { title: "Mood Trends", type: "line" },
-      { title: "Issue Categories", type: "pie" },
-      { title: "Time of Day Reporting", type: "bar" },
-    ],
-  };
-
   return (
     <div style={{ padding: "20px" }}>
-      <Title level={2}>Mental Health Report Generator</Title>
+      <Title level={2}>Mental Health Trends Report Generator</Title>
       <Paragraph type="secondary">
-        Generate anonymized, aggregated reports on student mental health trends.
+        Generate PDF reports with mental health trend charts organized by month.
         All data is completely anonymous to protect student privacy.
       </Paragraph>
 
       <Row gutter={24}>
-        <Col span={previewData ? 12 : 24}>
+        <Col span={24}>
           <Card style={{ marginBottom: "20px" }}>
             <Form
               form={form}
               layout="vertical"
               onFinish={handleSubmit}
               initialValues={{
-                includeCharts: true,
-                includeTables: true,
-                includeRecommendations: true,
-                reportType: "comprehensive",
-                timePeriod: "week",
+                timePeriod: "1month",
               }}
             >
               <Form.Item
@@ -166,67 +126,11 @@ const ReportGenerator = () => {
                 ]}
               >
                 <Radio.Group>
-                  <Radio.Button value="week">Weekly</Radio.Button>
-                  <Radio.Button value="month">Monthly</Radio.Button>
-                  <Radio.Button value="semester">Semester</Radio.Button>
+                  <Radio.Button value="1month">Last Month</Radio.Button>
+                  <Radio.Button value="3months">Last 3 Months</Radio.Button>
+                  <Radio.Button value="6months">Last 6 Months</Radio.Button>
+                  <Radio.Button value="12months">Last 12 Months</Radio.Button>
                 </Radio.Group>
-              </Form.Item>
-
-              <Form.Item
-                name="reportType"
-                label="Report Type"
-                rules={[{ required: true }]}
-              >
-                <Select>
-                  <Option value="comprehensive">Comprehensive Report</Option>
-                  <Option value="summary">Summary Report</Option>
-                  <Option value="trends">Trends Analysis</Option>
-                </Select>
-              </Form.Item>
-
-              <Form.Item label="Report Content">
-                <Row>
-                  <Col span={8}>
-                    <Form.Item
-                      name="includeCharts"
-                      valuePropName="checked"
-                      noStyle
-                    >
-                      <Checkbox>Include Charts</Checkbox>
-                    </Form.Item>
-                  </Col>
-                  <Col span={8}>
-                    <Form.Item
-                      name="includeTables"
-                      valuePropName="checked"
-                      noStyle
-                    >
-                      <Checkbox>Include Tables</Checkbox>
-                    </Form.Item>
-                  </Col>
-                  <Col span={8}>
-                    <Form.Item
-                      name="includeRecommendations"
-                      valuePropName="checked"
-                      noStyle
-                    >
-                      <Checkbox>Include Recommendations</Checkbox>
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Form.Item>
-
-              <Form.Item
-                name="outputFormat"
-                label="Output Format"
-                rules={[{ required: true }]}
-                initialValue={reportFormat}
-              >
-                <Select onChange={handleReportFormatChange}>
-                  <Option value="pdf">PDF Document</Option>
-                  <Option value="csv">CSV (Data Only)</Option>
-                  <Option value="preview">Preview in Browser</Option>
-                </Select>
               </Form.Item>
 
               <Form.Item>
@@ -234,20 +138,22 @@ const ReportGenerator = () => {
                   type="primary"
                   htmlType="submit"
                   loading={loading}
-                  icon={
-                    reportFormat === "preview" ? (
-                      <LineChartOutlined />
-                    ) : (
-                      <DownloadOutlined />
-                    )
-                  }
+                  icon={<DownloadOutlined />}
+                  size="large"
                 >
-                  {reportFormat === "preview"
-                    ? "Generate Preview"
-                    : `Generate ${reportFormat.toUpperCase()} Report`}
+                  Generate PDF Trends Report
                 </Button>
               </Form.Item>
             </Form>
+
+            <Divider />
+
+            <Alert
+              message="Report Information"
+              description="This report will contain monthly trend charts showing mental health patterns over the selected time period. All data is aggregated and anonymized."
+              type="info"
+              showIcon
+            />
 
             <Divider />
 
@@ -259,84 +165,6 @@ const ReportGenerator = () => {
             />
           </Card>
         </Col>
-
-        {(previewData || mockPreviewData) && reportFormat === "preview" && (
-          <Col span={12}>
-            <Card
-              title={
-                <span>
-                  <FileTextOutlined /> Report Preview
-                </span>
-              }
-            >
-              <div className="report-preview">
-                <Title level={3}>
-                  {previewData?.title || mockPreviewData.title}
-                </Title>
-                <Text type="secondary">
-                  {previewData?.period || mockPreviewData.period}
-                </Text>
-
-                <Divider />
-
-                <Title level={4}>Summary</Title>
-                <ul>
-                  <li>
-                    <strong>Total Responses:</strong>{" "}
-                    {previewData?.summary.totalResponses ||
-                      mockPreviewData.summary.totalResponses}
-                  </li>
-                  <li>
-                    <strong>Average Mood:</strong>{" "}
-                    {previewData?.summary.averageMood ||
-                      mockPreviewData.summary.averageMood}
-                  </li>
-                </ul>
-
-                <Title level={4}>Top Issues</Title>
-                <ul>
-                  {(
-                    previewData?.summary.topIssues ||
-                    mockPreviewData.summary.topIssues
-                  ).map((issue, index) => (
-                    <li key={index}>{issue}</li>
-                  ))}
-                </ul>
-
-                <Title level={4}>Recommended Actions</Title>
-                <ul>
-                  {(
-                    previewData?.summary.recommendedActions ||
-                    mockPreviewData.summary.recommendedActions
-                  ).map((action, index) => (
-                    <li key={index}>{action}</li>
-                  ))}
-                </ul>
-
-                <Divider />
-
-                <Title level={4}>Included Charts</Title>
-                <ul>
-                  {(previewData?.charts || mockPreviewData.charts).map(
-                    (chart, index) => (
-                      <li key={index}>
-                        {chart.title} ({chart.type} chart)
-                      </li>
-                    )
-                  )}
-                </ul>
-
-                <Divider />
-
-                <Alert
-                  message="Preview Only"
-                  description="This is a simplified preview. Generated reports will contain detailed charts and analysis."
-                  type="warning"
-                />
-              </div>
-            </Card>
-          </Col>
-        )}
       </Row>
     </div>
   );

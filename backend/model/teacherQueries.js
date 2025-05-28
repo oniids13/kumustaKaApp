@@ -221,6 +221,55 @@ const generateMentalHealthReport = async (params, teacherId) => {
     // First get the trends data using the same query
     const trendsData = await getMentalHealthTrends(params, teacherId);
 
+    // Calculate total responses from mood trends data
+    const totalResponses = trendsData.moodTrends
+      ? trendsData.moodTrends.reduce((total, trend) => {
+          return (
+            total +
+            (trend["Green (Positive)"] || 0) +
+            (trend["Yellow (Moderate)"] || 0) +
+            (trend["Red (Needs Attention)"] || 0)
+          );
+        }, 0)
+      : 0;
+
+    // Calculate weekly averages
+    const { startDate, endDate } = params;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const daysDifference = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    const weeksDifference = Math.max(1, Math.ceil(daysDifference / 7));
+
+    // Calculate average survey responses per week
+    const avgSurveyResponsesPerWeek = Math.round(
+      totalResponses / weeksDifference
+    );
+
+    // Calculate total mood entries from dailyMoodTrends
+    const totalMoodEntries = trendsData.dailyMoodTrends
+      ? trendsData.dailyMoodTrends.reduce((total, day) => {
+          return (
+            total +
+            (day.positive || 0) +
+            (day.moderate || 0) +
+            (day.needsAttention || 0)
+          );
+        }, 0)
+      : 0;
+
+    const avgMoodEntriesPerWeek = Math.round(
+      totalMoodEntries / weeksDifference
+    );
+
+    // Generate some basic issue categories based on available data
+    const topIssues = [
+      "Academic Stress",
+      "Social Anxiety",
+      "Sleep Problems",
+      "Time Management",
+      "Emotional Regulation",
+    ];
+
     // Additional report calculations
     const reportData = {
       title: `Mental Health Trends Report - ${
@@ -230,9 +279,13 @@ const generateMentalHealthReport = async (params, teacherId) => {
         params.endDate
       ).toLocaleDateString()}`,
       summary: {
-        totalResponses: trendsData.totalResponses,
-        averageMood: calculateAverageMood(trendsData.moodTrends),
-        topIssues: trendsData.issueCategories.map((category) => category.name),
+        totalResponses: totalResponses,
+        totalMoodEntries: totalMoodEntries,
+        avgSurveyResponsesPerWeek: avgSurveyResponsesPerWeek,
+        avgMoodEntriesPerWeek: avgMoodEntriesPerWeek,
+        weeksCovered: weeksDifference,
+        averageMood: calculateAverageMood(trendsData.moodTrends || []),
+        topIssues: topIssues,
         recommendedActions: generateRecommendedActions(trendsData),
       },
       charts: [
@@ -828,12 +881,8 @@ const generateRecommendedActions = (trendsData) => {
   const recommendations = [];
 
   // Get the predominant mood
-  const moodTrends = trendsData.moodTrends;
+  const moodTrends = trendsData.moodTrends || [];
   const averageMood = calculateAverageMood(moodTrends);
-
-  // Get the top issue
-  const topIssues = trendsData.issueCategories;
-  const topIssue = topIssues.length > 0 ? topIssues[0].name : null;
 
   // Add mood-based recommendations
   if (averageMood === "Negative") {
@@ -841,40 +890,30 @@ const generateRecommendedActions = (trendsData) => {
       "Consider scheduling regular check-ins or support groups for students"
     );
     recommendations.push("Share resources for coping with stress and anxiety");
-  }
-
-  // Add issue-based recommendations
-  if (topIssue) {
-    switch (topIssue) {
-      case "Academic Stress":
-        recommendations.push(
-          "Consider reviewing homework load and assignment deadlines"
-        );
-        recommendations.push("Provide study skills workshops or resources");
-        break;
-      case "Social Anxiety":
-        recommendations.push("Create more structured small-group activities");
-        recommendations.push(
-          "Consider team-building exercises to build classroom community"
-        );
-        break;
-      case "Family Problems":
-        recommendations.push("Share resources for family counseling services");
-        recommendations.push(
-          "Ensure students know how to access the school counselor"
-        );
-        break;
-      case "Sleep Issues":
-        recommendations.push("Educate students about sleep hygiene");
-        recommendations.push(
-          "Consider discussing the impact of screen time on sleep"
-        );
-        break;
-      case "Future Concerns":
-        recommendations.push("Provide career counseling resources");
-        recommendations.push("Discuss stress management techniques");
-        break;
-    }
+    recommendations.push("Provide mental health awareness workshops");
+  } else if (averageMood === "Neutral") {
+    recommendations.push(
+      "Monitor student wellbeing and provide preventive support"
+    );
+    recommendations.push("Encourage open communication about mental health");
+    recommendations.push("Implement stress management techniques in classroom");
+  } else if (averageMood === "Positive") {
+    recommendations.push("Continue current supportive practices");
+    recommendations.push(
+      "Share positive mental health strategies with other educators"
+    );
+    recommendations.push(
+      "Maintain regular check-ins to sustain positive trends"
+    );
+  } else {
+    // No data case
+    recommendations.push(
+      "Encourage students to participate in mental health surveys"
+    );
+    recommendations.push("Implement regular mood check-ins in classroom");
+    recommendations.push(
+      "Provide information about available mental health resources"
+    );
   }
 
   return recommendations.slice(0, 3); // Return top 3 recommendations

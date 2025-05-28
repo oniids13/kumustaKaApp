@@ -3,9 +3,6 @@ import {
   Card,
   Button,
   Typography,
-  Select,
-  Radio,
-  Checkbox,
   Form,
   Divider,
   Spin,
@@ -15,15 +12,10 @@ import {
   Skeleton,
   Empty,
   Space,
-  Result,
+  Radio,
+  Select,
 } from "antd";
-import {
-  DownloadOutlined,
-  FileTextOutlined,
-  BarChartOutlined,
-  FileExcelOutlined,
-  FilePdfOutlined,
-} from "@ant-design/icons";
+import { DownloadOutlined, FilePdfOutlined } from "@ant-design/icons";
 import axios from "axios";
 import moment from "moment";
 
@@ -99,25 +91,32 @@ const Reports = () => {
       let startDate;
 
       switch (values.timePeriod) {
-        case "week":
-          startDate = moment().subtract(7, "days").format("YYYY-MM-DD");
+        case "1month":
+          startDate = moment().subtract(1, "month").format("YYYY-MM-DD");
           break;
-        case "month":
-          startDate = moment().subtract(30, "days").format("YYYY-MM-DD");
+        case "3months":
+          startDate = moment().subtract(3, "months").format("YYYY-MM-DD");
           break;
-        case "semester":
-          startDate = moment().subtract(4, "months").format("YYYY-MM-DD");
+        case "6months":
+          startDate = moment().subtract(6, "months").format("YYYY-MM-DD");
+          break;
+        case "12months":
+          startDate = moment().subtract(12, "months").format("YYYY-MM-DD");
           break;
         default:
-          startDate = moment().subtract(7, "days").format("YYYY-MM-DD");
+          startDate = moment().subtract(1, "month").format("YYYY-MM-DD");
       }
 
       const formattedValues = {
-        ...values,
+        studentId: values.studentId,
+        reportType: "trends",
+        outputFormat: "pdf",
+        includeCharts: true,
+        includeTables: false,
+        includeRecommendations: true,
         startDate,
         endDate,
       };
-      delete formattedValues.timePeriod;
 
       const response = await axios.post(
         "http://localhost:3000/api/counselor/reports/generate",
@@ -133,7 +132,7 @@ const Reports = () => {
 
       // Create a blob and download the file
       const blob = new Blob([response.data], {
-        type: values.outputFormat === "pdf" ? "application/pdf" : "text/csv",
+        type: "application/pdf",
       });
 
       const url = window.URL.createObjectURL(blob);
@@ -141,15 +140,15 @@ const Reports = () => {
       link.href = url;
       link.setAttribute(
         "download",
-        `mental_health_report_${moment().format("YYYY-MM-DD")}.${
-          values.outputFormat
-        }`
+        `mental_health_trends_report_${moment().format("YYYY-MM-DD")}.pdf`
       );
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      message.success("Report generated and downloaded successfully");
+      message.success(
+        "Mental health trends report successfully downloaded as PDF"
+      );
       fetchReportHistory(); // Refresh report history
     } catch (err) {
       console.error("Error generating report:", err);
@@ -185,7 +184,9 @@ const Reports = () => {
       link.href = url;
       link.setAttribute(
         "download",
-        `mental_health_report_${report?.createdAt || "download"}.${format}`
+        `mental_health_trends_report_${
+          report?.createdAt || "download"
+        }.${format}`
       );
       document.body.appendChild(link);
       link.click();
@@ -198,30 +199,34 @@ const Reports = () => {
     }
   };
 
+  const getStudentName = (studentId) => {
+    const student = students.find((s) => s.id === studentId);
+    return student
+      ? `${student.firstName} ${student.lastName}`
+      : "Unknown Student";
+  };
+
   return (
     <div style={{ padding: "20px" }}>
-      <Title level={2}>Mental Health Reports</Title>
-      <Text type="secondary">
-        Generate comprehensive reports on student mental health data
-      </Text>
+      <Title level={2}>Mental Health Trends Report Generator</Title>
+      <Paragraph type="secondary">
+        Generate PDF reports with mental health trend charts organized by month.
+        All data is aggregated and anonymized to protect student privacy.
+      </Paragraph>
 
       {error && (
         <Alert message={error} type="error" style={{ marginTop: "16px" }} />
       )}
 
       <Card style={{ marginTop: "20px" }}>
-        <Title level={4}>Generate New Report</Title>
+        <Title level={4}>Generate New Trends Report</Title>
         <Form
           form={form}
           layout="vertical"
           onFinish={handleGenerateReport}
           initialValues={{
-            reportType: "comprehensive",
-            outputFormat: "pdf",
-            includeCharts: true,
-            includeTables: true,
-            includeRecommendations: true,
-            timePeriod: "week",
+            studentId: "all",
+            timePeriod: "1month",
           }}
         >
           <Form.Item
@@ -245,51 +250,15 @@ const Reports = () => {
 
           <Form.Item
             name="timePeriod"
-            label="Time Period"
+            label="Report Period"
             rules={[{ required: true, message: "Please select a time period" }]}
           >
             <Radio.Group>
-              <Radio.Button value="week">Weekly</Radio.Button>
-              <Radio.Button value="month">Monthly</Radio.Button>
-              <Radio.Button value="semester">Semester</Radio.Button>
+              <Radio.Button value="1month">Last Month</Radio.Button>
+              <Radio.Button value="3months">Last 3 Months</Radio.Button>
+              <Radio.Button value="6months">Last 6 Months</Radio.Button>
+              <Radio.Button value="12months">Last 12 Months</Radio.Button>
             </Radio.Group>
-          </Form.Item>
-
-          <Form.Item name="reportType" label="Report Type">
-            <Radio.Group>
-              <Radio value="comprehensive">Comprehensive</Radio>
-              <Radio value="summary">Summary</Radio>
-              <Radio value="trend">Trend Analysis</Radio>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item name="outputFormat" label="Output Format">
-            <Radio.Group>
-              <Radio.Button value="pdf">
-                <FilePdfOutlined /> PDF
-              </Radio.Button>
-              <Radio.Button value="csv">
-                <FileExcelOutlined /> CSV
-              </Radio.Button>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item label="Include in Report">
-            <Space direction="horizontal">
-              <Form.Item name="includeCharts" valuePropName="checked" noStyle>
-                <Checkbox>Charts</Checkbox>
-              </Form.Item>
-              <Form.Item name="includeTables" valuePropName="checked" noStyle>
-                <Checkbox>Data Tables</Checkbox>
-              </Form.Item>
-              <Form.Item
-                name="includeRecommendations"
-                valuePropName="checked"
-                noStyle
-              >
-                <Checkbox>Recommendations</Checkbox>
-              </Form.Item>
-            </Space>
           </Form.Item>
 
           <Form.Item>
@@ -298,11 +267,30 @@ const Reports = () => {
               htmlType="submit"
               icon={<DownloadOutlined />}
               loading={generating}
+              size="large"
             >
-              Generate Report
+              Generate PDF Trends Report
             </Button>
           </Form.Item>
         </Form>
+
+        <Divider />
+
+        <Alert
+          message="Report Information"
+          description="This report will contain monthly trend charts showing mental health patterns over the selected time period. All data is aggregated and anonymized."
+          type="info"
+          showIcon
+        />
+
+        <Divider />
+
+        <Alert
+          message="Data Privacy Notice"
+          description="Reports contain only aggregated data. No individual student responses are included or identifiable."
+          type="info"
+          showIcon
+        />
       </Card>
 
       <Divider orientation="left">Report History</Divider>
@@ -328,24 +316,15 @@ const Reports = () => {
             >
               <List.Item.Meta
                 avatar={
-                  item.format === "pdf" ? (
-                    <FilePdfOutlined
-                      style={{ fontSize: "24px", color: "#ff4d4f" }}
-                    />
-                  ) : (
-                    <FileExcelOutlined
-                      style={{ fontSize: "24px", color: "#52c41a" }}
-                    />
-                  )
+                  <FilePdfOutlined
+                    style={{ fontSize: "24px", color: "#ff4d4f" }}
+                  />
                 }
-                title={`${
-                  item.reportType.charAt(0).toUpperCase() +
-                  item.reportType.slice(1)
-                } Report`}
+                title={`Mental Health Trends Report`}
                 description={`Generated on ${moment(item.createdAt).format(
                   "MMMM D, YYYY"
                 )} - ${
-                  item.studentId === "all"
+                  item.studentId === null || item.studentId === "all"
                     ? "All Students"
                     : getStudentName(item.studentId)
                 }`}
@@ -358,13 +337,6 @@ const Reports = () => {
       )}
     </div>
   );
-
-  function getStudentName(studentId) {
-    const student = students.find((s) => s.id === studentId);
-    return student
-      ? `${student.firstName} ${student.lastName}`
-      : "Unknown Student";
-  }
 };
 
 export default Reports;

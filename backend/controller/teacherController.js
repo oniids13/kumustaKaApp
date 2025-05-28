@@ -221,118 +221,311 @@ const getAllStudentsController = async (req, res) => {
  * Generate a PDF report
  */
 const generatePdfReport = (reportData, res) => {
-  // Set response headers for PDF
-  res.setHeader("Content-Type", "application/pdf");
-  res.setHeader(
-    "Content-Disposition",
-    `attachment; filename=mental_health_report_${new Date()
-      .toISOString()
-      .slice(0, 10)}.pdf`
-  );
-
-  // Create a new PDF document
-  const doc = new PDFDocument({ margin: 50 });
-  doc.pipe(res);
-
-  // Add title and header
-  doc.fontSize(24).text(reportData.title, { align: "center" });
-  doc.moveDown();
-  doc.fontSize(12).text(reportData.period, { align: "center" });
-  doc.moveDown(2);
-
-  // Add summary section
-  doc.fontSize(18).text("Summary", { underline: true });
-  doc.moveDown();
-  doc
-    .fontSize(12)
-    .text(`Total Responses: ${reportData.summary.totalResponses}`);
-  doc.moveDown(0.5);
-  doc.text(`Average Mood: ${reportData.summary.averageMood}`);
-  doc.moveDown(2);
-
-  // Add top issues section
-  doc.fontSize(16).text("Top Issues", { underline: true });
-  doc.moveDown();
-
-  reportData.summary.topIssues.forEach((issue, index) => {
-    doc.text(`${index + 1}. ${issue}`);
-    doc.moveDown(0.5);
-  });
-  doc.moveDown();
-
-  // Add recommendations section
-  if (reportData.summary.recommendedActions.length > 0) {
-    doc.fontSize(16).text("Recommended Actions", { underline: true });
-    doc.moveDown();
-
-    reportData.summary.recommendedActions.forEach((action, index) => {
-      doc.text(`${index + 1}. ${action}`);
-      doc.moveDown(0.5);
-    });
-  }
-
-  // Add data table section if we have data
-  if (reportData.trends.moodTrends.length > 0) {
-    doc.addPage();
-    doc.fontSize(18).text("Detailed Data", { underline: true });
-    doc.moveDown();
-
-    const period = reportData.period.includes("week")
-      ? "Weekly Mental Health Zone Distribution"
-      : "Mental Health Zone Trends Data";
-
-    // Mood trends table
-    doc.fontSize(14).text(period);
-    doc.moveDown();
-
-    // Create a simple table header
-    const tableTop = doc.y;
-    const tableLeft = 50;
-    const colWidth = 110;
-
-    doc.fontSize(10);
-    doc.text("Period", tableLeft, tableTop);
-    doc.text("Green (Positive)", tableLeft + colWidth, tableTop);
-    doc.text("Yellow (Moderate)", tableLeft + colWidth * 2, tableTop);
-    doc.text("Red (Needs Attention)", tableLeft + colWidth * 3, tableTop);
-    doc.text("Total", tableLeft + colWidth * 4, tableTop);
-
-    // Add data rows
-    reportData.trends.moodTrends.forEach((period, i) => {
-      const y = tableTop + 20 + i * 20;
-      doc.text(period.name, tableLeft, y);
-      doc.text(period["Green (Positive)"].toString(), tableLeft + colWidth, y);
-      doc.text(
-        period["Yellow (Moderate)"].toString(),
-        tableLeft + colWidth * 2,
-        y
-      );
-      doc.text(
-        period["Red (Needs Attention)"].toString(),
-        tableLeft + colWidth * 3,
-        y
-      );
-
-      // Calculate total for the row
-      const total =
-        period["Green (Positive)"] +
-        period["Yellow (Moderate)"] +
-        period["Red (Needs Attention)"];
-
-      doc.text(total.toString(), tableLeft + colWidth * 4, y);
-    });
-  }
-
-  // Add footer
-  doc
-    .fontSize(10)
-    .text(
-      "Privacy Notice: This report contains only anonymized, aggregated data. No individual student responses are included.",
-      { align: "center" }
+  try {
+    // Set response headers for PDF
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=mental_health_trends_report_${new Date()
+        .toISOString()
+        .slice(0, 10)}.pdf`
     );
 
-  // Finalize the PDF
-  doc.end();
+    // Create a new PDF document
+    const doc = new PDFDocument({ margin: 50 });
+    doc.pipe(res);
+
+    // Add title and header
+    doc.fontSize(24).text(reportData.title || "Mental Health Trends Report", {
+      align: "center",
+    });
+    doc.moveDown();
+    doc
+      .fontSize(12)
+      .text(reportData.period || "No period specified", { align: "center" });
+    doc.moveDown(2);
+
+    // Add summary section with weekly averages
+    doc.fontSize(18).text("Summary", { underline: true });
+    doc.moveDown();
+
+    // Survey and Mood submission statistics
+    doc.fontSize(14).text("Submission Statistics", { underline: true });
+    doc.moveDown(0.5);
+    doc
+      .fontSize(12)
+      .text(`Period Covered: ${reportData.summary?.weeksCovered || 0} weeks`);
+    doc.moveDown(0.3);
+    doc.text(
+      `Total Survey Responses: ${reportData.summary?.totalResponses || 0}`
+    );
+    doc.moveDown(0.3);
+    doc.text(
+      `Average Survey Responses per Week: ${
+        reportData.summary?.avgSurveyResponsesPerWeek || 0
+      }`
+    );
+    doc.moveDown(0.3);
+    doc.text(
+      `Total Mood Entries: ${reportData.summary?.totalMoodEntries || 0}`
+    );
+    doc.moveDown(0.3);
+    doc.text(
+      `Average Mood Entries per Week: ${
+        reportData.summary?.avgMoodEntriesPerWeek || 0
+      }`
+    );
+    doc.moveDown(0.3);
+    doc.text(
+      `Overall Mood Trend: ${reportData.summary?.averageMood || "No Data"}`
+    );
+    doc.moveDown(2);
+
+    // Add recommendations section
+    const recommendations = reportData.summary?.recommendedActions || [];
+    if (recommendations.length > 0) {
+      doc.fontSize(14).text("Recommended Actions", { underline: true });
+      doc.moveDown(0.5);
+
+      recommendations.forEach((action, index) => {
+        doc.fontSize(12).text(`${index + 1}. ${action}`);
+        doc.moveDown(0.4);
+      });
+      doc.moveDown();
+    }
+
+    // Add Mental Health Zone Trends Chart Data
+    const moodTrends = reportData.trends?.moodTrends || [];
+    if (moodTrends.length > 0) {
+      doc.addPage();
+      doc.fontSize(18).text("Mental Health Zone Trends", { underline: true });
+      doc.moveDown();
+
+      doc
+        .fontSize(12)
+        .text(
+          "This data represents the distribution of students across mental health zones over time:",
+          { align: "left" }
+        );
+      doc.moveDown();
+
+      // Create a table for mood trends
+      const tableTop = doc.y;
+      const tableLeft = 50;
+      const colWidth = 110;
+
+      // Table header
+      doc.fontSize(11).fillColor("black");
+      doc.text("Period", tableLeft, tableTop, { width: colWidth });
+      doc.text("Green (Positive)", tableLeft + colWidth, tableTop, {
+        width: colWidth,
+      });
+      doc.text("Yellow (Moderate)", tableLeft + colWidth * 2, tableTop, {
+        width: colWidth,
+      });
+      doc.text("Red (Needs Attention)", tableLeft + colWidth * 3, tableTop, {
+        width: colWidth,
+      });
+      doc.text("Total", tableLeft + colWidth * 4, tableTop, {
+        width: colWidth,
+      });
+
+      // Draw header line
+      doc
+        .moveTo(tableLeft, tableTop + 15)
+        .lineTo(tableLeft + colWidth * 5, tableTop + 15)
+        .stroke();
+
+      // Add data rows
+      moodTrends.forEach((period, i) => {
+        const y = tableTop + 25 + i * 20;
+
+        // Calculate total for the row
+        const total =
+          (period["Green (Positive)"] || 0) +
+          (period["Yellow (Moderate)"] || 0) +
+          (period["Red (Needs Attention)"] || 0);
+
+        doc.fontSize(10);
+        doc.text(period.name || `Period ${i + 1}`, tableLeft, y, {
+          width: colWidth,
+        });
+        doc.text(
+          (period["Green (Positive)"] || 0).toString(),
+          tableLeft + colWidth,
+          y,
+          { width: colWidth }
+        );
+        doc.text(
+          (period["Yellow (Moderate)"] || 0).toString(),
+          tableLeft + colWidth * 2,
+          y,
+          { width: colWidth }
+        );
+        doc.text(
+          (period["Red (Needs Attention)"] || 0).toString(),
+          tableLeft + colWidth * 3,
+          y,
+          { width: colWidth }
+        );
+        doc.text(total.toString(), tableLeft + colWidth * 4, y, {
+          width: colWidth,
+        });
+      });
+    }
+
+    // Add Daily Mood Trends Chart Data
+    const dailyMoodTrends = reportData.trends?.dailyMoodTrends || [];
+    if (dailyMoodTrends.length > 0) {
+      doc.addPage();
+      doc.fontSize(18).text("Daily Mood Entry Trends", { underline: true });
+      doc.moveDown();
+
+      doc
+        .fontSize(12)
+        .text(
+          "This data shows daily mood entry patterns based on mood levels:",
+          { align: "left" }
+        );
+      doc.moveDown();
+
+      // Create a table for daily mood trends
+      const tableTop = doc.y;
+      const tableLeft = 50;
+      const colWidth = 120;
+
+      // Table header
+      doc.fontSize(11).fillColor("black");
+      doc.text("Date", tableLeft, tableTop, { width: colWidth });
+      doc.text("Positive (4-5)", tableLeft + colWidth, tableTop, {
+        width: colWidth,
+      });
+      doc.text("Moderate (2-3)", tableLeft + colWidth * 2, tableTop, {
+        width: colWidth,
+      });
+      doc.text("Needs Attention (1)", tableLeft + colWidth * 3, tableTop, {
+        width: colWidth,
+      });
+
+      // Draw header line
+      doc
+        .moveTo(tableLeft, tableTop + 15)
+        .lineTo(tableLeft + colWidth * 4, tableTop + 15)
+        .stroke();
+
+      // Add data rows (limit to last 14 days to fit on page)
+      const recentTrends = dailyMoodTrends.slice(-14);
+      recentTrends.forEach((day, i) => {
+        const y = tableTop + 25 + i * 18;
+
+        doc.fontSize(10);
+        doc.text(day.date || `Day ${i + 1}`, tableLeft, y, { width: colWidth });
+        doc.text((day.positive || 0).toString(), tableLeft + colWidth, y, {
+          width: colWidth,
+        });
+        doc.text((day.moderate || 0).toString(), tableLeft + colWidth * 2, y, {
+          width: colWidth,
+        });
+        doc.text(
+          (day.needsAttention || 0).toString(),
+          tableLeft + colWidth * 3,
+          y,
+          { width: colWidth }
+        );
+      });
+
+      if (dailyMoodTrends.length > 14) {
+        doc.moveDown(2);
+        doc
+          .fontSize(10)
+          .text(
+            `Note: Showing last 14 days of data. Total days in period: ${dailyMoodTrends.length}`,
+            { align: "center", fillColor: "gray" }
+          );
+      }
+    }
+
+    // Add Time of Day Reporting Chart Data
+    const timeframeTrends = reportData.trends?.timeframeTrends || [];
+    if (timeframeTrends.length > 0) {
+      doc.addPage();
+      doc
+        .fontSize(18)
+        .text("Time of Day Reporting Patterns", { underline: true });
+      doc.moveDown();
+
+      doc
+        .fontSize(12)
+        .text(
+          "This data shows when students are most likely to submit mood entries:",
+          { align: "left" }
+        );
+      doc.moveDown();
+
+      // Create a simple list for timeframe data
+      timeframeTrends.forEach((timeframe, i) => {
+        doc.fontSize(14).text(`${timeframe.name}: ${timeframe.value} entries`);
+        doc.moveDown(0.5);
+
+        // Add a simple visual bar (text-based)
+        const percentage =
+          timeframeTrends.length > 0
+            ? Math.round(
+                (timeframe.value /
+                  timeframeTrends.reduce((sum, t) => sum + t.value, 0)) *
+                  100
+              )
+            : 0;
+
+        doc
+          .fontSize(12)
+          .fillColor("gray")
+          .text(`${percentage}% of total submissions`);
+        doc.moveDown();
+      });
+    }
+
+    // Add no data message if no trends are available
+    if (
+      moodTrends.length === 0 &&
+      dailyMoodTrends.length === 0 &&
+      timeframeTrends.length === 0
+    ) {
+      doc.addPage();
+      doc.fontSize(18).text("Chart Data", { underline: true });
+      doc.moveDown();
+      doc
+        .fontSize(12)
+        .text(
+          "No trend data available for the selected period. This may be because:"
+        );
+      doc.moveDown();
+      doc.text("• No survey responses were submitted during this period");
+      doc.text("• No mood entries were recorded during this period");
+      doc.text("• The selected date range contains no data");
+      doc.moveDown();
+      doc.text(
+        "Please try selecting a different date range or encourage students to participate in surveys and mood tracking."
+      );
+    }
+
+    // Add footer
+    doc
+      .fontSize(8)
+      .fillColor("black")
+      .text(
+        "Privacy Notice: This report contains only anonymized, aggregated data. No individual student responses are included.",
+        50,
+        doc.page.height - 50,
+        { align: "center", width: doc.page.width - 100 }
+      );
+
+    // Finalize the PDF
+    doc.end();
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    res.status(500).json({ error: "Failed to generate PDF report" });
+  }
 };
 
 /**

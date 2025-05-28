@@ -332,140 +332,452 @@ const generateReportData = async (
   endDate,
   reportType
 ) => {
-  // This would be a complex function to gather all the data needed for the report
-  // For now, we'll just return some mock data
+  try {
+    // Calculate weekly averages
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const daysDifference = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    const weeksDifference = Math.max(1, Math.ceil(daysDifference / 7));
 
-  // Format the date range for display
-  const formattedStartDate = new Date(startDate).toLocaleDateString();
-  const formattedEndDate = new Date(endDate).toLocaleDateString();
+    // Get trends data for the period
+    const moodTrends = await getMoodTrends(null, startDate, endDate);
+    const dailyMoodTrends = await getDailyMoodTrends(startDate, endDate);
+    const timeframeTrends = await getTimeframeTrends(null, startDate, endDate);
 
-  return {
-    title: `Mental Health Report - ${
-      reportType.charAt(0).toUpperCase() + reportType.slice(1)
-    }`,
-    period: `${formattedStartDate} to ${formattedEndDate}`,
-    studentInfo:
-      studentId === "all" ? "All Students" : await getStudentName(studentId),
-    summary: {
-      totalResponses: 45,
-      averageMood: 3.7,
-      topIssues: ["Academic Stress", "Social Anxiety", "Sleep Issues"],
-      recommendedActions: [
-        "Consider reducing academic workload for students showing high stress",
-        "Implement stress management workshops",
-        "Provide resources for healthy sleep habits",
+    // Calculate total responses from mood trends data
+    const totalResponses = moodTrends
+      ? moodTrends.reduce((total, trend) => {
+          return (
+            total +
+            (trend["Green (Positive)"] || 0) +
+            (trend["Yellow (Moderate)"] || 0) +
+            (trend["Red (Needs Attention)"] || 0)
+          );
+        }, 0)
+      : 0;
+
+    // Calculate total mood entries from dailyMoodTrends
+    const totalMoodEntries = dailyMoodTrends
+      ? dailyMoodTrends.reduce((total, day) => {
+          return (
+            total +
+            (day.positive || 0) +
+            (day.moderate || 0) +
+            (day.needsAttention || 0)
+          );
+        }, 0)
+      : 0;
+
+    // Calculate weekly averages
+    const avgSurveyResponsesPerWeek = Math.round(
+      totalResponses / weeksDifference
+    );
+    const avgMoodEntriesPerWeek = Math.round(
+      totalMoodEntries / weeksDifference
+    );
+
+    // Calculate average mood
+    const averageMood = calculateAverageMood(moodTrends || []);
+
+    // Generate recommendations
+    const recommendedActions = generateRecommendedActions({
+      moodTrends: moodTrends || [],
+      dailyMoodTrends: dailyMoodTrends || [],
+      timeframeTrends: timeframeTrends || [],
+    });
+
+    // Format the date range for display
+    const formattedStartDate = new Date(startDate).toLocaleDateString();
+    const formattedEndDate = new Date(endDate).toLocaleDateString();
+
+    return {
+      title: `Mental Health Trends Report - ${
+        reportType.charAt(0).toUpperCase() + reportType.slice(1)
+      }`,
+      period: `${formattedStartDate} to ${formattedEndDate}`,
+      studentInfo:
+        studentId === "all" ? "All Students" : await getStudentName(studentId),
+      summary: {
+        totalResponses: totalResponses,
+        totalMoodEntries: totalMoodEntries,
+        avgSurveyResponsesPerWeek: avgSurveyResponsesPerWeek,
+        avgMoodEntriesPerWeek: avgMoodEntriesPerWeek,
+        weeksCovered: weeksDifference,
+        averageMood: averageMood,
+        recommendedActions: recommendedActions,
+      },
+      charts: [
+        { title: "Mental Health Zone Trends", type: "line" },
+        { title: "Daily Mood Trends", type: "bar" },
+        { title: "Time of Day Reporting", type: "pie" },
       ],
-    },
-    moodData: [
-      { date: "Week 1", average: 3.2 },
-      { date: "Week 2", average: 3.5 },
-      { date: "Week 3", average: 3.8 },
-      { date: "Week 4", average: 3.7 },
-    ],
-    zoneData: {
-      "Green (Positive)": 25,
-      "Yellow (Moderate)": 15,
-      "Red (Needs Attention)": 5,
-    },
-    issueData: [
-      { issue: "Academic Stress", count: 22 },
-      { issue: "Social Anxiety", count: 18 },
-      { issue: "Sleep Issues", count: 12 },
-      { issue: "Family Problems", count: 8 },
-      { issue: "Future Concerns", count: 6 },
-    ],
-  };
+      // Include the trends data as well
+      trends: {
+        moodTrends: moodTrends || [],
+        dailyMoodTrends: dailyMoodTrends || [],
+        timeframeTrends: timeframeTrends || [],
+      },
+    };
+  } catch (error) {
+    console.error("Error generating report data:", error);
+    throw new Error("Failed to generate report data");
+  }
+};
+
+// Helper functions for counselor reports
+const calculateAverageMood = (moodTrends) => {
+  if (!moodTrends.length) return "No Data";
+
+  let totalGreen = 0;
+  let totalYellow = 0;
+  let totalRed = 0;
+
+  moodTrends.forEach((period) => {
+    totalGreen += period["Green (Positive)"] || 0;
+    totalYellow += period["Yellow (Moderate)"] || 0;
+    totalRed += period["Red (Needs Attention)"] || 0;
+  });
+
+  const total = totalGreen + totalYellow + totalRed;
+
+  if (total === 0) return "No Data";
+
+  const weightedScore =
+    (totalGreen * 3 + totalYellow * 2 + totalRed * 1) / total;
+
+  if (weightedScore >= 2.5) return "Positive";
+  if (weightedScore >= 1.5) return "Neutral";
+  return "Negative";
+};
+
+const generateRecommendedActions = (trendsData) => {
+  const recommendations = [];
+
+  // Get the predominant mood
+  const moodTrends = trendsData.moodTrends || [];
+  const averageMood = calculateAverageMood(moodTrends);
+
+  // Add mood-based recommendations
+  if (averageMood === "Negative") {
+    recommendations.push(
+      "Schedule individual counseling sessions for students in red zones"
+    );
+    recommendations.push(
+      "Implement group therapy sessions for stress management"
+    );
+    recommendations.push("Develop crisis intervention protocols");
+  } else if (averageMood === "Neutral") {
+    recommendations.push(
+      "Monitor students closely and provide preventive interventions"
+    );
+    recommendations.push("Conduct mental health awareness workshops");
+    recommendations.push("Establish peer support programs");
+  } else if (averageMood === "Positive") {
+    recommendations.push("Continue current supportive practices");
+    recommendations.push(
+      "Maintain regular check-ins to sustain positive trends"
+    );
+    recommendations.push("Share successful strategies with other counselors");
+  } else {
+    // No data case
+    recommendations.push(
+      "Encourage student participation in mental health assessments"
+    );
+    recommendations.push("Implement regular mental health screening programs");
+    recommendations.push(
+      "Provide information about available counseling resources"
+    );
+  }
+
+  return recommendations.slice(0, 3); // Return top 3 recommendations
 };
 
 /**
  * Generate PDF report
  */
 const generatePdfReport = (doc, data, options) => {
-  // Add title and header
-  doc.fontSize(24).text(data.title, { align: "center" });
-  doc.moveDown();
-  doc.fontSize(12).text(`Period: ${data.period}`, { align: "center" });
-  doc.fontSize(12).text(`Student: ${data.studentInfo}`, { align: "center" });
-  doc.moveDown(2);
+  try {
+    // Add title and header
+    doc
+      .fontSize(24)
+      .text(data.title || "Mental Health Trends Report", { align: "center" });
+    doc.moveDown();
+    doc.fontSize(12).text(`Period: ${data.period}`, { align: "center" });
+    doc.fontSize(12).text(`Student: ${data.studentInfo}`, { align: "center" });
+    doc.moveDown(2);
 
-  // Add summary section
-  doc.fontSize(18).text("Summary", { underline: true });
-  doc.moveDown();
-  doc.fontSize(12).text(`Total Responses: ${data.summary.totalResponses}`);
-  doc.moveDown(0.5);
-  doc.fontSize(12).text(`Average Mood: ${data.summary.averageMood} / 5`);
-  doc.moveDown();
+    // Add summary section with weekly averages
+    doc.fontSize(18).text("Summary", { underline: true });
+    doc.moveDown();
 
-  // Add top issues section
-  doc.fontSize(16).text("Top Issues", { underline: true });
-  doc.moveDown();
-  data.summary.topIssues.forEach((issue, index) => {
-    doc.text(`${index + 1}. ${issue}`);
+    // Survey and Mood submission statistics
+    doc.fontSize(14).text("Submission Statistics", { underline: true });
     doc.moveDown(0.5);
-  });
-  doc.moveDown();
-
-  // Add recommendations if enabled
-  if (options.includeRecommendations) {
-    doc.fontSize(16).text("Recommended Actions", { underline: true });
-    doc.moveDown();
-    data.summary.recommendedActions.forEach((action, index) => {
-      doc.text(`${index + 1}. ${action}`);
-      doc.moveDown(0.5);
-    });
-    doc.moveDown();
-  }
-
-  // Add tables if enabled
-  if (options.includeTables) {
-    doc.addPage();
-    doc.fontSize(18).text("Detailed Data", { underline: true });
-    doc.moveDown();
-
-    // Mood trends table
-    doc.fontSize(14).text("Mood Trends Data");
-    doc.moveDown();
-    const tableTop = doc.y;
-    const tableLeft = 50;
-    const colWidth = 120;
-
-    doc.fontSize(10);
-    doc.text("Period", tableLeft, tableTop);
-    doc.text("Average Mood", tableLeft + colWidth, tableTop);
-
-    data.moodData.forEach((period, i) => {
-      const y = tableTop + 20 + i * 20;
-      doc.text(period.date, tableLeft, y);
-      doc.text(period.average.toString(), tableLeft + colWidth, y);
-    });
-
-    doc.moveDown(4);
-
-    // Zone distribution table
-    doc.fontSize(14).text("Zone Distribution");
-    doc.moveDown();
-    const zoneTableTop = doc.y;
-
-    doc.fontSize(10);
-    doc.text("Zone", tableLeft, zoneTableTop);
-    doc.text("Count", tableLeft + colWidth, zoneTableTop);
-
-    let row = 0;
-    Object.entries(data.zoneData).forEach(([zone, count]) => {
-      const y = zoneTableTop + 20 + row * 20;
-      doc.text(zone, tableLeft, y);
-      doc.text(count.toString(), tableLeft + colWidth, y);
-      row++;
-    });
-  }
-
-  // Add footer
-  doc
-    .fontSize(10)
-    .text(
-      "Confidential: This report contains sensitive mental health information and should be handled with care.",
-      { align: "center" }
+    doc
+      .fontSize(12)
+      .text(`Period Covered: ${data.summary?.weeksCovered || 0} weeks`);
+    doc.moveDown(0.3);
+    doc.text(`Total Survey Responses: ${data.summary?.totalResponses || 0}`);
+    doc.moveDown(0.3);
+    doc.text(
+      `Average Survey Responses per Week: ${
+        data.summary?.avgSurveyResponsesPerWeek || 0
+      }`
     );
+    doc.moveDown(0.3);
+    doc.text(`Total Mood Entries: ${data.summary?.totalMoodEntries || 0}`);
+    doc.moveDown(0.3);
+    doc.text(
+      `Average Mood Entries per Week: ${
+        data.summary?.avgMoodEntriesPerWeek || 0
+      }`
+    );
+    doc.moveDown(0.3);
+    doc.text(`Overall Mood Trend: ${data.summary?.averageMood || "No Data"}`);
+    doc.moveDown(2);
+
+    // Add recommendations section
+    const recommendations = data.summary?.recommendedActions || [];
+    if (recommendations.length > 0) {
+      doc.fontSize(14).text("Recommended Actions", { underline: true });
+      doc.moveDown(0.5);
+
+      recommendations.forEach((action, index) => {
+        doc.fontSize(12).text(`${index + 1}. ${action}`);
+        doc.moveDown(0.4);
+      });
+      doc.moveDown();
+    }
+
+    // Add Mental Health Zone Trends Chart Data
+    const moodTrends = data.trends?.moodTrends || [];
+    if (moodTrends.length > 0) {
+      doc.addPage();
+      doc.fontSize(18).text("Mental Health Zone Trends", { underline: true });
+      doc.moveDown();
+
+      doc
+        .fontSize(12)
+        .text(
+          "This data represents the distribution of students across mental health zones over time:",
+          { align: "left" }
+        );
+      doc.moveDown();
+
+      // Create a table for mood trends
+      const tableTop = doc.y;
+      const tableLeft = 50;
+      const colWidth = 110;
+
+      // Table header
+      doc.fontSize(11).fillColor("black");
+      doc.text("Period", tableLeft, tableTop, { width: colWidth });
+      doc.text("Green (Positive)", tableLeft + colWidth, tableTop, {
+        width: colWidth,
+      });
+      doc.text("Yellow (Moderate)", tableLeft + colWidth * 2, tableTop, {
+        width: colWidth,
+      });
+      doc.text("Red (Needs Attention)", tableLeft + colWidth * 3, tableTop, {
+        width: colWidth,
+      });
+      doc.text("Total", tableLeft + colWidth * 4, tableTop, {
+        width: colWidth,
+      });
+
+      // Draw header line
+      doc
+        .moveTo(tableLeft, tableTop + 15)
+        .lineTo(tableLeft + colWidth * 5, tableTop + 15)
+        .stroke();
+
+      // Add data rows
+      moodTrends.forEach((period, i) => {
+        const y = tableTop + 25 + i * 20;
+
+        // Calculate total for the row
+        const total =
+          (period["Green (Positive)"] || 0) +
+          (period["Yellow (Moderate)"] || 0) +
+          (period["Red (Needs Attention)"] || 0);
+
+        doc.fontSize(10);
+        doc.text(period.name || `Period ${i + 1}`, tableLeft, y, {
+          width: colWidth,
+        });
+        doc.text(
+          (period["Green (Positive)"] || 0).toString(),
+          tableLeft + colWidth,
+          y,
+          { width: colWidth }
+        );
+        doc.text(
+          (period["Yellow (Moderate)"] || 0).toString(),
+          tableLeft + colWidth * 2,
+          y,
+          { width: colWidth }
+        );
+        doc.text(
+          (period["Red (Needs Attention)"] || 0).toString(),
+          tableLeft + colWidth * 3,
+          y,
+          { width: colWidth }
+        );
+        doc.text(total.toString(), tableLeft + colWidth * 4, y, {
+          width: colWidth,
+        });
+      });
+    }
+
+    // Add Daily Mood Trends Chart Data
+    const dailyMoodTrends = data.trends?.dailyMoodTrends || [];
+    if (dailyMoodTrends.length > 0) {
+      doc.addPage();
+      doc.fontSize(18).text("Daily Mood Entry Trends", { underline: true });
+      doc.moveDown();
+
+      doc
+        .fontSize(12)
+        .text(
+          "This data shows daily mood entry patterns based on mood levels:",
+          { align: "left" }
+        );
+      doc.moveDown();
+
+      // Create a table for daily mood trends
+      const tableTop = doc.y;
+      const tableLeft = 50;
+      const colWidth = 120;
+
+      // Table header
+      doc.fontSize(11).fillColor("black");
+      doc.text("Date", tableLeft, tableTop, { width: colWidth });
+      doc.text("Positive (4-5)", tableLeft + colWidth, tableTop, {
+        width: colWidth,
+      });
+      doc.text("Moderate (2-3)", tableLeft + colWidth * 2, tableTop, {
+        width: colWidth,
+      });
+      doc.text("Needs Attention (1)", tableLeft + colWidth * 3, tableTop, {
+        width: colWidth,
+      });
+
+      // Draw header line
+      doc
+        .moveTo(tableLeft, tableTop + 15)
+        .lineTo(tableLeft + colWidth * 4, tableTop + 15)
+        .stroke();
+
+      // Add data rows (limit to last 14 days to fit on page)
+      const recentTrends = dailyMoodTrends.slice(-14);
+      recentTrends.forEach((day, i) => {
+        const y = tableTop + 25 + i * 18;
+
+        doc.fontSize(10);
+        doc.text(day.date || `Day ${i + 1}`, tableLeft, y, { width: colWidth });
+        doc.text((day.positive || 0).toString(), tableLeft + colWidth, y, {
+          width: colWidth,
+        });
+        doc.text((day.moderate || 0).toString(), tableLeft + colWidth * 2, y, {
+          width: colWidth,
+        });
+        doc.text(
+          (day.needsAttention || 0).toString(),
+          tableLeft + colWidth * 3,
+          y,
+          { width: colWidth }
+        );
+      });
+
+      if (dailyMoodTrends.length > 14) {
+        doc.moveDown(2);
+        doc
+          .fontSize(10)
+          .text(
+            `Note: Showing last 14 days of data. Total days in period: ${dailyMoodTrends.length}`,
+            { align: "center", fillColor: "gray" }
+          );
+      }
+    }
+
+    // Add Time of Day Reporting Chart Data
+    const timeframeTrends = data.trends?.timeframeTrends || [];
+    if (timeframeTrends.length > 0) {
+      doc.addPage();
+      doc
+        .fontSize(18)
+        .text("Time of Day Reporting Patterns", { underline: true });
+      doc.moveDown();
+
+      doc
+        .fontSize(12)
+        .text(
+          "This data shows when students are most likely to submit mood entries:",
+          { align: "left" }
+        );
+      doc.moveDown();
+
+      // Create a simple list for timeframe data
+      timeframeTrends.forEach((timeframe, i) => {
+        doc.fontSize(14).text(`${timeframe.name}: ${timeframe.value} entries`);
+        doc.moveDown(0.5);
+
+        // Add a simple visual bar (text-based)
+        const percentage =
+          timeframeTrends.length > 0
+            ? Math.round(
+                (timeframe.value /
+                  timeframeTrends.reduce((sum, t) => sum + t.value, 0)) *
+                  100
+              )
+            : 0;
+
+        doc
+          .fontSize(12)
+          .fillColor("gray")
+          .text(`${percentage}% of total submissions`);
+        doc.moveDown();
+      });
+    }
+
+    // Add no data message if no trends are available
+    if (
+      moodTrends.length === 0 &&
+      dailyMoodTrends.length === 0 &&
+      (!timeframeTrends || timeframeTrends.length === 0)
+    ) {
+      doc.addPage();
+      doc.fontSize(18).text("Chart Data", { underline: true });
+      doc.moveDown();
+      doc
+        .fontSize(12)
+        .text(
+          "No trend data available for the selected period. This may be because:"
+        );
+      doc.moveDown();
+      doc.text("• No survey responses were submitted during this period");
+      doc.text("• No mood entries were recorded during this period");
+      doc.text("• The selected date range contains no data");
+      doc.moveDown();
+      doc.text(
+        "Please try selecting a different date range or encourage students to participate in surveys and mood tracking."
+      );
+    }
+
+    // Add footer
+    doc
+      .fontSize(8)
+      .fillColor("black")
+      .text(
+        "Confidential: This report contains sensitive mental health information and should be handled with care.",
+        50,
+        doc.page.height - 50,
+        { align: "center", width: doc.page.width - 100 }
+      );
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    throw error;
+  }
 };
 
 /**
@@ -490,7 +802,10 @@ const generateCsvReport = (data, options) => {
     { category: "Student", data: data.studentInfo },
     { category: "Total Responses", data: data.summary.totalResponses },
     { category: "Average Mood", data: data.summary.averageMood },
-    { category: "Top Issues", data: data.summary.topIssues.join(", ") },
+    {
+      category: "Top Issues",
+      data: data.summary.recommendedActions.join(", "),
+    },
   ];
 
   // Add recommendations if enabled
@@ -519,7 +834,7 @@ const generateCsvReport = (data, options) => {
     });
     csvOutput +=
       moodTrendsCsvStringifier.getHeaderString() +
-      moodTrendsCsvStringifier.stringifyRecords(data.moodData);
+      moodTrendsCsvStringifier.stringifyRecords(data.trends.moodTrends);
 
     // Add zone distribution
     csvOutput += "\n\nZone Distribution\n";
@@ -530,9 +845,9 @@ const generateCsvReport = (data, options) => {
     const zoneCsvStringifier = createObjectCsvStringifier({
       header: zoneHeader,
     });
-    const zoneRows = Object.entries(data.zoneData).map(([zone, count]) => ({
-      zone,
-      count,
+    const zoneRows = data.trends.moodTrends.map((period) => ({
+      zone: period.name,
+      count: period["Green (Positive)"],
     }));
     csvOutput +=
       zoneCsvStringifier.getHeaderString() +
@@ -549,7 +864,12 @@ const generateCsvReport = (data, options) => {
     });
     csvOutput +=
       issueCsvStringifier.getHeaderString() +
-      issueCsvStringifier.stringifyRecords(data.issueData);
+      issueCsvStringifier.stringifyRecords(
+        data.trends.moodTrends.map((period) => ({
+          issue: period.name,
+          count: period["Green (Positive)"],
+        }))
+      );
   }
 
   return csvOutput;
@@ -873,50 +1193,38 @@ const getTimeframeTrends = async (period, startDate, endDate) => {
       },
     });
 
-    // Check for initial assessments if no mood entries
-    let totalEntries = moodEntries.length;
-    let totalMoodValue = 0;
-
-    if (moodEntries.length === 0) {
-      // Check if there are any students with initial assessments
-      const studentsWithAssessments = await prisma.student.findMany({
-        where: {
-          initialAssessment: {
-            isNot: null,
-          },
-        },
-        select: {
-          id: true,
-          initialAssessment: true,
-        },
-      });
-
-      // If we have students with assessments but no mood entries, return default values
-      if (studentsWithAssessments.length > 0) {
-        // Use a moderate mood value as default
-        return {
-          totalEntries: 1, // Show something even if there are no actual entries
-          averageMood: 3.0,
-        };
-      }
-    } else {
-      // Calculate total and average from actual entries
-      totalMoodValue = moodEntries.reduce(
-        (sum, entry) => sum + entry.moodLevel,
-        0
-      );
-    }
-
-    // Calculate average mood
-    const averageMood = totalEntries > 0 ? totalMoodValue / totalEntries : 0;
-
-    return {
-      totalEntries,
-      averageMood: parseFloat(averageMood.toFixed(2)),
-    };
+    // Process time of day data
+    return processTimeOfDayData(moodEntries);
   } catch (error) {
     throw error;
   }
+};
+
+/**
+ * Process time of day reporting data
+ */
+const processTimeOfDayData = (entries) => {
+  if (!entries.length) return [];
+
+  const timeframes = {
+    Morning: { name: "Morning", value: 0 },
+    Afternoon: { name: "Afternoon", value: 0 },
+    Evening: { name: "Evening", value: 0 },
+  };
+
+  entries.forEach((entry) => {
+    const hour = new Date(entry.createdAt).getHours();
+
+    if (hour >= 5 && hour < 12) {
+      timeframes.Morning.value++;
+    } else if (hour >= 12 && hour < 18) {
+      timeframes.Afternoon.value++;
+    } else {
+      timeframes.Evening.value++;
+    }
+  });
+
+  return Object.values(timeframes);
 };
 
 // Helper functions
