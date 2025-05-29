@@ -118,48 +118,95 @@
   background-color: #f9f9f9;
   scroll-behavior: auto;
   overflow-anchor: auto;
+  display: flex;
+  flex-direction: column;
   /* Prevent auto-scrolling to bottom on new content */
   scroll-snap-type: none;
 }
 
 .message-item {
   display: flex;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   align-items: flex-start;
+  width: 100%;
+  clear: both;
 }
 
 .message-content {
   margin-left: 8px;
   max-width: 70%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Allow content to shrink */
 }
 
 .own-message {
-  flex-direction: row-reverse;
-  align-self: flex-end;
+  flex-direction: row-reverse !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  max-width: 70% !important;
+  align-self: flex-end !important;
 }
 
 .own-message .message-content {
-  margin-left: 0;
-  margin-right: 8px;
+  margin-left: 0 !important;
+  margin-right: 8px !important;
+  align-items: flex-end !important;
+}
+
+.other-message {
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  margin-left: 0 !important;
+  margin-right: auto !important;
+  max-width: 70% !important;
+  align-self: flex-start !important;
+}
+
+.other-message .message-content {
+  align-items: flex-start !important;
 }
 
 .message-sender {
   font-size: 12px;
   color: #666;
   margin-bottom: 2px;
+  text-align: left;
+}
+
+.own-message .message-sender {
+  text-align: right;
+}
+
+.sender-role {
+  font-size: 10px;
+  color: #999;
+  font-weight: normal;
+  margin-left: 4px;
 }
 
 .message-bubble {
   padding: 10px 12px;
-  border-radius: 12px;
-  background-color: #e6f7ff;
+  border-radius: 18px;
+  background-color: #f0f0f0;
   position: relative;
   word-wrap: break-word;
+  max-width: 100%;
+  display: inline-block;
 }
 
 .own-message .message-bubble {
   background-color: #1890ff;
   color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.other-message .message-bubble {
+  background-color: #f0f0f0;
+  color: #333;
+  border-bottom-left-radius: 4px;
 }
 
 .message-time {
@@ -171,6 +218,12 @@
 
 .own-message .message-time {
   color: rgba(255, 255, 255, 0.8);
+  text-align: right;
+}
+
+.other-message .message-time {
+  color: #aaa;
+  text-align: left;
 }
 
 .message-input {
@@ -241,4 +294,46 @@
   .messaging-content {
     height: auto;
   }
+}
+
+/* More specific selectors to override any conflicting styles */
+.conversation-view .message-list .message-item.own-message {
+  flex-direction: row-reverse !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  max-width: 70% !important;
+  align-self: flex-end !important;
+}
+
+.conversation-view .message-list .message-item.own-message .message-content {
+  margin-left: 0 !important;
+  margin-right: 8px !important;
+  align-items: flex-end !important;
+}
+
+.conversation-view .message-list .message-item.own-message .message-bubble {
+  background-color: #1890ff !important;
+  color: white !important;
+  border-bottom-right-radius: 4px !important;
+}
+
+.conversation-view .message-list .message-item.other-message {
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  margin-left: 0 !important;
+  margin-right: auto !important;
+  max-width: 70% !important;
+  align-self: flex-start !important;
+}
+
+.conversation-view .message-list .message-item.other-message .message-content {
+  align-items: flex-start !important;
+}
+
+.conversation-view .message-list .message-item.other-message .message-bubble {
+  background-color: #f0f0f0 !important;
+  color: #333 !important;
+  border-bottom-left-radius: 4px !important;
 }

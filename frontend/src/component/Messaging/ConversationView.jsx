@@ -18,6 +18,11 @@ const ConversationView = ({ conversationId, onConversationUpdated }) => {
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
 
+  // Get the correct user ID from various possible structures
+  const getUserId = () => {
+    return user.id || user.userId || user.user?.id || null;
+  };
+
   // Fetch conversation and messages
   useEffect(() => {
     if (conversationId) {
@@ -198,40 +203,42 @@ const ConversationView = ({ conversationId, onConversationUpdated }) => {
             className="empty-messages"
           />
         ) : (
-          <List
-            dataSource={messages}
-            renderItem={(message) => {
-              const isOwnMessage = message.sender.id === user.id;
+          messages.map((message) => {
+            // Convert both IDs to strings for comparison to handle type mismatches
+            const currentUserId = String(getUserId() || '');
+            const messageSenderId = String(message.sender.id);
+            const isOwnMessage = messageSenderId === currentUserId && currentUserId !== '';
 
-              return (
-                <div
-                  className={`message-item ${
-                    isOwnMessage ? "own-message" : "other-message"
-                  }`}
-                >
+            return (
+              <div
+                key={message.id}
+                className={`message-item ${
+                  isOwnMessage ? "own-message" : "other-message"
+                }`}
+              >
+                {!isOwnMessage && (
+                  <Avatar
+                    src={message.sender.avatar || "/default-avatar.png"}
+                    size="small"
+                  />
+                )}
+                <div className="message-content">
                   {!isOwnMessage && (
-                    <Avatar
-                      src={message.sender.avatar || "/default-avatar.png"}
-                      size="small"
-                    />
+                    <div className="message-sender">
+                      {message.sender.firstName} {message.sender.lastName}
+                      <span className="sender-role">({message.sender.role})</span>
+                    </div>
                   )}
-                  <div className="message-content">
-                    {!isOwnMessage && (
-                      <div className="message-sender">
-                        {message.sender.firstName} {message.sender.lastName}
-                      </div>
-                    )}
-                    <div className="message-bubble">
-                      {message.content}
-                      <div className="message-time">
-                        {formatTime(message.createdAt)}
-                      </div>
+                  <div className="message-bubble">
+                    {message.content}
+                    <div className="message-time">
+                      {formatTime(message.createdAt)}
                     </div>
                   </div>
                 </div>
-              );
-            }}
-          />
+              </div>
+            );
+          })
         )}
         <div ref={messagesEndRef} />
       </div>

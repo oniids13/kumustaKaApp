@@ -120,7 +120,9 @@ const ConversationList = ({ onSelectConversation, selectedConversationId }) => {
                   conversation.latestMessage.sender
                     ? `${
                         conversation.latestMessage.sender.firstName || "User"
-                      }: ${
+                      } (${
+                        conversation.latestMessage.sender.role || "User"
+                      }): ${
                         conversation.latestMessage.content &&
                         conversation.latestMessage.content.length > 30
                           ? conversation.latestMessage.content.substring(

@@ -127,7 +127,7 @@ const markConversationAsRead = async (req, res) => {
 
 /**
  * Get users available for messaging (teachers and counselors for students,
- * students for teachers and counselors)
+ * students and other staff for teachers and counselors)
  */
 const getMessageableUsers = async (req, res) => {
   try {
@@ -139,8 +139,10 @@ const getMessageableUsers = async (req, res) => {
       // Students can message teachers and counselors
       users = await communicationQueries.getMessageableUsers(userId);
     } else if (userRole === "TEACHER" || userRole === "COUNSELOR") {
-      // Teachers and counselors can message students
-      users = await communicationQueries.getStudentsForMessaging(userId);
+      // Teachers and counselors can message students AND other teachers/counselors
+      const students = await communicationQueries.getStudentsForMessaging(userId);
+      const staff = await communicationQueries.getMessageableUsers(userId);
+      users = [...students, ...staff];
     } else {
       // Admin can message everyone
       const teachers = await communicationQueries.getMessageableUsers(userId);

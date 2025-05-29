@@ -134,6 +134,7 @@ const getConversationById = async (conversationId, userId) => {
                 firstName: true,
                 lastName: true,
                 avatar: true,
+                role: true,
               },
             },
           },
@@ -235,6 +236,7 @@ const createMessage = async (conversationId, content, senderId) => {
             firstName: true,
             lastName: true,
             avatar: true,
+            role: true,
           },
         },
       },
@@ -431,8 +433,8 @@ const getMessageableUsers = async (userId) => {
 };
 
 /**
- * Get students for teachers and counselors
- * @param {string} userId - ID of teacher or counselor
+ * Get students for teachers, counselors, and admins
+ * @param {string} userId - ID of teacher, counselor, or admin
  * @returns {Array} List of students
  */
 const getStudentsForMessaging = async (userId) => {
@@ -444,9 +446,11 @@ const getStudentsForMessaging = async (userId) => {
 
     if (
       !currentUser ||
-      (currentUser.role !== "TEACHER" && currentUser.role !== "COUNSELOR")
+      (currentUser.role !== "TEACHER" && 
+       currentUser.role !== "COUNSELOR" && 
+       currentUser.role !== "ADMIN")
     ) {
-      throw new Error("Only teachers and counselors can access student lists");
+      throw new Error("Only teachers, counselors, and admins can access student lists");
     }
 
     const students = await prisma.user.findMany({
@@ -458,6 +462,7 @@ const getStudentsForMessaging = async (userId) => {
         firstName: true,
         lastName: true,
         avatar: true,
+        role: true,
       },
       orderBy: {
         lastName: "asc",
