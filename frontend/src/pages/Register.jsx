@@ -6,9 +6,17 @@ import "../styles/Register.css";
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({
+    passwordMatch: "",
+    email: "",
+    phone: "",
+    firstName: "",
+    lastName: "",
+  });
 
   const handleRegistration = async (userData) => {
     setLoading(true);
+    setErrors({}); // Clear previous errors
     console.log("Submitting registration data:", userData);
 
     try {
@@ -28,10 +36,21 @@ const RegisterPage = () => {
       }
     } catch (err) {
       console.error("Registration error:", err.response?.data || err.message);
-      alert(
-        err.response?.data?.message ||
-          "Registration failed. Please check your inputs."
-      );
+      
+      if (err.response?.data?.errors) {
+        // Handle validation errors from backend
+        const backendErrors = {};
+        err.response.data.errors.forEach(error => {
+          const field = error.path || error.param;
+          backendErrors[field] = error.msg;
+        });
+        setErrors(backendErrors);
+      } else {
+        alert(
+          err.response?.data?.message ||
+            "Registration failed. Please check your inputs."
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -45,7 +64,12 @@ const RegisterPage = () => {
           <p>Create your account to start your wellness journey</p>
         </div>
 
-        <RegistrationForm onSubmit={handleRegistration} loading={loading} />
+        <RegistrationForm 
+          onSubmit={handleRegistration} 
+          loading={loading} 
+          errors={errors}
+          setErrors={setErrors}
+        />
 
         <div className="register-footer">
           <p>
@@ -61,7 +85,7 @@ const RegisterPage = () => {
   );
 };
 
-const RegistrationForm = ({ onSubmit, loading }) => {
+const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -70,12 +94,6 @@ const RegistrationForm = ({ onSubmit, loading }) => {
     lastName: "",
     phone: "",
     role: "STUDENT",
-  });
-
-  const [errors, setErrors] = useState({
-    passwordMatch: "",
-    email: "",
-    phone: "",
   });
 
   const ROLES = [
@@ -95,11 +113,20 @@ const RegistrationForm = ({ onSubmit, loading }) => {
     if (errors.passwordMatch && name.includes("password")) {
       setErrors((prev) => ({ ...prev, passwordMatch: "" }));
     }
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
   const validateForm = () => {
     let valid = true;
-    const newErrors = { ...errors };
+    const newErrors = {
+      passwordMatch: "",
+      email: "",
+      phone: "",
+      firstName: "",
+      lastName: "",
+    };
 
     if (formData.password !== formData.confirmPassword) {
       newErrors.passwordMatch = "Passwords do not match";
@@ -111,8 +138,24 @@ const RegistrationForm = ({ onSubmit, loading }) => {
       valid = false;
     }
 
-    if (formData.phone && !/^\d{10}$/.test(formData.phone)) {
-      newErrors.phone = "Please enter a valid phone number";
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+      valid = false;
+    } else if (!/^[A-Za-z\s]+$/.test(formData.firstName)) {
+      newErrors.firstName = "First name must only contain letters and spaces";
+      valid = false;
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+      valid = false;
+    } else if (!/^[A-Za-z\s]+$/.test(formData.lastName)) {
+      newErrors.lastName = "Last name must only contain letters and spaces";
+      valid = false;
+    }
+
+    if (formData.phone && !/^09\d{9}$/.test(formData.phone)) {
+      newErrors.phone = "Phone number must be exactly 11 digits starting with 09";
       valid = false;
     }
 
@@ -123,7 +166,8 @@ const RegistrationForm = ({ onSubmit, loading }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      const { confirmPassword, ...data } = formData;
+      const data = { ...formData };
+      delete data.confirmPassword;
       onSubmit(data);
     }
   };
@@ -142,7 +186,11 @@ const RegistrationForm = ({ onSubmit, loading }) => {
             onChange={handleChange}
             required
             placeholder="Enter your first name"
+            className={errors.firstName ? "error" : ""}
           />
+          {errors.firstName && (
+            <span className="error-message">{errors.firstName}</span>
+          )}
         </div>
 
         {/* Last Name */}
@@ -156,7 +204,11 @@ const RegistrationForm = ({ onSubmit, loading }) => {
             onChange={handleChange}
             required
             placeholder="Enter your last name"
+            className={errors.lastName ? "error" : ""}
           />
+          {errors.lastName && (
+            <span className="error-message">{errors.lastName}</span>
+          )}
         </div>
       </div>
 
@@ -185,8 +237,8 @@ const RegistrationForm = ({ onSubmit, loading }) => {
           name="phone"
           value={formData.phone}
           onChange={handleChange}
-          pattern="[0-9]{10,15}"
-          placeholder="e.g. 9123456789 (10 digits)"
+          pattern="09[0-9]{9}"
+          placeholder="e.g. 09123456789 (11 digits)"
           className={errors.phone ? "error" : ""}
         />
         {errors.phone && <span className="error-message">{errors.phone}</span>}
