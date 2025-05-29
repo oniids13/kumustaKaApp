@@ -184,8 +184,9 @@ const CommentSection = ({ postId }) => {
               <div className="flex-grow-1">
                 <div className="comment-content bg-light p-2 rounded">
                   <strong>
-                    {comment.author.firstName} {comment.author.lastName}
+                    {comment.author.firstName} {comment.author.lastName}  
                   </strong>
+                  <small> ({user.role.toLowerCase()})</small>
 
                   {editingCommentId === comment.id ? (
                     <div className="mt-2">

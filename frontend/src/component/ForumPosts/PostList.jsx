@@ -13,9 +13,7 @@ const PostList = () => {
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
 
-  console.log("PostList rendered - User data:", user);
-  console.log("PostList rendered - User role:", user.role);
-  console.log("PostList rendered - User ID:", user.userId);
+
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -112,9 +110,6 @@ const PostList = () => {
   const handleDeletePost = async (postId) => {
     if (window.confirm("Are you sure you want to delete this post?")) {
       try {
-        console.log("Delete request - User role:", user.role);
-        console.log("Delete request - User ID:", user.userId);
-        console.log("Delete request - Post ID:", postId);
 
         const response = await axios.delete(
           `http://localhost:3000/api/forum/deletePost/${postId}`,
@@ -223,7 +218,7 @@ const PostList = () => {
                     />
                     <div className="text-start">
                       <h6 className="mb-0">
-                        {author.firstName} {author.lastName}
+                        {author.firstName} {author.lastName} <small>({user.role.toLowerCase()})</small>
                       </h6>
                       <small className="text-muted">
                         {formatDate(post.createdAt)}
