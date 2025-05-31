@@ -57,12 +57,23 @@
 }
 
 .form-group input[type="text"],
-.form-group input[type="tel"] {
+.form-group input[type="tel"],
+.form-group select {
   width: 100%;
   padding: 0.8rem;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
+  background-color: white;
+  transition: border-color 0.3s;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="tel"]:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 
 .checkbox-group {
@@ -233,4 +244,10 @@
   .ec-contacts-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.text-muted {
+  color: #95a5a6;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
 }

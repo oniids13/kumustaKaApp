@@ -13,6 +13,9 @@ const RegisterPage = () => {
     firstName: "",
     lastName: "",
     passcode: "",
+    emergencyContactName: "",
+    emergencyContactPhone: "",
+    emergencyContactRelationship: "",
   });
 
   const handleRegistration = async (userData) => {
@@ -96,6 +99,9 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     phone: "",
     role: "STUDENT",
     passcode: "",
+    emergencyContactName: "",
+    emergencyContactPhone: "",
+    emergencyContactRelationship: "",
   });
 
   const ROLES = [
@@ -105,8 +111,19 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     { value: "COUNSELOR", label: "Counselor" },
   ];
 
+  const RELATIONSHIPS = [
+    { value: "Parent", label: "Parent" },
+    { value: "Guardian", label: "Guardian" },
+    { value: "Sibling", label: "Sibling" },
+    { value: "Spouse", label: "Spouse" },
+    { value: "Friend", label: "Friend" },
+    { value: "Relative", label: "Relative" },
+    { value: "Other", label: "Other" },
+  ];
+
   const ADMIN_PASSCODE = "TEST";
   const requiresPasscode = ["ADMIN", "TEACHER", "COUNSELOR"].includes(formData.role);
+  const isStudent = formData.role === "STUDENT";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -120,6 +137,16 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       setFormData((prev) => ({
         ...prev,
         passcode: "",
+      }));
+    }
+
+    // Clear emergency contact fields when switching away from student role
+    if (name === "role" && value !== "STUDENT") {
+      setFormData((prev) => ({
+        ...prev,
+        emergencyContactName: "",
+        emergencyContactPhone: "",
+        emergencyContactRelationship: "",
       }));
     }
 
@@ -140,6 +167,9 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       firstName: "",
       lastName: "",
       passcode: "",
+      emergencyContactName: "",
+      emergencyContactPhone: "",
+      emergencyContactRelationship: "",
     };
 
     if (formData.password !== formData.confirmPassword) {
@@ -184,6 +214,30 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       }
     }
 
+    // Validate emergency contact fields for students
+    if (isStudent) {
+      if (!formData.emergencyContactName.trim()) {
+        newErrors.emergencyContactName = "Emergency contact name is required";
+        valid = false;
+      } else if (!/^[A-Za-z\s]+$/.test(formData.emergencyContactName)) {
+        newErrors.emergencyContactName = "Name must only contain letters and spaces";
+        valid = false;
+      }
+
+      if (!formData.emergencyContactPhone.trim()) {
+        newErrors.emergencyContactPhone = "Emergency contact phone is required";
+        valid = false;
+      } else if (!/^09\d{9}$/.test(formData.emergencyContactPhone)) {
+        newErrors.emergencyContactPhone = "Phone number must be exactly 11 digits starting with 09";
+        valid = false;
+      }
+
+      if (!formData.emergencyContactRelationship.trim()) {
+        newErrors.emergencyContactRelationship = "Relationship is required";
+        valid = false;
+      }
+    }
+
     setErrors(newErrors);
     return valid;
   };
@@ -193,9 +247,21 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     if (validateForm()) {
       const data = { ...formData };
       delete data.confirmPassword;
+      
       if (!requiresPasscode) {
         delete data.passcode;
       }
+      
+      // Only include emergency contact data for students
+      if (!isStudent) {
+        delete data.emergencyContactName;
+        delete data.emergencyContactPhone;
+        delete data.emergencyContactRelationship;
+      } else {
+        // Mark emergency contact as primary for students
+        data.emergencyContactIsPrimary = true;
+      }
+      
       onSubmit(data);
     }
   };
@@ -289,6 +355,86 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
           ))}
         </select>
       </div>
+
+      {/* Emergency Contact Section - Only for Students */}
+      {isStudent && (
+        <div className="emergency-contact-section">
+          <h4 className="section-title">
+            Emergency Contact <span className="required-indicator">*</span>
+          </h4>
+          <p className="section-description">
+            This will be your primary emergency contact for health and safety purposes.
+          </p>
+          
+          <div className="form-row">
+            {/* Emergency Contact Name */}
+            <div className="form-group">
+              <label htmlFor="emergencyContactName">
+                Emergency Contact Name <span className="required-indicator">*</span>
+              </label>
+              <input
+                type="text"
+                id="emergencyContactName"
+                name="emergencyContactName"
+                value={formData.emergencyContactName}
+                onChange={handleChange}
+                required
+                placeholder="Full name of emergency contact"
+                className={errors.emergencyContactName ? "error" : ""}
+              />
+              {errors.emergencyContactName && (
+                <span className="error-message">{errors.emergencyContactName}</span>
+              )}
+            </div>
+
+            {/* Emergency Contact Relationship */}
+            <div className="form-group">
+              <label htmlFor="emergencyContactRelationship">
+                Relationship <span className="required-indicator">*</span>
+              </label>
+              <select
+                id="emergencyContactRelationship"
+                name="emergencyContactRelationship"
+                value={formData.emergencyContactRelationship}
+                onChange={handleChange}
+                required
+                className={errors.emergencyContactRelationship ? "error" : ""}
+              >
+                <option value="">Select relationship</option>
+                {RELATIONSHIPS.map((relationship) => (
+                  <option key={relationship.value} value={relationship.value}>
+                    {relationship.label}
+                  </option>
+                ))}
+              </select>
+              {errors.emergencyContactRelationship && (
+                <span className="error-message">{errors.emergencyContactRelationship}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Emergency Contact Phone */}
+          <div className="form-group">
+            <label htmlFor="emergencyContactPhone">
+              Emergency Contact Phone <span className="required-indicator">*</span>
+            </label>
+            <input
+              type="tel"
+              id="emergencyContactPhone"
+              name="emergencyContactPhone"
+              value={formData.emergencyContactPhone}
+              onChange={handleChange}
+              pattern="09[0-9]{9}"
+              required
+              placeholder="e.g. 09123456789 (11 digits)"
+              className={errors.emergencyContactPhone ? "error" : ""}
+            />
+            {errors.emergencyContactPhone && (
+              <span className="error-message">{errors.emergencyContactPhone}</span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Access Code - Only for Admin, Teacher, Counselor */}
       {requiresPasscode && (

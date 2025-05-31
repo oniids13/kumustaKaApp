@@ -22,9 +22,27 @@ const validateUser = [
         .withMessage('Last name must only contain letters and spaces'),
     body('phone')
         .matches(/^09\d{9}$/)
-        .withMessage('Phone number must be exactly 11 digits starting with 09')
+        .withMessage('Phone number must be exactly 11 digits starting with 09'),
+    // Emergency contact validation for students
+    body('emergencyContactName')
+        .if(body('role').equals('STUDENT'))
+        .notEmpty()
+        .withMessage('Emergency contact name is required for students')
+        .matches(/^[A-Za-z\s]+$/)
+        .withMessage('Emergency contact name must only contain letters and spaces'),
+    body('emergencyContactPhone')
+        .if(body('role').equals('STUDENT'))
+        .notEmpty()
+        .withMessage('Emergency contact phone is required for students')
+        .matches(/^09\d{9}$/)
+        .withMessage('Emergency contact phone must be exactly 11 digits starting with 09'),
+    body('emergencyContactRelationship')
+        .if(body('role').equals('STUDENT'))
+        .notEmpty()
+        .withMessage('Emergency contact relationship is required for students')
+        .isIn(['Parent', 'Guardian', 'Sibling', 'Spouse', 'Friend', 'Relative', 'Other'])
+        .withMessage('Invalid relationship type')
 ]
-
 
 const createUserController = [validateUser, async (req, res) => {
     const errors = validationResult(req);
@@ -36,11 +54,44 @@ const createUserController = [validateUser, async (req, res) => {
         });
     }
 
-    const { email, password, firstName, lastName, phone, role } = req.body;
+    const { 
+        email, 
+        password, 
+        firstName, 
+        lastName, 
+        phone, 
+        role,
+        emergencyContactName,
+        emergencyContactPhone,
+        emergencyContactRelationship,
+        emergencyContactIsPrimary = true
+    } = req.body;
+    
     const { salt, hash } = genPassword(password);
 
     try {
-        const user = await createUser({ email, salt, hash, firstName, lastName, phone, role });
+        // Prepare user data
+        const userData = {
+            email, 
+            salt, 
+            hash, 
+            firstName, 
+            lastName, 
+            phone, 
+            role
+        };
+
+        // Add emergency contact data for students
+        if (role === 'STUDENT' && emergencyContactName && emergencyContactPhone && emergencyContactRelationship) {
+            userData.emergencyContact = {
+                name: emergencyContactName,
+                phone: emergencyContactPhone,
+                relationship: emergencyContactRelationship,
+                isPrimary: emergencyContactIsPrimary
+            };
+        }
+
+        const user = await createUser(userData);
         return res.status(201).json(user);
     } catch (error) {
         console.error("Error creating user:", error);
@@ -68,6 +119,5 @@ const getUserByIdController = async (req, res) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 }
-
 
 module.exports = { createUserController, getUserByIdController}

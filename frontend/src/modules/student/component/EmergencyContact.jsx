@@ -14,6 +14,17 @@ const EmergencyContact = () => {
     isPrimary: false,
   });
 
+  const RELATIONSHIPS = [
+    { value: "", label: "Select relationship" },
+    { value: "Parent", label: "Parent" },
+    { value: "Guardian", label: "Guardian" },
+    { value: "Sibling", label: "Sibling" },
+    { value: "Spouse", label: "Spouse" },
+    { value: "Friend", label: "Friend" },
+    { value: "Relative", label: "Relative" },
+    { value: "Other", label: "Other" },
+  ];
+
   const user = JSON.parse(localStorage.getItem("userData"));
 
   useEffect(() => {
@@ -133,18 +144,24 @@ const EmergencyContact = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
+                placeholder="Full name of emergency contact"
                 required
               />
             </div>
             <div className="form-group">
               <label>Relationship</label>
-              <input
-                type="text"
+              <select
                 name="relationship"
                 value={formData.relationship}
                 onChange={handleInputChange}
                 required
-              />
+              >
+                {RELATIONSHIPS.map((relationship) => (
+                  <option key={relationship.value} value={relationship.value}>
+                    {relationship.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="form-group">
               <label>Phone Number</label>
@@ -153,6 +170,8 @@ const EmergencyContact = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
+                placeholder="e.g. 09123456789 (11 digits)"
+                pattern="09[0-9]{9}"
                 required
               />
             </div>
@@ -189,6 +208,7 @@ const EmergencyContact = () => {
         {contacts.length === 0 ? (
           <div className="empty-state">
             <p>No emergency contacts added yet</p>
+            <p className="text-muted">Add your first emergency contact above</p>
           </div>
         ) : (
           contacts.map((contact) => (

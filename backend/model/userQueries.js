@@ -4,9 +4,9 @@ const { validPassword } = require("../utils/passwordUtil");
 const { getGravatar } = require("../utils/avatar");
 
 const createUser = async (userData) => {
-  const { email, salt, hash, role, firstName, lastName, phone } = userData;
+  const { email, salt, hash, role, firstName, lastName, phone, emergencyContact } = userData;
   try {
-    const userData = {
+    const userCreateData = {
       email,
       salt,
       hash,
@@ -19,23 +19,39 @@ const createUser = async (userData) => {
 
     switch (role) {
       case "ADMIN":
-        userData.admin = { create: {} };
+        userCreateData.admin = { create: {} };
         break;
       case "TEACHER":
-        userData.teacher = { create: {} };
+        userCreateData.teacher = { create: {} };
         break;
       case "COUNSELOR":
-        userData.counselor = { create: {} };
+        userCreateData.counselor = { create: {} };
         break;
       case "STUDENT":
-        userData.student = { create: {} };
+        // Create student with emergency contact if provided
+        if (emergencyContact) {
+          userCreateData.student = { 
+            create: {
+              emergencyContacts: {
+                create: {
+                  name: emergencyContact.name,
+                  phone: emergencyContact.phone,
+                  relationship: emergencyContact.relationship,
+                  isPrimary: emergencyContact.isPrimary || true
+                }
+              }
+            }
+          };
+        } else {
+          userCreateData.student = { create: {} };
+        }
         break;
       default:
         throw new Error("Invalid role");
     }
 
     const user = await prisma.user.create({
-      data: userData,
+      data: userCreateData,
       select: {
         id: true,
         email: true,
@@ -48,10 +64,27 @@ const createUser = async (userData) => {
         avatar: true,
         ...(role === "ADMIN" && { admin: true }),
         ...(role === "TEACHER" && { teacher: true }),
-        ...(role === "STUDENT" && { student: true }),
+        ...(role === "STUDENT" && { 
+          student: {
+            select: {
+              id: true,
+              emergencyContacts: {
+                select: {
+                  id: true,
+                  name: true,
+                  phone: true,
+                  relationship: true,
+                  isPrimary: true
+                }
+              }
+            }
+          }
+        }),
         ...(role === "COUNSELOR" && { counselor: true }),
       },
     });
+    
+    console.log(`[INFO] Created user with role ${role}${emergencyContact ? ' and emergency contact' : ''}`);
     return user;
   } catch (error) {
     console.error("Error creating user:", error);

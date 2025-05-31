@@ -289,12 +289,6 @@ const StudentDashboard = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button
-            variant="outline-secondary"
-            onClick={() => handleAssessmentResponse(false)}
-          >
-            I'll Do It Later
-          </Button>
-          <Button
             variant="primary"
             onClick={() => handleAssessmentResponse(true)}
           >

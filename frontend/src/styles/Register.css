@@ -86,6 +86,61 @@
   margin-top: 4px;
 }
 
+/* Emergency Contact Section */
+.emergency-contact-section {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 15px 0;
+  animation: slideDown 0.3s ease;
+}
+
+.section-title {
+  color: #2d3748;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title::before {
+  content: "🆘";
+  font-size: 1.1rem;
+}
+
+.section-description {
+  color: #718096;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.emergency-contact-section .form-group input,
+.emergency-contact-section .form-group select {
+  background-color: white;
+  border: 1px solid #cbd5e0;
+}
+
+.emergency-contact-section .form-group input:focus,
+.emergency-contact-section .form-group select:focus {
+  border-color: #4a6baf;
+  box-shadow: 0 0 0 3px rgba(74, 107, 175, 0.1);
+}
+
+.emergency-contact-section .error-message {
+  background: #fed7d7;
+  color: #c53030;
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin-top: 6px;
+  border: 1px solid #feb2b2;
+  font-size: 0.85rem;
+}
+
 /* Passcode field specific styles */
 .passcode-group {
   position: relative;
@@ -143,7 +198,7 @@
   to {
     opacity: 1;
     transform: translateY(0);
-    max-height: 200px;
+    max-height: 500px;
   }
 }
 
@@ -236,6 +291,19 @@
 
   .register-card {
     padding: 30px 20px;
+  }
+
+  .emergency-contact-section {
+    padding: 16px;
+    margin: 12px 0;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+  }
+
+  .section-description {
+    font-size: 0.85rem;
   }
 
   .passcode-group {
