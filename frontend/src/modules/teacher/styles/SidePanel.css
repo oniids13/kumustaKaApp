@@ -4,13 +4,17 @@
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .user-info {
   text-align: center;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
   border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
 }
 
 .user-avatar {
@@ -31,10 +35,57 @@
   font-size: 0.9rem;
 }
 
-.nav-item {
-  margin-bottom: 10px;
+.navigation {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 5px;
 }
 
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Navigation Button Styles */
+.nav-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  border: none;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  color: #333;
+  text-align: left;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  width: 100%;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.nav-button:hover {
+  background-color: #e9ecef;
+  transform: translateX(2px);
+}
+
+.nav-button.active {
+  background-color: #4e73df;
+  color: white;
+  box-shadow: 0 2px 4px rgba(78, 115, 223, 0.3);
+}
+
+.nav-button.active:hover {
+  background-color: #3a5ecc;
+}
+
+.nav-button svg {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* Legacy module-button styles for backwards compatibility */
 .module-button {
   display: flex;
   align-items: center;
@@ -67,16 +118,51 @@
 }
 
 .notification-badge {
-  margin-left: 5px;
+  margin-left: auto;
   font-size: 0.7rem;
-  position: relative;
-  top: -1px;
+  flex-shrink: 0;
+}
+
+/* Scrollbar styling for navigation */
+.navigation::-webkit-scrollbar {
+  width: 6px;
+}
+
+.navigation::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.navigation::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.navigation::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 /* For tablets and smaller screens */
 @media (max-width: 991.98px) {
   .side-panel {
     height: auto;
+    max-height: none;
     margin-bottom: 20px;
+  }
+  
+  .navigation {
+    overflow-y: visible;
+  }
+}
+
+/* For smaller screens */
+@media (max-width: 767.98px) {
+  .side-panel {
+    padding: 15px;
+  }
+  
+  .nav-button {
+    padding: 10px 12px;
+    font-size: 0.9rem;
   }
 }
