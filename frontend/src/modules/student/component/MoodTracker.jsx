@@ -150,22 +150,32 @@ const MoodTracker = () => {
   // Process mood data for the chart
   const processMoodData = (moods) => {
     try {
-      // Create array for exactly 7 days (Sun-Sat)
+      // Create array for exactly 7 days (Mon-Sun to match ISO week)
       const daysOfWeek = [
-        "Sunday",
         "Monday",
-        "Tuesday",
+        "Tuesday", 
         "Wednesday",
         "Thursday",
         "Friday",
         "Saturday",
+        "Sunday"
       ];
       const weekData = new Array(7).fill(null);
 
+      console.log(`[DEBUG] Processing ${moods.length} mood entries for chart`);
+
       moods.forEach((mood) => {
         const date = new Date(mood.createdAt);
-        const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+        console.log(`[DEBUG] Processing mood entry: ${date.toISOString()}, mood: ${mood.moodLevel}`);
+        
+        // Use UTC to avoid timezone issues
+        const dayName = date.toLocaleDateString("en-US", { 
+          weekday: "long",
+          timeZone: "UTC"
+        });
+        
         const dayIndex = daysOfWeek.indexOf(dayName);
+        console.log(`[DEBUG] Day: ${dayName}, Index: ${dayIndex}`);
 
         if (dayIndex !== -1) {
           // If multiple entries for same day, use the latest one
@@ -174,10 +184,12 @@ const MoodTracker = () => {
             new Date(mood.createdAt) > new Date(weekData[dayIndex].createdAt)
           ) {
             weekData[dayIndex] = mood.moodLevel;
+            console.log(`[DEBUG] Set mood ${mood.moodLevel} for day index ${dayIndex}`);
           }
         }
       });
 
+      console.log(`[DEBUG] Final week data:`, weekData);
       return weekData;
     } catch (e) {
       console.error("Error processing mood entries:", e);
@@ -191,7 +203,7 @@ const MoodTracker = () => {
   const renderMoodChart = () => {
     try {
       const chartData = {
-        labels: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
         datasets: [
           {
             label: "Mood Level",
@@ -286,7 +298,7 @@ const MoodTracker = () => {
     return (
       <div className="simple-mood-display">
         <div className="mood-week-grid">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
             (day, index) => (
               <div key={day} className="mood-day-card">
                 <div className="day-label">{day}</div>

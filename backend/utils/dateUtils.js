@@ -35,11 +35,46 @@ const getTodayRange = (clientTime = null) => {
   };
 };
 
-const getDateOfWeek = (week, year) => {
-  const date = new Date(year, 0, 1 + (week - 1) * 7);
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(date.setDate(diff));
+// Updated to use ISO week calculation matching the frontend
+const getDateOfWeek = (weekNumber, year) => {
+  // Get January 4th of the year (which is always in week 1)
+  const jan4 = new Date(year, 0, 4);
+  
+  // Find the Monday of week 1
+  const week1Monday = new Date(jan4);
+  week1Monday.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
+  
+  // Calculate the Monday of the requested week
+  const targetWeekMonday = new Date(week1Monday);
+  targetWeekMonday.setDate(week1Monday.getDate() + (weekNumber - 1) * 7);
+  
+  return targetWeekMonday;
 };
 
-module.exports = { getTodayRange, getDateOfWeek };
+// Get the ISO week number for a given date (matching frontend calculation)
+const getISOWeekNumber = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+  const week1 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+};
+
+// Get week date range for mood entries
+const getWeekDateRange = (weekNumber, year) => {
+  const startDate = getDateOfWeek(weekNumber, year);
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + 6);
+  endDate.setHours(23, 59, 59, 999);
+  
+  console.log(`[DEBUG] Week ${weekNumber} range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+  
+  return { startDate, endDate };
+};
+
+module.exports = { 
+  getTodayRange, 
+  getDateOfWeek, 
+  getISOWeekNumber, 
+  getWeekDateRange 
+};

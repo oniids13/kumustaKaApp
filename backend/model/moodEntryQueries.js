@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { getTodayRange, getDateOfWeek } = require("../utils/dateUtils");
+const { getTodayRange, getWeekDateRange } = require("../utils/dateUtils");
 
 const checkTodaySubmission = async (userId, clientTime = null) => {
   // If client time is provided, use it for better timezone accuracy
@@ -153,10 +153,11 @@ const createMoodEntry = async (
 const getRecentMoodEntry = async (userId, weekNumber) => {
   try {
     const year = new Date().getFullYear();
+    const { startDate, endDate } = getWeekDateRange(weekNumber, year);
 
-    const startDate = getDateOfWeek(weekNumber, year);
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + 6);
+    console.log(`[DEBUG] Getting mood entries for user ${userId}, week ${weekNumber}:
+      - Start: ${startDate.toISOString()}
+      - End: ${endDate.toISOString()}`);
 
     const student = await prisma.student.findUnique({
       where: { userId },
@@ -164,7 +165,8 @@ const getRecentMoodEntry = async (userId, weekNumber) => {
     });
 
     if (!student) {
-      throw new Error("Student not found");
+      console.log(`[DEBUG] Student not found for userId ${userId}`);
+      return [];
     }
 
     const entries = await prisma.moodEntry.findMany({
@@ -178,25 +180,23 @@ const getRecentMoodEntry = async (userId, weekNumber) => {
       orderBy: {
         createdAt: "asc",
       },
+      select: {
+        id: true,
+        moodLevel: true,
+        notes: true,
+        createdAt: true,
+      },
     });
 
-    const weekData = [];
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(startDate);
-      day.setDate(startDate.getDate() + i);
+    console.log(`[DEBUG] Found ${entries.length} mood entries for week ${weekNumber}`);
+    entries.forEach(entry => {
+      console.log(`[DEBUG] Entry ID ${entry.id}: ${entry.createdAt.toISOString()}, mood: ${entry.moodLevel}`);
+    });
 
-      const entry = entries.find(
-        (e) =>
-          e.createdAt.toISOString().split("T")[0] ===
-          day.toISOString().split("T")[0]
-      );
-
-      weekData.push(entry || null);
-    }
-
-    return weekData;
+    return entries;
   } catch (error) {
-    throw new Error("Error getting mood entries");
+    console.error(`[ERROR] Error getting mood entries: ${error.message}`);
+    return [];
   }
 };
 
