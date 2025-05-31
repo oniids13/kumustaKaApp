@@ -33,40 +33,29 @@ const changePasswordController = [
     const userId = req.user.id; // Assuming you have user info in req.user from auth middleware
 
     try {
-      console.log(`🔄 Password change attempt for user: ${userId}`);
-      
       // Get user's password data
       const user = await getUserPasswordData(userId);
 
       if (!user) {
-        console.log(`❌ User not found: ${userId}`);
         return res.status(404).json({ message: "User not found" });
       }
 
       // Verify current password
       const isValid = validPassword(currentPassword, user.hash, user.salt);
       if (!isValid) {
-        console.log(`❌ Invalid current password for user: ${userId}`);
         return res
           .status(401)
           .json({ message: "Current password is incorrect" });
       }
 
-      console.log(`✅ Current password verified for user: ${userId}`);
-
       // Check if new password was used in the last 3 passwords
-      console.log(`🔍 Checking password history for user: ${userId}`);
       const isPasswordReused = await checkPasswordHistory(userId, newPassword);
-      console.log(`📊 Password reuse check result: ${isPasswordReused}`);
       
       if (isPasswordReused) {
-        console.log(`🚫 Password reuse detected for user: ${userId}`);
         return res.status(400).json({ 
           message: "You cannot reuse any of your last 3 passwords. Please choose a different password." 
         });
       }
-
-      console.log(`✅ Password is unique, proceeding with change for user: ${userId}`);
 
       // Generate new password hash
       const { salt, hash } = genPassword(newPassword);
@@ -77,7 +66,6 @@ const changePasswordController = [
       // Add new password to history
       await addPasswordToHistory(userId, salt, hash);
 
-      console.log(`🎉 Password changed successfully for user: ${userId}`);
       return res.status(200).json({ message: "Password changed successfully" });
     } catch (error) {
       console.error("Error changing password:", error);

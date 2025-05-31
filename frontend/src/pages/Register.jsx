@@ -22,7 +22,6 @@ const RegisterPage = () => {
   const handleRegistration = async (userData) => {
     setLoading(true);
     setErrors({}); // Clear previous errors
-    console.log("Submitting registration data:", userData);
 
     try {
       const response = await axios.post(

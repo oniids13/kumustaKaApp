@@ -15,13 +15,6 @@ const createMoodEntryController = async (req, res) => {
     : null;
   const clientTimezone = req.headers["x-client-timezone"] || "Not provided";
 
-  console.log(`[DEBUG] Creating mood entry for user ${userId}:
-    - Server time: ${new Date().toISOString()}
-    - Client time: ${clientTime ? clientTime.toISOString() : "Not provided"}
-    - Client timezone: ${clientTimezone}
-    - Mood level: ${moodLevel}
-    - Force create: ${forceCreate === true}`);
-
   try {
     if (!userId) {
       return res.status(403).json({ error: "Unauthorized" });
@@ -32,11 +25,6 @@ const createMoodEntryController = async (req, res) => {
       moodLevel,
       notes,
       forceCreate === true
-    );
-
-    // Save submission info to help debug timezone issues
-    console.log(
-      `[INFO] Successfully created mood entry with ID: ${newMoodEntry.id}`
     );
 
     return res.status(201).json({
@@ -99,14 +87,6 @@ const checkTodaySubmissionController = async (req, res) => {
     const clientTimezone = req.headers["x-client-timezone"] || "Not provided";
     const forceCheck = req.query.forceCheck === "true";
 
-    console.log(
-      `[DEBUG] Checking mood entry for user ${userId}:
-      - Server time: ${requestTime.toISOString()}
-      - Client time: ${clientTime ? clientTime.toISOString() : "Not provided"}
-      - Client timezone: ${clientTimezone}
-      - Force check: ${forceCheck}`
-    );
-
     // Get the entry result - only call this once
     const result = await checkTodaySubmission(userId, clientTime);
     const { entry, debugInfo } = result || { entry: null, debugInfo: {} };
@@ -131,11 +111,6 @@ const checkTodaySubmissionController = async (req, res) => {
         forceCheckApplied: forceCheck,
       },
     };
-
-    console.log(
-      `[DEBUG] Mood check response for user ${userId}:`,
-      JSON.stringify(responseData, null, 2)
-    );
 
     return res.json(responseData);
   } catch (error) {

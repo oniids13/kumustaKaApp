@@ -9,6 +9,7 @@ const AdminResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState(null);
+  const [filteredUsers, setFilteredUsers] = useState([]);
 
   useEffect(() => {
     // Fetch users when component mounts
@@ -35,20 +36,15 @@ const AdminResetPassword = () => {
         }
       );
 
-      console.log("API Response:", response.data);
-
-      if (response.data && response.data.users) {
-        console.log("Setting users:", response.data.users);
+      if (response.data && Array.isArray(response.data.users)) {
         setUsers(response.data.users);
       } else {
         console.error("No users array found in API response:", response.data);
-        setUsers([]);
-        setError("No user data received from server");
+        setError("Invalid response format from server");
       }
     } catch (error) {
       console.error("Error fetching users:", error);
-      setError(error.response?.data?.message || "Failed to fetch users");
-      setUsers([]);
+      setError("Failed to fetch users. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -96,25 +92,23 @@ const AdminResetPassword = () => {
     }
   };
 
-  const handleSearchChange = (e) => {
-    console.log("Search term changed to:", e.target.value);
-    setSearchTerm(e.target.value);
-  };
+  const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
 
-  // Add console logs to debug filtering
-  console.log("Current users array:", users);
-  console.log("Current search term:", searchTerm);
+    if (!term.trim()) {
+      setFilteredUsers(users);
+      return;
+    }
 
-  // Improved filtering logic with debugging
-  let filteredUsers = [];
-  if (Array.isArray(users)) {
-    filteredUsers = users.filter((user) => {
+    const filtered = users.filter((user) => {
+      // Validate user object structure
       if (!user || typeof user !== "object") {
         console.warn("Invalid user object in array:", user);
         return false;
       }
 
-      // Check if the necessary properties exist
+      // Check if user has required properties
       if (!user.firstName || !user.lastName || !user.email) {
         console.warn("User missing required properties:", user);
         return false;
@@ -122,21 +116,16 @@ const AdminResetPassword = () => {
 
       const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
       const email = user.email.toLowerCase();
-      const term = searchTerm.toLowerCase();
 
-      const nameMatch = fullName.includes(term);
-      const emailMatch = email.includes(term);
-
-      // Debug individual search match
-      if (term && (nameMatch || emailMatch)) {
-        console.log(`Match found for "${term}":`, user);
-      }
-
-      return nameMatch || emailMatch;
+      return (
+        fullName.includes(term) ||
+        email.includes(term) ||
+        user.id?.toLowerCase().includes(term)
+      );
     });
-  }
 
-  console.log("Filtered users count:", filteredUsers.length);
+    setFilteredUsers(filtered);
+  };
 
   return (
     <div className="admin-reset-password-container">
@@ -149,7 +138,7 @@ const AdminResetPassword = () => {
           type="text"
           placeholder="Search users..."
           value={searchTerm}
-          onChange={handleSearchChange}
+          onChange={handleSearch}
           className="search-input"
         />
       </div>

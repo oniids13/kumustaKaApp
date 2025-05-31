@@ -111,21 +111,10 @@ const MentalHealthOverview = () => {
         const startDate = thirtyDaysAgo.format("YYYY-MM-DD");
         const endDate = today.format("YYYY-MM-DD");
 
-        // Fetch mental health data for students
-        const mentalHealthData = await Promise.all(
+        // Fetch data for each student
+        const studentsWithData = await Promise.all(
           allStudents.map(async (student) => {
             try {
-              // Check if this is our target student
-              const isTargetStudent =
-                student.id === "6926b287-6c08-4c3f-b2cb-bc72a4814ada";
-
-              if (isTargetStudent) {
-                console.log("==== DEBUGGING TARGET STUDENT ====");
-                console.log(
-                  `Processing student: ${student.firstName} ${student.lastName} (ID: ${student.id})`
-                );
-              }
-
               // Fetch latest survey for the student
               const surveyResponse = await axios.get(
                 `http://localhost:3000/api/counselor/student/${student.id}/surveys`,
@@ -162,39 +151,6 @@ const MentalHealthOverview = () => {
               const moods = moodResponse.data.moods || [];
               let initialAssessment = null;
 
-              if (isTargetStudent) {
-                console.log(`Survey data received: ${surveys.length} items`);
-                console.log(`Mood data received: ${moods.length} items`);
-
-                if (surveys.length > 0) {
-                  console.log("Latest survey:", {
-                    id: surveys[0].id,
-                    zone: surveys[0].zone,
-                    createdAt: surveys[0].createdAt,
-                  });
-                }
-
-                if (moods.length > 0) {
-                  console.log("Latest mood:", {
-                    id: moods[0].id,
-                    moodLevel: moods[0].moodLevel,
-                    type: typeof moods[0].moodLevel,
-                    createdAt: moods[0].createdAt,
-                  });
-
-                  // Check all mood entries for validity
-                  const validMoods = moods.filter(
-                    (m) => typeof m.moodLevel === "number"
-                  );
-                  console.log(
-                    `Valid mood entries: ${validMoods.length} out of ${moods.length}`
-                  );
-                  if (validMoods.length === 0 && moods.length > 0) {
-                    console.log("Sample invalid mood entry:", moods[0]);
-                  }
-                }
-              }
-
               // Handle initialAssessment - could be null or have data
               try {
                 initialAssessment = initialAssessmentResponse.data;
@@ -217,50 +173,10 @@ const MentalHealthOverview = () => {
                         stressScore,
                       })
                     );
-                  } else {
-                    console.log(
-                      `Found initial assessment for ${student.firstName}: D:${depressionScore}, A:${anxietyScore}, S:${stressScore}`
-                    );
                   }
-                } else {
-                  console.log(
-                    `No initial assessment data for ${student.firstName}`
-                  );
                 }
-              } catch (error) {
-                console.log(
-                  `No initial assessment found for ${student.firstName}:`,
-                  error.message
-                );
-              }
-
-              if (isTargetStudent) {
-                // Call getStudentZone for target student and log its results
-                const enrichedStudent = {
-                  ...student,
-                  latestSurvey: surveys.length > 0 ? surveys[0] : null,
-                  latestMood: moods.length > 0 ? moods[0] : null,
-                  avgMood:
-                    moods.length > 0
-                      ? moods.reduce((sum, m) => sum + m.moodLevel, 0) /
-                        moods.length
-                      : null,
-                  redFlags: 0, // We'll calculate this later
-                  surveys,
-                  moods,
-                  initialAssessment,
-                  hasData:
-                    surveys.length > 0 ||
-                    moods.length > 0 ||
-                    !!initialAssessment,
-                };
-
-                // Calculate zone for debugging
-                const calculatedZone = getStudentZone(enrichedStudent);
-                console.log(
-                  `Calculated zone for target student: ${calculatedZone}`
-                );
-                console.log("==== END DEBUGGING TARGET STUDENT ====");
+              } catch {
+                // Initial assessment not found or error - this is normal
               }
 
               return {
@@ -306,7 +222,7 @@ const MentalHealthOverview = () => {
         let greenCount = 0;
 
         // Calculate red flags for each student
-        const mentalHealthDataWithFlags = mentalHealthData.map((student) => {
+        const mentalHealthDataWithFlags = studentsWithData.map((student) => {
           let redFlags = 0;
           if (student.surveys && student.surveys.length > 0) {
             redFlags += student.surveys.filter(
@@ -329,7 +245,7 @@ const MentalHealthOverview = () => {
           red: redCount,
           yellow: yellowCount,
           green: greenCount,
-          total: mentalHealthData.length,
+          total: studentsWithData.length,
         });
 
         setStudents(mentalHealthDataWithFlags);
@@ -360,12 +276,9 @@ const MentalHealthOverview = () => {
         }
       );
 
-      console.log("API Response:", response.data);
-
       if (response.data && response.data.moodTrends) {
         setMoodData(response.data.moodTrends);
       } else {
-        console.log("No mood trends data in response");
         setMoodData([]);
       }
     } catch (err) {
@@ -381,38 +294,19 @@ const MentalHealthOverview = () => {
   };
 
   const getStudentZone = (student) => {
-    console.log(
-      `Calculating zone for student: ${student.firstName} ${student.lastName}`
-    );
-    console.log(
-      `Data available: ${JSON.stringify({
-        hasSurveys: student.surveys && student.surveys.length > 0,
-        surveyCount: student.surveys?.length || 0,
-        hasMoods: student.moods && student.moods.length > 0,
-        moodCount: student.moods?.length || 0,
-        hasInitialAssessment: !!student.initialAssessment,
-      })}`
-    );
-
     // Check if this is the problematic student
     const isAnaGarcia = student.id === "6926b287-6c08-4c3f-b2cb-bc72a4814ada";
     if (isAnaGarcia) {
-      console.log("SPECIAL DEBUGGING FOR ANA GARCIA");
       if (student.surveys && student.surveys.length > 0) {
-        console.log("Survey data for Ana Garcia:");
         const latestSurvey = student.surveys[0];
-        console.log(JSON.stringify(latestSurvey, null, 2));
 
         // Fix the survey zone format if needed
         if (latestSurvey.zone === "Yellow") {
-          console.log("Converting 'Yellow' to 'Yellow (Moderate)'");
           // Don't mutate the original object directly to avoid side effects
           return "Yellow (Moderate)";
         } else if (latestSurvey.zone === "Red") {
-          console.log("Converting 'Red' to 'Red (Needs Attention)'");
           return "Red (Needs Attention)";
         } else if (latestSurvey.zone === "Green") {
-          console.log("Converting 'Green' to 'Green (Positive)'");
           return "Green (Positive)";
         }
       }
@@ -429,9 +323,6 @@ const MentalHealthOverview = () => {
       else if (rawZone === "Red") normalizedZone = "Red (Needs Attention)";
       else if (rawZone === "Green") normalizedZone = "Green (Positive)";
 
-      console.log(
-        `Student ${student.firstName} has survey zone: ${normalizedZone}`
-      );
       return normalizedZone;
     }
     // If no survey but has mood data, calculate zone from mood level
@@ -442,20 +333,12 @@ const MentalHealthOverview = () => {
       );
 
       if (validMoods.length === 0) {
-        console.log(
-          `Student ${student.firstName} has mood entries but all values are invalid`
-        );
         return "No Data";
       }
 
       // Calculate average mood directly from valid entries
       const avgMood =
         validMoods.reduce((sum, m) => sum + m.moodLevel, 0) / validMoods.length;
-      console.log(
-        `Student ${
-          student.firstName
-        } has calculated mood zone from avg mood: ${avgMood.toFixed(2)}`
-      );
 
       if (avgMood <= 2) return "Red (Needs Attention)";
       else if (avgMood <= 3.5) return "Yellow (Moderate)";
@@ -473,28 +356,16 @@ const MentalHealthOverview = () => {
         typeof stressScore === "number"
       ) {
         const avgScore = (depressionScore + anxietyScore + stressScore) / 3;
-        console.log(
-          `Student ${
-            student.firstName
-          } has assessment zone from avg score: ${avgScore.toFixed(2)}`
-        );
 
         if (avgScore >= 15) return "Red (Needs Attention)";
         else if (avgScore >= 10) return "Yellow (Moderate)";
         else return "Green (Positive)";
       } else {
-        console.log(
-          `Student ${student.firstName} has invalid assessment scores:`,
-          JSON.stringify({ depressionScore, anxietyScore, stressScore })
-        );
         return "Invalid Data";
       }
     }
 
     // If we reach here, we couldn't determine the zone
-    console.log(
-      `Student ${student.firstName} has no valid data for zone calculation`
-    );
     return "No Data";
   };
 
@@ -680,19 +551,6 @@ const MentalHealthOverview = () => {
       title: "Last Activity",
       key: "lastActivity",
       render: (_, record) => {
-        // Additional debugging for Ana Garcia
-        const isAnaGarcia =
-          record.id === "6926b287-6c08-4c3f-b2cb-bc72a4814ada";
-
-        if (isAnaGarcia) {
-          console.log("==== DEBUGGING ANA GARCIA'S LAST ACTIVITY ====");
-          console.log("Raw data:", {
-            latestSurvey: record.latestSurvey,
-            latestMood: record.latestMood,
-            initialAssessment: record.initialAssessment,
-          });
-        }
-
         // Use our standardization helper for consistent date handling
         const lastSurveyDate = record.latestSurvey
           ? standardizeDate(record.latestSurvey.createdAt)
@@ -704,32 +562,6 @@ const MentalHealthOverview = () => {
           ? standardizeDate(record.initialAssessment.createdAt)
           : null;
 
-        // Log dates to help with debugging
-        if (isAnaGarcia) {
-          console.log("Standardized dates:", {
-            surveyDate: lastSurveyDate
-              ? lastSurveyDate.format("YYYY-MM-DD")
-              : null,
-            moodDate: lastMoodDate ? lastMoodDate.format("YYYY-MM-DD") : null,
-            assessmentDate: assessmentDate
-              ? assessmentDate.format("YYYY-MM-DD")
-              : null,
-            rawSurvey: record.latestSurvey
-              ? record.latestSurvey.createdAt
-              : null,
-            rawMood: record.latestMood ? record.latestMood.createdAt : null,
-          });
-
-          // Check today's date in various formats
-          const now = new Date();
-          const todayMoment = moment();
-          console.log("Today's date:", {
-            jsDate: now.toISOString(),
-            moment: todayMoment.format("YYYY-MM-DD"),
-            momentUTC: todayMoment.utc().format("YYYY-MM-DD"),
-          });
-        }
-
         // Check if we have actual mood or survey data
         if (lastMoodDate || lastSurveyDate) {
           let lastActivityDate;
@@ -737,54 +569,23 @@ const MentalHealthOverview = () => {
           if (lastSurveyDate && lastMoodDate) {
             // Use the most recent date
             lastActivityDate = moment.max(lastSurveyDate, lastMoodDate);
-            if (isAnaGarcia) {
-              console.log(
-                `Max date between survey ${lastSurveyDate.format(
-                  "YYYY-MM-DD"
-                )} and mood ${lastMoodDate.format(
-                  "YYYY-MM-DD"
-                )} is: ${lastActivityDate.format("YYYY-MM-DD")}`
-              );
-            }
           } else if (lastSurveyDate) {
             lastActivityDate = lastSurveyDate;
-            if (isAnaGarcia) {
-              console.log(
-                `Using survey date: ${lastActivityDate.format("YYYY-MM-DD")}`
-              );
-            }
           } else {
             lastActivityDate = lastMoodDate;
-            if (isAnaGarcia) {
-              console.log(
-                `Using mood date: ${lastActivityDate.format("YYYY-MM-DD")}`
-              );
-            }
           }
 
           // Format date consistently for display (always showing local time)
           const formattedDate = lastActivityDate.local().format("MMM DD, YYYY");
-          if (isAnaGarcia) {
-            console.log(`Final formatted date: ${formattedDate}`);
-            console.log("==== END DEBUGGING ANA GARCIA'S LAST ACTIVITY ====");
-          }
           return formattedDate;
         }
         // If no survey or mood data, but we have assessment data
         else if (assessmentDate) {
           // Format assessment date consistently
           const formattedDate = assessmentDate.local().format("MMM DD, YYYY");
-          if (isAnaGarcia) {
-            console.log(`Using assessment date: ${formattedDate}`);
-            console.log("==== END DEBUGGING ANA GARCIA'S LAST ACTIVITY ====");
-          }
           return formattedDate;
         }
 
-        if (isAnaGarcia) {
-          console.log("No activity data found");
-          console.log("==== END DEBUGGING ANA GARCIA'S LAST ACTIVITY ====");
-        }
         return "No activity";
       },
       sorter: (a, b) => {
@@ -836,7 +637,6 @@ const MentalHealthOverview = () => {
 
   const calculateOverallStatus = (data) => {
     if (!data || !Array.isArray(data) || data.length === 0) {
-      console.log("No valid data for calculateOverallStatus");
       return [];
     }
 
@@ -854,7 +654,6 @@ const MentalHealthOverview = () => {
 
     const total = totalGreen + totalYellow + totalRed;
     if (total === 0) {
-      console.log("Total count is zero, returning empty array");
       return [];
     }
 
@@ -901,10 +700,6 @@ const MentalHealthOverview = () => {
     students.some((s) => s.initialAssessment || s.latestMood || s.latestSurvey);
 
   if (!hasData) {
-    console.log(
-      "No mood data available, students data:",
-      students.length > 0 ? students.length + " students" : "No students"
-    );
     if (hasStudentData) {
       return (
         <div style={{ padding: "20px" }}>

@@ -34,7 +34,7 @@ const getStudentsController = async (req, res) => {
 };
 
 /**
- * Get surveys for a specific student
+ * Get survey responses for a specific student
  */
 const getStudentSurveysController = async (req, res) => {
   try {
@@ -46,26 +46,12 @@ const getStudentSurveysController = async (req, res) => {
       return res.status(400).json({ error: "Student ID is required" });
     }
 
-    console.log(`[DEBUG] Fetching surveys for student ${studentId}`);
-    console.log(`[DEBUG] Date range: ${startDate} to ${endDate}`);
-
     // Fetch surveys for this student
     const surveys = await counselorQueries.getStudentSurveys(
       studentId,
       startDate,
       endDate
     );
-
-    console.log(
-      `[DEBUG] Found ${surveys.length} surveys for student ${studentId}`
-    );
-    if (surveys.length > 0) {
-      console.log(`[DEBUG] Latest survey data: 
-        - ID: ${surveys[0].id}
-        - Zone: ${surveys[0].zone || "No zone"}
-        - Created At: ${surveys[0].createdAt}
-      `);
-    }
 
     res.status(200).json({ surveys });
   } catch (error) {
@@ -89,26 +75,12 @@ const getStudentMoodsController = async (req, res) => {
       return res.status(400).json({ error: "Student ID is required" });
     }
 
-    console.log(`[DEBUG] Fetching mood entries for student ${studentId}`);
-    console.log(`[DEBUG] Date range: ${startDate} to ${endDate}`);
-
     // Fetch mood entries for this student
     const moods = await counselorQueries.getStudentMoods(
       studentId,
       startDate,
       endDate
     );
-
-    console.log(
-      `[DEBUG] Found ${moods.length} mood entries for student ${studentId}`
-    );
-    if (moods.length > 0) {
-      console.log(`[DEBUG] Latest mood data:
-        - ID: ${moods[0].id}
-        - Mood Level: ${moods[0].moodLevel} (type: ${typeof moods[0].moodLevel})
-        - Created At: ${moods[0].createdAt}
-      `);
-    }
 
     res.status(200).json({ moods });
   } catch (error) {
@@ -536,57 +508,36 @@ const getDailySubmissionCountsController = async (req, res) => {
 const getTrendsController = async (req, res) => {
   try {
     const { period, startDate, endDate } = req.query;
-    console.log(
-      `Trends request - period: ${period}, startDate: ${startDate}, endDate: ${endDate}`
-    );
 
     // Get counselor ID from user
     const counselor = await counselorQueries.getCounselorByUserId(req.user.id);
 
     if (!counselor) {
-      console.log(`Counselor not found for user ID: ${req.user.id}`);
       return res.status(404).json({
         error: "Counselor profile not found",
       });
     }
-    console.log(`Processing trends request for counselor ID: ${counselor.id}`);
 
     // Get mood trends data
-    console.log("Fetching mood trends data...");
     const moodTrends = await counselorQueries.getMoodTrends(
       period,
       startDate,
       endDate
     );
-    console.log(`Retrieved ${moodTrends.length} mood trend periods`);
 
     // Get daily mood trends
-    console.log("Fetching daily mood trends data...");
     const dailyMoodTrends = await counselorQueries.getDailyMoodTrends(
       startDate,
       endDate
     );
-    console.log(`Retrieved ${dailyMoodTrends.length} daily mood trend entries`);
 
     // Get timeframe trends
-    console.log("Fetching timeframe trends data...");
     const timeframeTrends = await counselorQueries.getTimeframeTrends(
       period,
       startDate,
       endDate
     );
-    console.log("Timeframe trends:", timeframeTrends);
 
-    // If all data is empty, log a warning
-    if (
-      moodTrends.length === 0 &&
-      dailyMoodTrends.length === 0 &&
-      (!timeframeTrends || timeframeTrends.totalEntries === 0)
-    ) {
-      console.log("WARNING: No trends data available for the selected period");
-    }
-
-    console.log("Sending trends response");
     res.status(200).json({
       moodTrends,
       dailyMoodTrends,

@@ -60,8 +60,6 @@ class ErrorBoundary extends React.Component {
 }
 
 const MoodTracker = () => {
-  console.log("[DEBUG] MoodTracker component rendering");
-
   const [weekNumber, setWeekNumber] = useState(getCurrentWeek());
   const [moodData, setMoodData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -71,7 +69,6 @@ const MoodTracker = () => {
   const getUserData = () => {
     try {
       const userData = localStorage.getItem("userData");
-      console.log("[DEBUG] Retrieved userData from localStorage:", !!userData);
       return userData ? JSON.parse(userData) : null;
     } catch (e) {
       console.error("[ERROR] Error parsing user data:", e);
@@ -80,7 +77,6 @@ const MoodTracker = () => {
   };
 
   const user = getUserData();
-  console.log("[DEBUG] User authenticated:", !!user?.token);
 
   // Get current ISO week number
   function getCurrentWeek() {
@@ -94,7 +90,6 @@ const MoodTracker = () => {
         Math.round(
           ((date - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7
         );
-      console.log("[DEBUG] Current week calculated as:", currentWeek);
       return currentWeek;
     } catch (e) {
       console.error("[ERROR] Error calculating current week:", e);
@@ -104,11 +99,6 @@ const MoodTracker = () => {
 
   // Fetch mood data for selected week
   useEffect(() => {
-    console.log(
-      "[DEBUG] MoodTracker useEffect triggered for week:",
-      weekNumber
-    );
-
     const fetchMoodData = async () => {
       if (!user?.token) {
         console.error("No user token available for API request");
@@ -116,7 +106,6 @@ const MoodTracker = () => {
       }
 
       try {
-        console.log("[DEBUG] Fetching mood data for week:", weekNumber);
         setLoading(true);
         setError(null);
 
@@ -127,7 +116,6 @@ const MoodTracker = () => {
           }
         );
 
-        console.log("[DEBUG] Final axios response:", response);
         if (response.data && Array.isArray(response.data)) {
           setMoodData(response.data);
         }
@@ -139,7 +127,6 @@ const MoodTracker = () => {
             (error.response?.data?.error || error.message)
         );
       } finally {
-        console.log("[DEBUG] Finished loading mood data");
         setLoading(false);
       }
     };
@@ -162,11 +149,8 @@ const MoodTracker = () => {
       ];
       const weekData = new Array(7).fill(null);
 
-      console.log(`[DEBUG] Processing ${moods.length} mood entries for chart`);
-
       moods.forEach((mood) => {
         const date = new Date(mood.createdAt);
-        console.log(`[DEBUG] Processing mood entry: ${date.toISOString()}, mood: ${mood.moodLevel}`);
         
         // Use UTC to avoid timezone issues
         const dayName = date.toLocaleDateString("en-US", { 
@@ -175,7 +159,6 @@ const MoodTracker = () => {
         });
         
         const dayIndex = daysOfWeek.indexOf(dayName);
-        console.log(`[DEBUG] Day: ${dayName}, Index: ${dayIndex}`);
 
         if (dayIndex !== -1) {
           // If multiple entries for same day, use the latest one
@@ -184,12 +167,10 @@ const MoodTracker = () => {
             new Date(mood.createdAt) > new Date(weekData[dayIndex].createdAt)
           ) {
             weekData[dayIndex] = mood.moodLevel;
-            console.log(`[DEBUG] Set mood ${mood.moodLevel} for day index ${dayIndex}`);
           }
         }
       });
 
-      console.log(`[DEBUG] Final week data:`, weekData);
       return weekData;
     } catch (e) {
       console.error("Error processing mood entries:", e);
@@ -354,10 +335,10 @@ const MoodTracker = () => {
 
       <Card.Body>
         {/* Error Message */}
-        {error && (
+        {loading && (
           <Alert variant="danger" className="mb-3">
             <Alert.Heading>Error Loading Mood Data</Alert.Heading>
-            <p>{error}</p>
+            <p>{error || "Loading mood data..."}</p>
           </Alert>
         )}
 

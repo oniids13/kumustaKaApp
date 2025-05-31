@@ -3,6 +3,7 @@ import axios from "axios";
 import CommentSection from "./CommentSection";
 import EditPostForm from "./EditPostForm";
 import SparkButton from "../SparkButton";
+import { message } from "antd";
 
 const PostList = () => {
   const [posts, setPosts] = useState([]);
@@ -12,8 +13,6 @@ const PostList = () => {
   const [reactingPostId, setReactingPostId] = useState(null);
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
-
-
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -110,8 +109,7 @@ const PostList = () => {
   const handleDeletePost = async (postId) => {
     if (window.confirm("Are you sure you want to delete this post?")) {
       try {
-
-        const response = await axios.delete(
+        await axios.delete(
           `http://localhost:3000/api/forum/deletePost/${postId}`,
           {
             headers: {
@@ -120,16 +118,11 @@ const PostList = () => {
           }
         );
 
-        console.log("Delete response:", response.data);
-        alert("Post deleted successfully");
+        message.success("Post deleted successfully");
         setPosts(posts.filter((post) => post.id !== postId));
       } catch (error) {
         console.error("Error deleting post:", error);
-        console.error("Error response:", error.response?.data);
-        alert(
-          error.response?.data?.message ||
-            "Failed to delete post. Please try again."
-        );
+        message.error("Failed to delete post");
       }
     }
   };
@@ -238,8 +231,6 @@ const PostList = () => {
                       )}
                       <button
                         onClick={() => {
-                          console.log("Delete button clicked");
-                          console.log("Post ID:", post.id);
                           handleDeletePost(post.id);
                         }}
                         className="btn btn-sm btn-danger"

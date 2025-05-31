@@ -12,16 +12,6 @@ const getTodayRange = (clientTime = null) => {
   const todayEnd = new Date(referenceTime);
   todayEnd.setHours(23, 59, 59, 999);
 
-  // Add debugging information
-  console.log(
-    `[DEBUG] Date Range Calculation:
-    - Server time: ${new Date().toISOString()}
-    - Reference time: ${referenceTime.toISOString()} (${
-      clientTime ? "from client" : "from server"
-    })
-    - Today's range: ${todayStart.toISOString()} to ${todayEnd.toISOString()}`
-  );
-
   return {
     todayStart,
     todayEnd,
@@ -66,8 +56,6 @@ const getWeekDateRange = (weekNumber, year) => {
   const endDate = new Date(startDate);
   endDate.setDate(startDate.getDate() + 6);
   endDate.setHours(23, 59, 59, 999);
-  
-  console.log(`[DEBUG] Week ${weekNumber} range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
   
   return { startDate, endDate };
 };

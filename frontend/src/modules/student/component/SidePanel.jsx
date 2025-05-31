@@ -28,10 +28,6 @@ const checkLocalStorageMoodSubmission = () => {
     const lastSubmittedDate = localStorage.getItem("moodSubmissionDate");
     const today = new Date().toDateString();
 
-    console.log(
-      `[DEBUG] Checking localStorage: lastSubmittedDate=${lastSubmittedDate}, today=${today}`
-    );
-
     // If there's a record for today in localStorage, user has submitted
     return lastSubmittedDate === today;
   } catch (error) {
@@ -45,9 +41,6 @@ const saveMoodSubmissionToStorage = () => {
   try {
     const today = new Date().toDateString();
     localStorage.setItem("moodSubmissionDate", today);
-    console.log(
-      `[DEBUG] Saved mood submission to localStorage for date: ${today}`
-    );
     return true;
   } catch (error) {
     console.error("[ERROR] Error saving to localStorage:", error);
@@ -58,7 +51,6 @@ const saveMoodSubmissionToStorage = () => {
 const SidePanel = ({ user, activeModule, setActiveModule }) => {
   // Initialize state based on localStorage check
   const initialSubmittedState = checkLocalStorageMoodSubmission();
-  console.log(`[DEBUG] Initial localStorage check: ${initialSubmittedState}`);
 
   const [moodRating, setMoodRating] = useState(null);
   const [notes, setNotes] = useState("");
@@ -71,23 +63,14 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
 
   const checkTodaySubmission = async () => {
     try {
-      console.log("[DEBUG] Checking mood submission for today...");
-
       // Check localStorage first - faster response
       const hasLocalStorageSubmission = checkLocalStorageMoodSubmission();
       if (hasLocalStorageSubmission) {
-        console.log(
-          "[DEBUG] Found submission record in localStorage, setting state without API call"
-        );
         setHasSubmittedToday(true);
         return true;
       }
 
       // If no localStorage record, check with API
-      console.log(
-        "[DEBUG] No submission in localStorage, checking with API..."
-      );
-
       // Include client-side time information in the request
       const clientTime = new Date();
       const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -105,20 +88,13 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
         timeout: 8000, // Add reasonable timeout
       });
 
-      console.log("[DEBUG] Raw mood check response:", response.data);
-
       const hasSubmitted =
         response.data && typeof response.data.hasSubmitted === "boolean"
           ? response.data.hasSubmitted
           : false;
 
-      console.log(
-        `[DEBUG] API says hasSubmitted = ${hasSubmitted}, current state = ${hasSubmittedToday}`
-      );
-
       // If API says user has submitted, update localStorage too
       if (hasSubmitted) {
-        console.log("[DEBUG] API confirms submission, updating localStorage");
         saveMoodSubmissionToStorage();
       }
 
@@ -158,8 +134,6 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
     setErrorMessage(null);
 
     try {
-      console.log("[INFO] Submitting mood entry with level:", moodRating);
-
       // Include client-side time information in the request
       const clientTime = new Date();
       const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -180,11 +154,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
         }
       );
 
-      console.log("[DEBUG] Mood submission response:", response);
-
       if (response.status === 201) {
-        console.log("[SUCCESS] Mood entry recorded successfully");
-
         // Clear form data
         setMoodRating(null);
         setNotes("");
@@ -214,10 +184,6 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
 
   // Force check for today's submission on component mount and set up periodic checks
   useEffect(() => {
-    console.log(
-      "[DEBUG] Component mounted - performing API check for mood submission"
-    );
-
     // Set initial state from localStorage first
     if (initialSubmittedState) {
       setHasSubmittedToday(true);
@@ -255,7 +221,6 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
       <button
         className={`nav-button ${activeModule === module ? "active" : ""}`}
         onClick={() => {
-          console.log(`[DEBUG] NavButton clicked: ${module}`);
           setActiveModule(module);
         }}
       >

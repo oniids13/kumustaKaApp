@@ -66,33 +66,21 @@ const getUserInfoForPasswordReset = async (userId) => {
  */
 const checkPasswordHistory = async (userId, newPassword) => {
   try {
-    console.log(`🔍 Checking password history for user: ${userId}`);
-    
     // Get the last 3 password hashes and salts
     const passwordHistory = await prisma.passwordHistory.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
       take: 3,
-      select: { hash: true, salt: true, createdAt: true },
+      select: { hash: true, salt: true },
     });
 
-    console.log(`📊 Found ${passwordHistory.length} password history records for user: ${userId}`);
-
     // Check if new password matches any of the previous 3
-    for (let i = 0; i < passwordHistory.length; i++) {
-      const prevPassword = passwordHistory[i];
-      console.log(`🔐 Checking against password ${i + 1} (created: ${prevPassword.createdAt})`);
-      
-      const isMatch = validPassword(newPassword, prevPassword.hash, prevPassword.salt);
-      console.log(`🎯 Password match result for password ${i + 1}: ${isMatch}`);
-      
-      if (isMatch) {
-        console.log(`🚫 Password reuse detected! New password matches password ${i + 1}`);
+    for (const prevPassword of passwordHistory) {
+      if (validPassword(newPassword, prevPassword.hash, prevPassword.salt)) {
         return true; // Password was reused
       }
     }
 
-    console.log(`✅ Password is unique - no matches found in history`);
     return false; // Password is not reused
   } catch (error) {
     console.error("Error checking password history:", error);

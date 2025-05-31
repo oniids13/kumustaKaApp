@@ -18,10 +18,6 @@ const createQuestionController = async (req, res) => {
 
 const getDailyQuestionsController = async (req, res) => {
   try {
-    console.log("[DEBUG] getDailyQuestionsController called");
-    console.log("[DEBUG] Query params:", req.query);
-    console.log("[DEBUG] User ID:", req.user?.id);
-
     const userId = req.user.id;
     const { skipWeekendCheck } = req.query; // Debug parameter
 
@@ -30,15 +26,7 @@ const getDailyQuestionsController = async (req, res) => {
     const day = today.getDay(); // 0 = Sunday, 6 = Saturday
     const isWeekend = day === 0 || day === 6;
 
-    console.log(
-      "[DEBUG] Is weekend:",
-      isWeekend,
-      "Skip weekend check:",
-      skipWeekendCheck
-    );
-
     if (isWeekend && !skipWeekendCheck) {
-      console.log("[DEBUG] Returning weekend message");
       return res.status(200).json({
         isWeekend: true,
         message:
@@ -47,23 +35,15 @@ const getDailyQuestionsController = async (req, res) => {
       });
     }
 
-    console.log(
-      "[DEBUG] Calling getDailyQuestions with skipWeekendCheck:",
-      skipWeekendCheck === "true"
-    );
     const questions = await getDailyQuestions(
       userId,
       skipWeekendCheck === "true"
     );
 
-    console.log("[DEBUG] Questions returned:", questions.length);
-
     if (questions.length === 0) {
-      console.log("[DEBUG] No questions found, returning 404");
       return res.status(404).json({ error: "No questions available" });
     }
 
-    console.log("[DEBUG] Returning questions successfully");
     res.json(questions);
   } catch (error) {
     console.error("[ERROR] getDailyQuestionsController error:", error);

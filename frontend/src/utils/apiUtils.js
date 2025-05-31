@@ -62,9 +62,6 @@ export const apiRequest = async (
 
       // Increment retries and wait before trying again
       retries++;
-      console.log(
-        `Rate limited. Retrying (${retries}/${maxRetries}) in ${delay}ms...`
-      );
 
       // Wait for the delay period
       await new Promise((resolve) => setTimeout(resolve, delay));
@@ -81,8 +78,14 @@ export const apiRequest = async (
  */
 export const getUserData = () => {
   try {
-    const userData = localStorage.getItem("userData");
-    return userData ? JSON.parse(userData) : null;
+    const userString = localStorage.getItem("userData");
+    
+    if (!userString) {
+      return null; // No user data in localStorage
+    }
+
+    const userData = JSON.parse(userString);
+    return userData;
   } catch (error) {
     console.error("Error parsing user data:", error);
     return null;
