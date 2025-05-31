@@ -1,23 +1,28 @@
 import { useState } from "react";
 import { Modal, Button, Form, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { CONSENT_TEXT, CONSENT_SUMMARY } from "../data/consentText";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles/Index.css";
 
 const Index = () => {
   const [showModal, setShowModal] = useState(false);
-  const [code, setCode] = useState("");
+  const [consentAccepted, setConsentAccepted] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const CORRECT_CODE = "TEST";
-
-  const handleVerifyCode = () => {
-    if (code === CORRECT_CODE) {
+  const handleAcceptConsent = () => {
+    if (consentAccepted) {
       navigate("/register");
     } else {
-      setError("Incorrect code. Contact your admin.");
+      setError("You must accept the consent form to proceed with registration.");
     }
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setConsentAccepted(false);
+    setError("");
   };
 
   return (
@@ -52,55 +57,60 @@ const Index = () => {
 
       <Modal
         show={showModal}
-        onHide={() => {
-          setShowModal(false);
-          setError("");
-        }}
+        onHide={handleCloseModal}
         backdrop="static"
         keyboard={false}
         centered
-        className="access-modal"
+        className="consent-modal"
+        size="lg"
       >
         <Modal.Header closeButton className="modal-header-custom">
-          <Modal.Title>🔒 Access Code Required</Modal.Title>
+          <Modal.Title>📋 Informed Consent</Modal.Title>
         </Modal.Header>
         <Modal.Body className="modal-body-custom">
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Enter your access code:</Form.Label>
-              <Form.Control
-                type="password"
-                value={code}
-                onChange={(e) => {
-                  setCode(e.target.value);
-                  setError("");
-                }}
-                placeholder="Enter code"
-                isInvalid={!!error}
-                className="code-input"
-              />
+          <div className="consent-content">
+            <div className="consent-text-container">
+              <pre className="consent-text">{CONSENT_TEXT}</pre>
+            </div>
+            
+            <Form className="consent-form">
+              <Form.Group className="consent-checkbox-group">
+                <Form.Check
+                  type="checkbox"
+                  id="consent-checkbox"
+                  checked={consentAccepted}
+                  onChange={(e) => {
+                    setConsentAccepted(e.target.checked);
+                    setError("");
+                  }}
+                  label={CONSENT_SUMMARY}
+                  className="consent-checkbox"
+                />
+              </Form.Group>
+              
               {error && (
-                <Alert variant="danger" className="error-alert">
+                <Alert variant="warning" className="error-alert">
                   {error}
                 </Alert>
               )}
-            </Form.Group>
-          </Form>
+            </Form>
+          </div>
         </Modal.Body>
         <Modal.Footer className="modal-footer-custom">
           <Button
             variant="secondary"
-            onClick={() => setShowModal(false)}
+            onClick={handleCloseModal}
             className="cancel-btn"
           >
             Cancel
           </Button>
           <Button
             variant="primary"
-            onClick={handleVerifyCode}
-            className="verify-btn"
+            onClick={handleAcceptConsent}
+            className={`accept-btn ${!consentAccepted ? 'disabled' : ''}`}
+            disabled={!consentAccepted}
           >
-            Verify Code
+            I Accept & Continue
           </Button>
         </Modal.Footer>
       </Modal>
