@@ -16,6 +16,7 @@ const RegisterPage = () => {
     emergencyContactName: "",
     emergencyContactPhone: "",
     emergencyContactRelationship: "",
+    password: "",
   });
 
   const handleRegistration = async (userData) => {
@@ -104,6 +105,19 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     emergencyContactRelationship: "",
   });
 
+  const [validationState, setValidationState] = useState({
+    password: {
+      length: false,
+      complexity: false,
+    },
+    email: false,
+    phone: false,
+    firstName: false,
+    lastName: false,
+    emergencyContactName: false,
+    emergencyContactPhone: false,
+  });
+
   const ROLES = [
     { value: "STUDENT", label: "Student" },
     { value: "TEACHER", label: "Teacher" },
@@ -125,12 +139,73 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
   const requiresPasscode = ["ADMIN", "TEACHER", "COUNSELOR"].includes(formData.role);
   const isStudent = formData.role === "STUDENT";
 
+  // Validation functions
+  const validatePassword = (password) => {
+    const length = password.length >= 8;
+    const complexity = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password);
+    return { length, complexity };
+  };
+
+  const validateEmail = (email) => {
+    return /\S+@\S+\.\S+/.test(email);
+  };
+
+  const validatePhone = (phone) => {
+    return /^09\d{9}$/.test(phone);
+  };
+
+  const validateName = (name) => {
+    return /^[A-Za-z\s]+$/.test(name) && name.trim().length >= 2;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+
+    // Real-time validation
+    let newValidationState = { ...validationState };
+    
+    if (name === "password") {
+      newValidationState.password = validatePassword(value);
+      if (errors.password) {
+        setErrors((prev) => ({ ...prev, password: "" }));
+      }
+    } else if (name === "email") {
+      newValidationState.email = validateEmail(value);
+      if (errors.email) {
+        setErrors((prev) => ({ ...prev, email: "" }));
+      }
+    } else if (name === "phone") {
+      newValidationState.phone = validatePhone(value);
+      if (errors.phone) {
+        setErrors((prev) => ({ ...prev, phone: "" }));
+      }
+    } else if (name === "firstName") {
+      newValidationState.firstName = validateName(value);
+      if (errors.firstName) {
+        setErrors((prev) => ({ ...prev, firstName: "" }));
+      }
+    } else if (name === "lastName") {
+      newValidationState.lastName = validateName(value);
+      if (errors.lastName) {
+        setErrors((prev) => ({ ...prev, lastName: "" }));
+      }
+    } else if (name === "emergencyContactName") {
+      newValidationState.emergencyContactName = validateName(value);
+      if (errors.emergencyContactName) {
+        setErrors((prev) => ({ ...prev, emergencyContactName: "" }));
+      }
+    } else if (name === "emergencyContactPhone") {
+      newValidationState.emergencyContactPhone = validatePhone(value);
+      if (errors.emergencyContactPhone) {
+        setErrors((prev) => ({ ...prev, emergencyContactPhone: "" }));
+      }
+    }
+
+    setValidationState(newValidationState);
 
     // Clear passcode when switching to student role
     if (name === "role" && value === "STUDENT") {
@@ -170,7 +245,17 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       emergencyContactName: "",
       emergencyContactPhone: "",
       emergencyContactRelationship: "",
+      password: "",
     };
+
+    // Password validation
+    if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters long";
+      valid = false;
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+      newErrors.password = "Password must contain at least one uppercase letter, one lowercase letter, and one number";
+      valid = false;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       newErrors.passwordMatch = "Passwords do not match";
@@ -188,6 +273,9 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     } else if (!/^[A-Za-z\s]+$/.test(formData.firstName)) {
       newErrors.firstName = "First name must only contain letters and spaces";
       valid = false;
+    } else if (formData.firstName.trim().length < 2) {
+      newErrors.firstName = "First name must be at least 2 characters long";
+      valid = false;
     }
 
     if (!formData.lastName.trim()) {
@@ -195,6 +283,9 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       valid = false;
     } else if (!/^[A-Za-z\s]+$/.test(formData.lastName)) {
       newErrors.lastName = "Last name must only contain letters and spaces";
+      valid = false;
+    } else if (formData.lastName.trim().length < 2) {
+      newErrors.lastName = "Last name must be at least 2 characters long";
       valid = false;
     }
 
@@ -221,6 +312,9 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
         valid = false;
       } else if (!/^[A-Za-z\s]+$/.test(formData.emergencyContactName)) {
         newErrors.emergencyContactName = "Name must only contain letters and spaces";
+        valid = false;
+      } else if (formData.emergencyContactName.trim().length < 2) {
+        newErrors.emergencyContactName = "Name must be at least 2 characters long";
         valid = false;
       }
 
@@ -271,7 +365,7 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       <div className="form-row">
         {/* First Name */}
         <div className="form-group">
-          <label htmlFor="firstName">First Name</label>
+          <label htmlFor="firstName">First Name <span className="required-indicator">*</span></label>
           <input
             type="text"
             id="firstName"
@@ -280,8 +374,14 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
             onChange={handleChange}
             required
             placeholder="Enter your first name"
-            className={errors.firstName ? "error" : ""}
+            className={errors.firstName ? "error" : validationState.firstName ? "valid" : ""}
           />
+          <div className="validation-guide">
+            <small className="form-helper-text">
+              <i className={`fas ${validationState.firstName ? 'fa-check text-success' : 'fa-info-circle'}`}></i>
+              Must be at least 2 characters, letters and spaces only
+            </small>
+          </div>
           {errors.firstName && (
             <span className="error-message">{errors.firstName}</span>
           )}
@@ -289,7 +389,7 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
 
         {/* Last Name */}
         <div className="form-group">
-          <label htmlFor="lastName">Last Name</label>
+          <label htmlFor="lastName">Last Name <span className="required-indicator">*</span></label>
           <input
             type="text"
             id="lastName"
@@ -298,8 +398,14 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
             onChange={handleChange}
             required
             placeholder="Enter your last name"
-            className={errors.lastName ? "error" : ""}
+            className={errors.lastName ? "error" : validationState.lastName ? "valid" : ""}
           />
+          <div className="validation-guide">
+            <small className="form-helper-text">
+              <i className={`fas ${validationState.lastName ? 'fa-check text-success' : 'fa-info-circle'}`}></i>
+              Must be at least 2 characters, letters and spaces only
+            </small>
+          </div>
           {errors.lastName && (
             <span className="error-message">{errors.lastName}</span>
           )}
@@ -308,7 +414,7 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
 
       {/* Email */}
       <div className="form-group">
-        <label htmlFor="email">Email Address</label>
+        <label htmlFor="email">Email Address <span className="required-indicator">*</span></label>
         <input
           type="email"
           id="email"
@@ -317,8 +423,14 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
           onChange={handleChange}
           required
           placeholder="Enter your email"
-          className={errors.email ? "error" : ""}
+          className={errors.email ? "error" : validationState.email ? "valid" : ""}
         />
+        <div className="validation-guide">
+          <small className="form-helper-text">
+            <i className={`fas ${validationState.email ? 'fa-check text-success' : 'fa-info-circle'}`}></i>
+            Must be a valid email format (e.g., user@example.com)
+          </small>
+        </div>
         {errors.email && <span className="error-message">{errors.email}</span>}
       </div>
 
@@ -332,15 +444,21 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
           value={formData.phone}
           onChange={handleChange}
           pattern="09[0-9]{9}"
-          placeholder="e.g. 09123456789 (11 digits)"
-          className={errors.phone ? "error" : ""}
+          placeholder="e.g. 09123456789"
+          className={errors.phone ? "error" : validationState.phone ? "valid" : ""}
         />
+        <div className="validation-guide">
+          <small className="form-helper-text">
+            <i className={`fas ${validationState.phone ? 'fa-check text-success' : 'fa-info-circle'}`}></i>
+            Must be exactly 11 digits starting with 09 (e.g., 09123456789)
+          </small>
+        </div>
         {errors.phone && <span className="error-message">{errors.phone}</span>}
       </div>
 
       {/* Role Selection */}
       <div className="form-group">
-        <label htmlFor="role">I am a</label>
+        <label htmlFor="role">I am a <span className="required-indicator">*</span></label>
         <select
           id="role"
           name="role"
@@ -380,8 +498,14 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
                 onChange={handleChange}
                 required
                 placeholder="Full name of emergency contact"
-                className={errors.emergencyContactName ? "error" : ""}
+                className={errors.emergencyContactName ? "error" : validationState.emergencyContactName ? "valid" : ""}
               />
+              <div className="validation-guide">
+                <small className="form-helper-text">
+                  <i className={`fas ${validationState.emergencyContactName ? 'fa-check text-success' : 'fa-info-circle'}`}></i>
+                  Must be at least 2 characters, letters and spaces only
+                </small>
+              </div>
               {errors.emergencyContactName && (
                 <span className="error-message">{errors.emergencyContactName}</span>
               )}
@@ -426,9 +550,15 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
               onChange={handleChange}
               pattern="09[0-9]{9}"
               required
-              placeholder="e.g. 09123456789 (11 digits)"
-              className={errors.emergencyContactPhone ? "error" : ""}
+              placeholder="e.g. 09123456789"
+              className={errors.emergencyContactPhone ? "error" : validationState.emergencyContactPhone ? "valid" : ""}
             />
+            <div className="validation-guide">
+              <small className="form-helper-text">
+                <i className={`fas ${validationState.emergencyContactPhone ? 'fa-check text-success' : 'fa-info-circle'}`}></i>
+                Must be exactly 11 digits starting with 09 (e.g., 09123456789)
+              </small>
+            </div>
             {errors.emergencyContactPhone && (
               <span className="error-message">{errors.emergencyContactPhone}</span>
             )}
@@ -464,7 +594,7 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       <div className="form-row">
         {/* Password */}
         <div className="form-group">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">Password <span className="required-indicator">*</span></label>
           <input
             type="password"
             id="password"
@@ -474,13 +604,29 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
             minLength="8"
             required
             placeholder="Create a password"
-            className={errors.passwordMatch ? "error" : ""}
+            className={errors.password ? "error" : (validationState.password.length && validationState.password.complexity) ? "valid" : ""}
           />
+          <div className="password-requirements">
+            <small className="form-helper-text">Password must contain:</small>
+            <ul className="requirements-list">
+              <li className={validationState.password.length ? "requirement-met" : "requirement-pending"}>
+                <i className={`fas ${validationState.password.length ? 'fa-check' : 'fa-circle'}`}></i>
+                At least 8 characters
+              </li>
+              <li className={validationState.password.complexity ? "requirement-met" : "requirement-pending"}>
+                <i className={`fas ${validationState.password.complexity ? 'fa-check' : 'fa-circle'}`}></i>
+                One uppercase letter, one lowercase letter, and one number
+              </li>
+            </ul>
+          </div>
+          {errors.password && (
+            <span className="error-message">{errors.password}</span>
+          )}
         </div>
 
         {/* Confirm Password */}
         <div className="form-group">
-          <label htmlFor="confirmPassword">Confirm Password</label>
+          <label htmlFor="confirmPassword">Confirm Password <span className="required-indicator">*</span></label>
           <input
             type="password"
             id="confirmPassword"
@@ -489,7 +635,7 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
             onChange={handleChange}
             required
             placeholder="Confirm your password"
-            className={errors.passwordMatch ? "error" : ""}
+            className={errors.passwordMatch ? "error" : (formData.confirmPassword && formData.password === formData.confirmPassword) ? "valid" : ""}
             onBlur={() => {
               if (formData.password !== formData.confirmPassword) {
                 setErrors((prev) => ({
@@ -499,6 +645,12 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
               }
             }}
           />
+          <div className="validation-guide">
+            <small className="form-helper-text">
+              <i className={`fas ${formData.confirmPassword && formData.password === formData.confirmPassword ? 'fa-check text-success' : 'fa-info-circle'}`}></i>
+              Must match the password above
+            </small>
+          </div>
           {errors.passwordMatch && (
             <span className="error-message">{errors.passwordMatch}</span>
           )}
