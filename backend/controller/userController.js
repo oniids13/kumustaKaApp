@@ -1,6 +1,6 @@
 const { body, validationResult } = require('express-validator');
-const { genPassword } = require('../utils/passwordUtil');
-const { createUser, getUserById } = require('../model/userQueries');
+const { genPassword, validPassword } = require('../utils/passwordUtil');
+const { createUser, getUserById, changeUserPassword, getUserForPasswordChange } = require('../model/userQueries');
 
 const validateUser = [
     body('email')
@@ -43,6 +43,24 @@ const validateUser = [
         .isIn(['Parent', 'Guardian', 'Sibling', 'Spouse', 'Friend', 'Relative', 'Other'])
         .withMessage('Invalid relationship type')
 ]
+
+const validatePasswordChange = [
+    body('currentPassword')
+        .notEmpty()
+        .withMessage('Current password is required'),
+    body('newPassword')
+        .isLength({ min: 8 })
+        .withMessage('New password must be at least 8 characters long')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+        .withMessage('New password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    body('confirmPassword')
+        .custom((value, { req }) => {
+            if (value !== req.body.newPassword) {
+                throw new Error('Password confirmation does not match new password');
+            }
+            return true;
+        })
+];
 
 const createUserController = [validateUser, async (req, res) => {
     const errors = validationResult(req);
@@ -120,4 +138,62 @@ const getUserByIdController = async (req, res) => {
     }
 }
 
-module.exports = { createUserController, getUserByIdController}
+const changePasswordController = [validatePasswordChange, async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ 
+            message: "Validation failed", 
+            errors: errors.array()
+        });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id; // Assuming user ID comes from auth middleware
+
+    try {
+        // Get user's current password data
+        const user = await getUserForPasswordChange(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Verify current password
+        if (!validPassword(currentPassword, user.hash, user.salt)) {
+            return res.status(400).json({ 
+                message: "Current password is incorrect" 
+            });
+        }
+
+        // Generate new password hash and salt
+        const { salt, hash } = genPassword(newPassword);
+
+        // Attempt to change password (this will check against last 3 passwords)
+        const updatedUser = await changeUserPassword(userId, {
+            salt,
+            hash,
+            plainPassword: newPassword // Pass plain password for checking against history
+        });
+
+        return res.status(200).json({ 
+            message: "Password changed successfully",
+            user: updatedUser
+        });
+
+    } catch (error) {
+        console.error("Error changing password:", error);
+        
+        if (error.message === "REUSED_PASSWORD") {
+            return res.status(400).json({ 
+                message: "You cannot reuse any of your last 3 passwords. Please choose a different password." 
+            });
+        }
+        
+        return res.status(500).json({ message: "Internal server error" });
+    }
+}];
+
+module.exports = { 
+    createUserController, 
+    getUserByIdController,
+    changePasswordController
+};

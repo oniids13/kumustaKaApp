@@ -1,4 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
+const { validPassword } = require("../utils/passwordUtil");
 const prisma = new PrismaClient();
 
 /**
@@ -57,8 +58,92 @@ const getUserInfoForPasswordReset = async (userId) => {
   }
 };
 
+/**
+ * Check if password was used in the last 3 passwords
+ * @param {string} userId - The user's ID
+ * @param {string} newPassword - The new password to check
+ * @returns {boolean} - True if password was reused
+ */
+const checkPasswordHistory = async (userId, newPassword) => {
+  try {
+    console.log(`🔍 Checking password history for user: ${userId}`);
+    
+    // Get the last 3 password hashes and salts
+    const passwordHistory = await prisma.passwordHistory.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+      select: { hash: true, salt: true, createdAt: true },
+    });
+
+    console.log(`📊 Found ${passwordHistory.length} password history records for user: ${userId}`);
+
+    // Check if new password matches any of the previous 3
+    for (let i = 0; i < passwordHistory.length; i++) {
+      const prevPassword = passwordHistory[i];
+      console.log(`🔐 Checking against password ${i + 1} (created: ${prevPassword.createdAt})`);
+      
+      const isMatch = validPassword(newPassword, prevPassword.hash, prevPassword.salt);
+      console.log(`🎯 Password match result for password ${i + 1}: ${isMatch}`);
+      
+      if (isMatch) {
+        console.log(`🚫 Password reuse detected! New password matches password ${i + 1}`);
+        return true; // Password was reused
+      }
+    }
+
+    console.log(`✅ Password is unique - no matches found in history`);
+    return false; // Password is not reused
+  } catch (error) {
+    console.error("Error checking password history:", error);
+    throw error;
+  }
+};
+
+/**
+ * Add new password to history and maintain only last 3
+ * @param {string} userId - The user's ID
+ * @param {string} salt - Password salt
+ * @param {string} hash - Password hash
+ * @returns {boolean} - Success status
+ */
+const addPasswordToHistory = async (userId, salt, hash) => {
+  try {
+    // Add new password to history
+    await prisma.passwordHistory.create({
+      data: {
+        userId,
+        hash,
+        salt,
+      },
+    });
+
+    // Keep only the last 3 password history records
+    const allHistory = await prisma.passwordHistory.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (allHistory.length > 3) {
+      const toDelete = allHistory.slice(3);
+      await prisma.passwordHistory.deleteMany({
+        where: {
+          id: { in: toDelete.map(p => p.id) }
+        },
+      });
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error adding password to history:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   getUserPasswordData,
   updateUserPassword,
   getUserInfoForPasswordReset,
+  checkPasswordHistory,
+  addPasswordToHistory,
 };

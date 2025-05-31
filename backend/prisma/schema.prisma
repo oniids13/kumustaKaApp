@@ -30,6 +30,7 @@ model User {
   teacher          Teacher?
   conversations    Conversation[] @relation("ConversationToUser")
   receivedMessages Message[]      @relation("ReceivedMessages")
+  passwordHistory  PasswordHistory[]
 
   @@map("users")
 }
@@ -331,6 +332,18 @@ model Message {
   @@index([conversationId])
   @@index([senderId])
   @@map("messages")
+}
+
+model PasswordHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  hash      String
+  salt      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("password_history")
 }
 
 enum UserRole {

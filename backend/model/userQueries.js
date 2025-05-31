@@ -83,6 +83,15 @@ const createUser = async (userData) => {
         ...(role === "COUNSELOR" && { counselor: true }),
       },
     });
+
+    // Create initial password history entry
+    await prisma.passwordHistory.create({
+      data: {
+        userId: user.id,
+        hash,
+        salt,
+      },
+    });
     
     console.log(`[INFO] Created user with role ${role}${emergencyContact ? ' and emergency contact' : ''}`);
     return user;
@@ -168,9 +177,95 @@ const getUserById = async (id) => {
   }
 };
 
+const changeUserPassword = async (userId, newPasswordData) => {
+  const { salt, hash } = newPasswordData;
+  
+  try {
+    // Get the last 3 password hashes and salts
+    const previousPasswords = await prisma.passwordHistory.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+    });
+
+    // Check if new password matches any of the previous 3
+    for (const prevPassword of previousPasswords) {
+      if (validPassword(newPasswordData.plainPassword, prevPassword.hash, prevPassword.salt)) {
+        throw new Error("REUSED_PASSWORD");
+      }
+    }
+
+    // Update user's current password
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { salt, hash },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+      },
+    });
+
+    // Add current password to history
+    await prisma.passwordHistory.create({
+      data: {
+        userId,
+        hash,
+        salt,
+      },
+    });
+
+    // Keep only the last 3 password history records
+    const allHistory = await prisma.passwordHistory.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (allHistory.length > 3) {
+      const toDelete = allHistory.slice(3);
+      await prisma.passwordHistory.deleteMany({
+        where: {
+          id: { in: toDelete.map(p => p.id) }
+        },
+      });
+    }
+
+    console.log(`[INFO] Password changed for user ${userId}`);
+    return updatedUser;
+  } catch (error) {
+    console.error("Error changing password:", error);
+    throw error;
+  }
+};
+
+const getUserForPasswordChange = async (userId) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        salt: true,
+        hash: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+      },
+    });
+    return user;
+  } catch (error) {
+    console.error("Error fetching user for password change:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   createUser,
   getUserLogin,
   getUserById,
   updateUserLastLogin,
+  changeUserPassword,
+  getUserForPasswordChange,
 };
