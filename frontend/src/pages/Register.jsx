@@ -12,6 +12,7 @@ const RegisterPage = () => {
     phone: "",
     firstName: "",
     lastName: "",
+    passcode: "",
   });
 
   const handleRegistration = async (userData) => {
@@ -94,6 +95,7 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     lastName: "",
     phone: "",
     role: "STUDENT",
+    passcode: "",
   });
 
   const ROLES = [
@@ -103,12 +105,23 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     { value: "COUNSELOR", label: "Counselor" },
   ];
 
+  const ADMIN_PASSCODE = "TEST";
+  const requiresPasscode = ["ADMIN", "TEACHER", "COUNSELOR"].includes(formData.role);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+
+    // Clear passcode when switching to student role
+    if (name === "role" && value === "STUDENT") {
+      setFormData((prev) => ({
+        ...prev,
+        passcode: "",
+      }));
+    }
 
     if (errors.passwordMatch && name.includes("password")) {
       setErrors((prev) => ({ ...prev, passwordMatch: "" }));
@@ -126,6 +139,7 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       phone: "",
       firstName: "",
       lastName: "",
+      passcode: "",
     };
 
     if (formData.password !== formData.confirmPassword) {
@@ -159,6 +173,17 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       valid = false;
     }
 
+    // Validate passcode for admin, teacher, and counselor roles
+    if (requiresPasscode) {
+      if (!formData.passcode.trim()) {
+        newErrors.passcode = "Access code is required for this role";
+        valid = false;
+      } else if (formData.passcode !== ADMIN_PASSCODE) {
+        newErrors.passcode = "Invalid access code. Contact your administrator.";
+        valid = false;
+      }
+    }
+
     setErrors(newErrors);
     return valid;
   };
@@ -168,6 +193,9 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     if (validateForm()) {
       const data = { ...formData };
       delete data.confirmPassword;
+      if (!requiresPasscode) {
+        delete data.passcode;
+      }
       onSubmit(data);
     }
   };
@@ -261,6 +289,31 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
           ))}
         </select>
       </div>
+
+      {/* Access Code - Only for Admin, Teacher, Counselor */}
+      {requiresPasscode && (
+        <div className="form-group passcode-group">
+          <label htmlFor="passcode">
+            Access Code <span className="required-indicator">*</span>
+          </label>
+          <input
+            type="password"
+            id="passcode"
+            name="passcode"
+            value={formData.passcode}
+            onChange={handleChange}
+            required
+            placeholder="Enter your access code"
+            className={errors.passcode ? "error" : ""}
+          />
+          <small className="form-helper-text">
+            Contact your administrator for the access code
+          </small>
+          {errors.passcode && (
+            <span className="error-message">{errors.passcode}</span>
+          )}
+        </div>
+      )}
 
       <div className="form-row">
         {/* Password */}

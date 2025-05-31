@@ -86,6 +86,67 @@
   margin-top: 4px;
 }
 
+/* Passcode field specific styles */
+.passcode-group {
+  position: relative;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 10px 0;
+  animation: slideDown 0.3s ease;
+}
+
+.passcode-group label {
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.required-indicator {
+  color: #e53e3e;
+  font-weight: bold;
+}
+
+.form-helper-text {
+  color: #718096;
+  font-size: 12px;
+  font-style: italic;
+  margin-top: 4px;
+  display: block;
+}
+
+.passcode-group input {
+  background-color: white;
+  border: 1px solid #cbd5e0;
+}
+
+.passcode-group input:focus {
+  border-color: #4a6baf;
+  box-shadow: 0 0 0 3px rgba(74, 107, 175, 0.1);
+}
+
+.passcode-group .error-message {
+  background: #fed7d7;
+  color: #c53030;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 8px;
+  border: 1px solid #feb2b2;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
+  }
+}
+
 .submit-button {
   background-color: #4a6baf;
   color: white;
@@ -175,5 +236,10 @@
 
   .register-card {
     padding: 30px 20px;
+  }
+
+  .passcode-group {
+    padding: 12px;
+    margin: 8px 0;
   }
 }
