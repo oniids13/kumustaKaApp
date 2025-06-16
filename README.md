@@ -19,33 +19,36 @@ This project was developed as a capstone project for the Masters in Information 
 ## ✨ Key Features
 
 ### 📊 Mood Tracking
+
 - Daily mood logging with intuitive interface
 - Visual mood history and pattern recognition
 - Customizable emotion categories and intensity levels
 
 ### 📈 Analytics & Insights
+
 - Weekly and monthly mood trend analysis
 - Correlation tracking between activities and mood
 - Progress visualization through charts and graphs
 
 ### 🔒 Privacy & Security
+
 - Secure data storage and encryption
 - Student privacy protection measures
 - Confidential journaling capabilities
 
 ### 📚 Educational Resources
+
 - Mental health awareness content
 - Coping strategies and techniques
 - Links to professional help and counseling services
 
 ### 👥 Support System
+
 - Safe communication channels
 - Peer support features (when appropriate)
 - Integration with school counseling services
 
 ## 🛠️ Technology Stack
-
-
 
 Frontend: ReactJS, Bootstrap, CSS5
 Backend: NodeJS, ExpressJS
@@ -60,17 +63,17 @@ Hosting: Coming Soon
 Node.js (v14 or higher)
 npm or yarn
 
-
-
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/oniids13/kumustaKaApp.git
    cd kumustaKaApp
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    # or
@@ -78,17 +81,20 @@ npm or yarn
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
 4. **Run database migrations** (if applicable)
+
    ```bash
    npm run migrate
    ```
 
 5. **Start the development server**
+
    ```bash
    npm start
    # or
@@ -101,6 +107,7 @@ npm or yarn
 ## 📱 Usage
 
 ### For Students
+
 1. **Registration**: Create a secure account with student credentials
 2. **Daily Check-ins**: Log daily mood and emotional state
 3. **Track Patterns**: View mood trends and identify triggers
@@ -108,6 +115,7 @@ npm or yarn
 5. **Seek Help**: Connect with school counselors when needed
 
 ### For Educators/Counselors (if applicable)
+
 1. **Monitor Trends**: View anonymized class-wide mental health trends
 2. **Identify At-Risk Students**: Receive alerts for students needing support
 3. **Resource Management**: Update and manage mental health resources
@@ -124,10 +132,10 @@ This application was developed as part of a Masters in Information Technology ca
 ## 🏥 Mental Health Considerations
 
 ### Important Disclaimers
+
 - This app is **not a substitute** for professional mental health treatment
 - Users experiencing crisis situations should contact emergency services or school counselors immediately
 - All data is handled with strict confidentiality in accordance with privacy regulations
-
 
 ## 📋 Project Status
 
@@ -137,25 +145,24 @@ This application was developed as part of a Masters in Information Technology ca
 - 📅 Mobile app version (planned)
 - 📅 Integration with school systems (planned)
 
-
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE) - see the LICENSE file for details.
 
 ## 👨‍💻 Author
 
-**Jose Dino Abaya** - *Masters in Information Technology Student*
+**Jose Dino Abaya** - _Masters in Information Technology Student_
+
 - GitHub: [@oniids13](https://github.com/oniids13)
 - Email: jdino.abaya@gmail.com
 - LinkedIn: https://linkedin.com/in/oniids/
 
 ## 🙏 Acknowledgments
 
-- **Academic Advisors**: Prof. Alain Anueovo, MIT for guidance and support
+- **Academic Advisors**: Prof. Alain Anuevo, MIT for guidance and support
 - **Mental Health Professionals**: For consultation on best practices
 - **Beta Testers**: Junior high school students and educators who provided valuable feedback
 - **Open Source Community**: For the tools and libraries that made this project possible
-
 
 ## 🔮 Future Enhancements
 
@@ -167,7 +174,7 @@ This project is licensed under the [MIT License](LICENSE) - see the LICENSE file
 
 ---
 
-*"Taking care of your mental health is just as important as taking care of your physical health. KumustaKa App is here to support your journey to emotional wellness."*
+_"Taking care of your mental health is just as important as taking care of your physical health. KumustaKa App is here to support your journey to emotional wellness."_
 
 ---
 
