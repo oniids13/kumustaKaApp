@@ -211,7 +211,7 @@ const PostList = () => {
                     />
                     <div className="text-start">
                       <h6 className="mb-0">
-                        {author.firstName} {author.lastName} <small>({user.role.toLowerCase()})</small>
+                        {author.firstName} {author.lastName}
                       </h6>
                       <small className="text-muted">
                         {formatDate(post.createdAt)}
