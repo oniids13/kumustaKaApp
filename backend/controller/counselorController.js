@@ -602,6 +602,45 @@ const getStudentController = async (req, res) => {
   }
 };
 
+/**
+ * Get comprehensive student profile for counselor view
+ */
+const getStudentProfileController = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    // Validate input
+    if (!studentId) {
+      return res.status(400).json({ error: "Student ID is required" });
+    }
+
+    // Get counselor ID from user
+    const counselor = await counselorQueries.getCounselorByUserId(req.user.id);
+
+    if (!counselor) {
+      return res.status(404).json({
+        error: "Counselor profile not found",
+      });
+    }
+
+    // Get comprehensive student profile
+    const studentProfile = await counselorQueries.getStudentProfile(studentId);
+
+    if (!studentProfile) {
+      return res.status(404).json({
+        error: "Student profile not found",
+      });
+    }
+
+    res.status(200).json({ studentProfile });
+  } catch (error) {
+    console.error("Error fetching student profile:", error);
+    res.status(500).json({
+      error: "Failed to fetch student profile",
+    });
+  }
+};
+
 module.exports = {
   getStudentsController,
   getStudentSurveysController,
@@ -618,4 +657,5 @@ module.exports = {
   getTrendsController,
   getDailySubmissionsController,
   getStudentController,
+  getStudentProfileController,
 };

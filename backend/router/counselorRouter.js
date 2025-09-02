@@ -3,6 +3,7 @@ const passport = require("passport");
 const {
   getStudentsController,
   getStudentController,
+  getStudentProfileController,
   getStudentSurveysController,
   getStudentMoodsController,
   getInterventionsController,
@@ -43,6 +44,13 @@ counselorRouter.get(
   passport.authenticate("jwt", { session: false }),
   isCounselor,
   getStudentController
+);
+
+counselorRouter.get(
+  "/student/:studentId/profile",
+  passport.authenticate("jwt", { session: false }),
+  isCounselor,
+  getStudentProfileController
 );
 
 counselorRouter.get(

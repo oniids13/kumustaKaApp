@@ -1434,6 +1434,84 @@ const getStudentById = async (studentId) => {
   }
 };
 
+/**
+ * Get comprehensive student profile for counselor view
+ */
+const getStudentProfile = async (studentId) => {
+  try {
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: true,
+            phone: true,
+            createdAt: true,
+            lastLogin: true,
+            updatedAt: true,
+            role: true,
+            status: true,
+          },
+        },
+        emergencyContacts: {
+          orderBy: { isPrimary: "desc" },
+        },
+        initialAssessment: true,
+        goals: {
+          orderBy: { createdAt: "desc" },
+          take: 10,
+        },
+        moodEntries: {
+          orderBy: { createdAt: "desc" },
+          take: 20,
+        },
+        surveys: {
+          orderBy: { createdAt: "desc" },
+          take: 10,
+        },
+        journals: {
+          select: {
+            id: true,
+            createdAt: true,
+            isPrivate: true,
+          },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+        },
+        interventions: {
+          include: {
+            counselor: {
+              include: {
+                user: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+        },
+      },
+    });
+
+    if (!student) {
+      return null;
+    }
+
+    return student;
+  } catch (error) {
+    console.error("Error fetching student profile:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   getCounselorByUserId,
   getAllStudents,
@@ -1457,4 +1535,5 @@ module.exports = {
   getDailyMoodTrends,
   getTimeframeTrends,
   getStudentById,
+  getStudentProfile,
 };

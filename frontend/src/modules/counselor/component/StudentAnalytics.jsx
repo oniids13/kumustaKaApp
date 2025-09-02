@@ -13,6 +13,7 @@ import {
   Empty,
   Statistic,
   Radio,
+  Space,
 } from "antd";
 import {
   LineChart,
@@ -35,7 +36,9 @@ import {
   FaCheckCircle,
   FaMehBlank,
 } from "react-icons/fa";
+import { EyeOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import StudentProfileView from "./StudentProfileView";
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -66,6 +69,9 @@ const StudentAnalytics = ({ initialStudentId }) => {
     latestZone: null,
     redFlags: 0,
   });
+  const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
+  const [selectedStudentProfile, setSelectedStudentProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
   const navigate = useNavigate();
@@ -224,6 +230,35 @@ const StudentAnalytics = ({ initialStudentId }) => {
     if (selectedStudent) {
       navigate(`/counselor/interventions/create?studentId=${selectedStudent}`);
     }
+  };
+
+  const handleViewProfile = async () => {
+    if (!selectedStudent) return;
+
+    setProfileLoading(true);
+    setIsProfileModalVisible(true);
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/api/counselor/student/${selectedStudent}/profile`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+      setSelectedStudentProfile(response.data.studentProfile);
+    } catch (err) {
+      console.error("Error fetching student profile:", err);
+      alert(`Failed to fetch student profile: ${err.message}`);
+      setIsProfileModalVisible(false);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleCloseProfile = () => {
+    setIsProfileModalVisible(false);
+    setSelectedStudentProfile(null);
   };
 
   if (loading && !selectedStudent) {
@@ -458,9 +493,23 @@ const StudentAnalytics = ({ initialStudentId }) => {
   const renderInterventionButton = () => {
     return (
       <div style={{ marginTop: "20px", textAlign: "center" }}>
-        <Button type="primary" size="large" onClick={handleCreateIntervention}>
-          Create Intervention Plan
-        </Button>
+        <Space size="large">
+          <Button
+            type="default"
+            size="large"
+            icon={<EyeOutlined />}
+            onClick={handleViewProfile}
+          >
+            View Student Profile
+          </Button>
+          <Button
+            type="primary"
+            size="large"
+            onClick={handleCreateIntervention}
+          >
+            Create Intervention Plan
+          </Button>
+        </Space>
       </div>
     );
   };
@@ -521,6 +570,13 @@ const StudentAnalytics = ({ initialStudentId }) => {
       ) : (
         <Empty description="Please select a student to view their analytics" />
       )}
+
+      <StudentProfileView
+        visible={isProfileModalVisible}
+        onClose={handleCloseProfile}
+        studentProfile={selectedStudentProfile}
+        loading={profileLoading}
+      />
     </div>
   );
 };
