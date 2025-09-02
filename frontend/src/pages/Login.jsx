@@ -2,7 +2,14 @@ import { useNavigate } from "react-router-dom";
 import { useOutletContext } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
-import { FaSignInAlt, FaArrowLeft, FaUser, FaLock } from "react-icons/fa";
+import {
+  FaSignInAlt,
+  FaArrowLeft,
+  FaUser,
+  FaLock,
+  FaEye,
+  FaEyeSlash,
+} from "react-icons/fa";
 import "../styles/Login.css"; // Create this new CSS file
 
 const Login = () => {
@@ -10,6 +17,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -22,6 +30,10 @@ const Login = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleLogin = async (e) => {
@@ -81,13 +93,22 @@ const Login = () => {
           handleLogin={handleLogin}
           error={error}
           isLoading={isLoading}
+          showPassword={showPassword}
+          togglePasswordVisibility={togglePasswordVisibility}
         />
       </div>
     </div>
   );
 };
 
-const LoginForm = ({ handleChange, handleLogin, error, isLoading }) => {
+const LoginForm = ({
+  handleChange,
+  handleLogin,
+  error,
+  isLoading,
+  showPassword,
+  togglePasswordVisibility,
+}) => {
   const navigate = useNavigate();
 
   return (
@@ -113,17 +134,25 @@ const LoginForm = ({ handleChange, handleLogin, error, isLoading }) => {
           />
         </div>
 
-        <div className="input-group">
+        <div className="input-group password-group">
           <span className="input-icon">
             <FaLock />
           </span>
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             name="password"
             placeholder="Password"
             required
             onChange={handleChange}
           />
+          <button
+            type="button"
+            className="password-toggle"
+            onClick={togglePasswordVisibility}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </button>
         </div>
 
         <div className="forgot-password">
