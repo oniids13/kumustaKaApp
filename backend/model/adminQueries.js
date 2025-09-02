@@ -101,9 +101,10 @@ const getRecentActivities = async (page = 1, limit = 10) => {
     const totalPosts = await prisma.forumPost.count();
     const totalMoodEntries = await prisma.moodEntry.count();
     const totalSurveyResponses = await prisma.surveyResponse.count();
-    const totalActivities = totalPosts + totalMoodEntries + totalSurveyResponses;
+    const totalActivities =
+      totalPosts + totalMoodEntries + totalSurveyResponses;
 
-    return { 
+    return {
       activities,
       pagination: {
         currentPage: page,
@@ -111,8 +112,8 @@ const getRecentActivities = async (page = 1, limit = 10) => {
         totalActivities,
         totalPages: Math.ceil(totalActivities / limit),
         hasNextPage: page < Math.ceil(totalActivities / limit),
-        hasPrevPage: page > 1
-      }
+        hasPrevPage: page > 1,
+      },
     };
   } catch (error) {
     console.error("Error fetching recent activities:", error);
@@ -175,9 +176,54 @@ const getUserById = async (id) => {
   }
 };
 
+const getUserProfile = async (id) => {
+  try {
+    // Get basic user info with emergency contacts for students
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        student: {
+          include: {
+            emergencyContacts: {
+              orderBy: { isPrimary: "desc" },
+            },
+          },
+        },
+        teacher: true,
+        counselor: {
+          include: {
+            interventions: {
+              orderBy: { createdAt: "desc" },
+              take: 5,
+            },
+          },
+        },
+        admin: true,
+      },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    return user;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    throw error;
+  }
+};
+
 const createUser = async (userData) => {
   try {
-    const { firstName, lastName, email, password, role, phone, status = "ACTIVE" } = userData;
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      role,
+      phone,
+      status = "ACTIVE",
+    } = userData;
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -314,7 +360,9 @@ const deleteUser = async (id) => {
     // Most relationships now have cascade deletes configured, so we only need to handle a few manually
     await prisma.$transaction(async (tx) => {
       // Delete user's forum posts first (this will cascade to delete comments and reactions on those posts)
-      const userPosts = await tx.forumPost.findMany({ where: { authorId: id } });
+      const userPosts = await tx.forumPost.findMany({
+        where: { authorId: id },
+      });
       for (const post of userPosts) {
         await tx.reaction.deleteMany({ where: { postId: post.id } });
         await tx.comment.deleteMany({ where: { postId: post.id } });
@@ -679,6 +727,7 @@ module.exports = {
   getRecentActivities,
   getAllUsers,
   getUserById,
+  getUserProfile,
   createUser,
   updateUser,
   deleteUser,

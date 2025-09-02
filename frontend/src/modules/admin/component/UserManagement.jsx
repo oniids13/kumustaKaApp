@@ -26,9 +26,11 @@ import {
   LockOutlined,
   UnlockOutlined,
   SearchOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import moment from "moment";
+import UserProfileView from "./UserProfileView";
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -43,6 +45,9 @@ const UserManagement = () => {
   const [error, setError] = useState(null);
   const [form] = Form.useForm();
   const [searchText, setSearchText] = useState("");
+  const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
+  const [selectedUserProfile, setSelectedUserProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
 
@@ -186,6 +191,33 @@ const UserManagement = () => {
     setIsModalVisible(false);
   };
 
+  const handleViewProfile = async (record) => {
+    setProfileLoading(true);
+    setIsProfileModalVisible(true);
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/api/admin/users/${record.id}/profile`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+      setSelectedUserProfile(response.data.userProfile);
+    } catch (err) {
+      console.error("Error fetching user profile:", err);
+      message.error(`Failed to fetch user profile: ${err.message}`);
+      setIsProfileModalVisible(false);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleCloseProfile = () => {
+    setIsProfileModalVisible(false);
+    setSelectedUserProfile(null);
+  };
+
   const handleSearch = (e) => {
     setSearchText(e.target.value);
   };
@@ -324,6 +356,13 @@ const UserManagement = () => {
       key: "actions",
       render: (_, record) => (
         <Space size="small">
+          <Tooltip title="View Profile">
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewProfile(record)}
+            />
+          </Tooltip>
           <Tooltip
             title={record.status === "ACTIVE" ? "Deactivate" : "Activate"}
           >
@@ -506,6 +545,13 @@ const UserManagement = () => {
           )}
         </Form>
       </Modal>
+
+      <UserProfileView
+        visible={isProfileModalVisible}
+        onClose={handleCloseProfile}
+        userProfile={selectedUserProfile}
+        loading={profileLoading}
+      />
     </div>
   );
 };

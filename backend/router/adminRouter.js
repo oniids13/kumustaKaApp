@@ -37,6 +37,12 @@ router.get(
   checkRole(["ADMIN"]),
   adminController.getUserById
 );
+router.get(
+  "/users/:id/profile",
+  authenticateToken,
+  checkRole(["ADMIN"]),
+  adminController.getUserProfile
+);
 router.put(
   "/users/:id",
   authenticateToken,

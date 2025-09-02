@@ -15,7 +15,7 @@ exports.getRecentActivities = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    
+
     const activities = await adminQueries.getRecentActivities(page, limit);
     res.status(200).json(activities);
   } catch (error) {
@@ -68,6 +68,22 @@ exports.getUserById = async (req, res) => {
   } catch (error) {
     console.error("Error fetching user:", error);
     res.status(500).json({ message: "Failed to fetch user" });
+  }
+};
+
+exports.getUserProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userProfile = await adminQueries.getUserProfile(id);
+
+    if (!userProfile) {
+      return res.status(404).json({ message: "User profile not found" });
+    }
+
+    res.status(200).json({ userProfile });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    res.status(500).json({ message: "Failed to fetch user profile" });
   }
 };
 
