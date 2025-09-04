@@ -249,6 +249,9 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
 
       {/* Mood Entry Form */}
       <div className="mood-entry-form mt-3">
+        <div className="text-center">
+          <h2>Daily Todo's</h2>
+        </div>
         {errorMessage && (
           <div className="alert alert-danger">{errorMessage}</div>
         )}

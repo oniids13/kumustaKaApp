@@ -99,12 +99,7 @@ const DailySurveyAlert = () => {
           >
             Refresh
           </Button>
-          <Button
-            as={Link}
-            to="/daily-survey"
-            variant="outline-danger"
-            size="sm"
-          >
+          <Button as={Link} to="/daily-survey" variant="success" size="sm">
             Start Survey
           </Button>
         </div>

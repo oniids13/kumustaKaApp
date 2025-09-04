@@ -101,6 +101,42 @@ const InitialAssessmentPage = () => {
   return (
     <div className="container py-4">
       <h2 className="mb-4">Initial Mental Health Assessment</h2>
+      <p>
+        Hi! This is a short questionnaire with 21 questions about your{" "}
+        <strong>feelings and thoughts during the past week</strong>. There are
+        no right or wrong answers — it’s simply about how you’ve been feeling.
+      </p>
+      <p>
+        For each question, choose the answer that best shows how much the
+        statement applied to you:
+      </p>
+      <p>
+        <ul>
+          <li>0 = Did not apply to me at all</li>
+          <li>1 = Applied to me to some degree, or some of the time</li>
+          <li>
+            2 = Applied to me to a considerable degree, or a good part of time
+          </li>
+          <li>3 = Applied to me very much, or most of the time</li>
+        </ul>
+      </p>
+      <p>
+        Please:
+        <ul>
+          <li>
+            Be honest about your answers — this helps us understand how you’re
+            really feeling.
+          </li>
+          <li>
+            Don’t spend too much time on each question; just pick the option
+            that feels right for you.
+          </li>
+          <li>
+            Remember, your answers are private and will only be used to help
+            support your well-being.
+          </li>
+        </ul>
+      </p>
       <ProgressBar now={progress} label={`${progress}%`} className="mb-4" />
 
       {allQuestions.length === 0 ? (

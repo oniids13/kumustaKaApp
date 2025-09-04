@@ -116,10 +116,11 @@ function DailySurveyPage() {
           <div>
             <strong>Instruction:</strong>
             <p>
-              Complete this short survey by selecting one option per question (1
-              = Strongly Disagree, 5 = Strongly Agree) to share how you felt
-              today. Answer honestly—there are no right or wrong responses. Once
-              finished, click Submit to return to your dashboard.
+              Take a quick survey by picking one answer for each question (1 =
+              Strongly Disagree, 5 = Strongly Agree).{" "}
+              <strong>Just think about how you’re feeling today</strong>. There
+              are no right or wrong answers—just be real and honest. When you’re
+              done, hit Submit and you’ll go back to your dashboard.
             </p>
           </div>
           <Form>
