@@ -164,18 +164,17 @@ const getUnreadMessagesCount = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Count unread messages across all conversations for this user
+    // Count unread messages where the user is a recipient
+    // This matches the logic used in markConversationAsRead
     const unreadCount = await prisma.message.count({
       where: {
-        conversation: {
-          participants: {
-            some: {
-              id: userId,
-            },
-          },
-        },
         senderId: {
           not: userId,
+        },
+        recipients: {
+          some: {
+            id: userId,
+          },
         },
         isRead: false,
       },
