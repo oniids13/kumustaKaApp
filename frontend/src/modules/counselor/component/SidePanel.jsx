@@ -11,7 +11,10 @@ import {
 } from "react-icons/fa";
 import "../styles/SidePanel.css";
 import { Badge } from "react-bootstrap";
-import { setupNotificationChecks } from "../../../utils/notificationUtils";
+import {
+  setupNotificationChecks,
+  refreshNotifications,
+} from "../../../utils/notificationUtils";
 
 const SidePanel = ({ user, activeModule, setActiveModule }) => {
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -22,7 +25,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
     const cleanup = setupNotificationChecks(
       setUnreadMessages,
       null,
-      "COUNSELOR"
+      "COUNSELOR",
     );
     return cleanup;
   }, []);
@@ -31,7 +34,16 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
   const renderNavButton = (module, icon, label, count) => (
     <button
       className={`nav-button ${activeModule === module ? "active" : ""}`}
-      onClick={() => setActiveModule(module)}
+      onClick={() => {
+        setActiveModule(module);
+        // Refresh notifications after a short delay when navigating to messaging
+        // This allows time for the messages to be marked as read
+        if (module === "messaging") {
+          setTimeout(() => {
+            refreshNotifications();
+          }, 1000);
+        }
+      }}
     >
       {icon} {label}
       {count > 0 && (
@@ -60,7 +72,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
         {renderNavButton(
           "dashboard",
           <FaTachometerAlt />,
-          "Mental Health Overview"
+          "Mental Health Overview",
         )}
         {renderNavButton("analytics", <FaChartLine />, "Student Analytics")}
         {renderNavButton("interventions", <FaUserMd />, "Intervention Plans")}
@@ -69,7 +81,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
           "messaging",
           <FaEnvelope />,
           "Messages",
-          unreadMessages
+          unreadMessages,
         )}
         {renderNavButton("forum", <FaComments />, "Community Forum")}
         {renderNavButton("history", <FaHistory />, "Intervention History")}

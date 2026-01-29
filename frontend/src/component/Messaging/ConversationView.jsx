@@ -4,6 +4,7 @@ import { SendOutlined } from "@ant-design/icons";
 import axios from "axios";
 import moment from "moment";
 import "./Messaging.css";
+import { refreshNotifications } from "../../utils/notificationUtils";
 
 const ConversationView = ({ conversationId, onConversationUpdated }) => {
   const [conversation, setConversation] = useState(null);
@@ -48,7 +49,7 @@ const ConversationView = ({ conversationId, onConversationUpdated }) => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        }
+        },
       );
 
       setConversation(response.data);
@@ -63,8 +64,11 @@ const ConversationView = ({ conversationId, onConversationUpdated }) => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        }
+        },
       );
+
+      // Refresh notification counts after marking as read
+      refreshNotifications();
 
       if (onConversationUpdated) {
         onConversationUpdated();
@@ -95,7 +99,7 @@ const ConversationView = ({ conversationId, onConversationUpdated }) => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        }
+        },
       );
 
       setMessages([...messages, response.data]);
@@ -205,9 +209,10 @@ const ConversationView = ({ conversationId, onConversationUpdated }) => {
         ) : (
           messages.map((message) => {
             // Convert both IDs to strings for comparison to handle type mismatches
-            const currentUserId = String(getUserId() || '');
+            const currentUserId = String(getUserId() || "");
             const messageSenderId = String(message.sender.id);
-            const isOwnMessage = messageSenderId === currentUserId && currentUserId !== '';
+            const isOwnMessage =
+              messageSenderId === currentUserId && currentUserId !== "";
 
             return (
               <div
@@ -226,7 +231,9 @@ const ConversationView = ({ conversationId, onConversationUpdated }) => {
                   {!isOwnMessage && (
                     <div className="message-sender">
                       {message.sender.firstName} {message.sender.lastName}
-                      <span className="sender-role">({message.sender.role})</span>
+                      <span className="sender-role">
+                        ({message.sender.role})
+                      </span>
                     </div>
                   )}
                   <div className="message-bubble">

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Button, Card, Typography, Space, message } from "antd";
 import { CheckOutlined, DeleteOutlined } from "@ant-design/icons";
+import { refreshNotifications } from "../../../utils/notificationUtils";
 
 const { Title, Text } = Typography;
 
@@ -19,7 +20,7 @@ const PostApproval = () => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        }
+        },
       );
       setUnpublishedPosts(response.data.unpublishedPosts);
       setLoading(false);
@@ -43,10 +44,12 @@ const PostApproval = () => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        }
+        },
       );
       message.success("Post approved successfully");
       fetchUnpublishedPosts();
+      // Refresh notification counts
+      refreshNotifications();
     } catch (error) {
       console.error("Error approving post:", error);
       message.error("Failed to approve post");
@@ -61,10 +64,12 @@ const PostApproval = () => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        }
+        },
       );
       message.success("Post deleted successfully");
       fetchUnpublishedPosts();
+      // Refresh notification counts
+      refreshNotifications();
     } catch (error) {
       console.error("Error deleting post:", error);
       message.error("Failed to delete post");

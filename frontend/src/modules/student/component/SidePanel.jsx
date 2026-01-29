@@ -18,7 +18,10 @@ import "../styles/SidePanel.css";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Badge } from "react-bootstrap";
-import { setupNotificationChecks } from "../../../utils/notificationUtils";
+import {
+  setupNotificationChecks,
+  refreshNotifications,
+} from "../../../utils/notificationUtils";
 
 import DailySurveyAlert from "./DailySurveyAlert";
 
@@ -56,7 +59,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmittedToday, setHasSubmittedToday] = useState(
-    initialSubmittedState
+    initialSubmittedState,
   );
   const [errorMessage, setErrorMessage] = useState(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -151,7 +154,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
             "X-Client-Time": clientTime.toISOString(),
             "X-Client-Timezone": clientTimezone,
           },
-        }
+        },
       );
 
       if (response.status === 201) {
@@ -175,7 +178,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
         error.response?.data?.error ||
           error.response?.data?.message ||
           error.message ||
-          "Failed to record mood. Please try again."
+          "Failed to record mood. Please try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -222,6 +225,13 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
         className={`nav-button ${activeModule === module ? "active" : ""}`}
         onClick={() => {
           setActiveModule(module);
+          // Refresh notifications after a short delay when navigating to messaging
+          // This allows time for the messages to be marked as read
+          if (module === "messaging") {
+            setTimeout(() => {
+              refreshNotifications();
+            }, 1000);
+          }
         }}
       >
         {icon} {label}
@@ -343,7 +353,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
           "messaging",
           <FaEnvelope />,
           "Messages",
-          unreadMessages
+          unreadMessages,
         )}
         {renderNavButton("journal", <FaBook />, "Wellness Journal")}
         {renderNavButton("moodtracker", <FaChartLine />, "Mood Tracker")}

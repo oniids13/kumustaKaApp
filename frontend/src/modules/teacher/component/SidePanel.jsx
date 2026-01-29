@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 
 import "../styles/SidePanel.css";
 import { Badge } from "react-bootstrap";
-import { setupNotificationChecks } from "../../../utils/notificationUtils";
+import {
+  setupNotificationChecks,
+  refreshNotifications,
+} from "../../../utils/notificationUtils";
 
 // Icons
 import {
@@ -24,7 +27,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
     const cleanup = setupNotificationChecks(
       setUnreadMessages,
       setPendingPosts,
-      "TEACHER"
+      "TEACHER",
     );
     return cleanup;
   }, []);
@@ -33,7 +36,16 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
   const renderNavButton = (module, icon, label, count) => (
     <button
       className={`nav-button ${activeModule === module ? "active" : ""}`}
-      onClick={() => setActiveModule(module)}
+      onClick={() => {
+        setActiveModule(module);
+        // Refresh notifications after a short delay when navigating to messaging or posts
+        // This allows time for the content to be marked as read/viewed
+        if (module === "messaging" || module === "posts") {
+          setTimeout(() => {
+            refreshNotifications();
+          }, 1000);
+        }
+      }}
     >
       {icon} {label}
       {count > 0 && (
@@ -67,13 +79,13 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
             "messaging",
             <FaEnvelope />,
             "Messages",
-            unreadMessages
+            unreadMessages,
           )}
           {renderNavButton(
             "posts",
             <FaBalanceScale />,
             "Approve Post",
-            pendingPosts
+            pendingPosts,
           )}
           {renderNavButton("trends", <FaChartLine />, "View Trends")}
           {renderNavButton("reports", <FaFileAlt />, "Generate Report")}

@@ -15,7 +15,7 @@ export const checkUnreadMessages = async () => {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
-      }
+      },
     );
 
     return response.data?.unreadCount || 0;
@@ -40,7 +40,7 @@ export const checkPendingPosts = async () => {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
-      }
+      },
     );
 
     return response.data?.pendingCount || 0;
@@ -50,19 +50,53 @@ export const checkPendingPosts = async () => {
   }
 };
 
+// Store references to setter functions for manual refresh
+let notificationSetters = {
+  setUnreadMessages: null,
+  setPendingPosts: null,
+  userRole: null,
+};
+
+// Manual refresh function - call this after viewing messages or approving posts
+export const refreshNotifications = async () => {
+  try {
+    if (notificationSetters.setUnreadMessages) {
+      const unreadCount = await checkUnreadMessages();
+      notificationSetters.setUnreadMessages(unreadCount);
+    }
+
+    if (
+      notificationSetters.userRole === "TEACHER" &&
+      notificationSetters.setPendingPosts
+    ) {
+      const pendingCount = await checkPendingPosts();
+      notificationSetters.setPendingPosts(pendingCount);
+    }
+  } catch (error) {
+    console.error("Error refreshing notifications:", error);
+  }
+};
+
 // Set up periodic checks (call this on component mount)
 export const setupNotificationChecks = (
   setUnreadMessages,
   setPendingPosts,
-  userRole
+  userRole,
 ) => {
+  // Store references for manual refresh
+  notificationSetters = {
+    setUnreadMessages,
+    setPendingPosts,
+    userRole,
+  };
+
   // Immediately check for notifications
   const checkNotifications = async () => {
     try {
       const unreadCount = await checkUnreadMessages();
       setUnreadMessages(unreadCount);
 
-      if (userRole === "TEACHER") {
+      if (userRole === "TEACHER" && setPendingPosts) {
         const pendingCount = await checkPendingPosts();
         setPendingPosts(pendingCount);
       }
@@ -78,5 +112,13 @@ export const setupNotificationChecks = (
   const intervalId = setInterval(checkNotifications, 30000);
 
   // Return cleanup function
-  return () => clearInterval(intervalId);
+  return () => {
+    clearInterval(intervalId);
+    // Clear stored references on cleanup
+    notificationSetters = {
+      setUnreadMessages: null,
+      setPendingPosts: null,
+      userRole: null,
+    };
+  };
 };
