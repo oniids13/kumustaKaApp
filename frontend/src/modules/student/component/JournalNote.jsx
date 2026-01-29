@@ -1,8 +1,20 @@
 import { FaStickyNote } from "react-icons/fa";
 
 const JournalNote = ({ journal, onClick, onEdit, onDelete, isSelected }) => {
-  const previewText =
-    journal.content.replace(/<[^>]*>/g, "").substring(0, 100) + "...";
+  // Helper function to decode HTML entities and strip HTML tags
+  const getPreviewText = (htmlContent) => {
+    const tempDiv = document.createElement("div");
+    // First pass: decode HTML entities (e.g., &lt;p&gt; becomes <p>)
+    tempDiv.innerHTML = htmlContent;
+    const decodedHtml = tempDiv.textContent || tempDiv.innerText || "";
+    // Second pass: strip actual HTML tags (e.g., <p>Sample</p> becomes Sample)
+    tempDiv.innerHTML = decodedHtml;
+    const plainText = tempDiv.textContent || tempDiv.innerText || "";
+    // Return truncated preview
+    return plainText.substring(0, 100) + (plainText.length > 100 ? "..." : "");
+  };
+
+  const previewText = getPreviewText(journal.content);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
