@@ -57,6 +57,7 @@ const TextEditor = ({ content, onUpdate }) => {
     <div className="tiptap-editor">
       <div className="menu-bar">
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
           className={editor.isActive("bold") ? "is-active" : ""}
           title="Bold"
@@ -64,6 +65,7 @@ const TextEditor = ({ content, onUpdate }) => {
           <FaBold />
         </button>
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleItalic().run()}
           className={editor.isActive("italic") ? "is-active" : ""}
           title="Italic"
@@ -71,6 +73,7 @@ const TextEditor = ({ content, onUpdate }) => {
           <FaItalic />
         </button>
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           className={editor.isActive("bulletList") ? "is-active" : ""}
           title="Bullet List"

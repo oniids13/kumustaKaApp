@@ -15,6 +15,24 @@ const Journal = () => {
 
   const user = JSON.parse(localStorage.getItem("userData"));
 
+  // Helper function to decode HTML entities (handles double-encoded content)
+  const decodeHtmlContent = (htmlContent) => {
+    const tempDiv = document.createElement("div");
+    // First pass: decode HTML entities (e.g., &lt;p&gt; becomes <p>)
+    tempDiv.innerHTML = htmlContent;
+    const decodedOnce = tempDiv.innerHTML;
+    // Check if content was entity-encoded by looking for actual HTML tags now
+    // If the textContent differs from innerHTML, we have actual HTML
+    // If they're similar and contain < >, it was double-encoded
+    const textContent = tempDiv.textContent || tempDiv.innerText || "";
+    if (textContent.includes("<") && textContent.includes(">")) {
+      // Content was double-encoded, return the decoded version
+      return textContent;
+    }
+    // Content has actual HTML tags, return as-is
+    return htmlContent;
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString("en-PH", {
@@ -35,7 +53,7 @@ const Journal = () => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        }
+        },
       );
       setJournals(response.data);
     } catch (error) {
@@ -57,7 +75,7 @@ const Journal = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${user.token}`,
           },
-        }
+        },
       );
       setJournals([response.data, ...journals]);
     } catch (error) {
@@ -74,7 +92,7 @@ const Journal = () => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        }
+        },
       );
       setJournals(journals.map((j) => (j.id === id ? { ...j, content } : j)));
       setSelectedJournal(null);
@@ -96,7 +114,7 @@ const Journal = () => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        }
+        },
       );
       setJournals(journals.filter((j) => j.id !== id));
       if (selectedJournal?.id === id) {
@@ -209,7 +227,9 @@ const Journal = () => {
             </div>
             <div
               className="journal-modal-body"
-              dangerouslySetInnerHTML={{ __html: selectedJournal.content }}
+              dangerouslySetInnerHTML={{
+                __html: decodeHtmlContent(selectedJournal.content),
+              }}
             />
             <div className="journal-modal-footer">
               <button
