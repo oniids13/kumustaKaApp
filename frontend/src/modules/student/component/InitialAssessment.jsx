@@ -10,6 +10,8 @@ const InitialAssessmentPage = () => {
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [validationError, setValidationError] = useState(null);
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
   const defaultScaleOptions = [
     { value: 0, label: "Did not apply to me at all" },
@@ -26,7 +28,7 @@ const InitialAssessmentPage = () => {
       try {
         const res = await axios.get(
           "http://localhost:3000/api/initialAssessment/getInitialAssessment",
-          { headers: { Authorization: `Bearer ${user.token}` } }
+          { headers: { Authorization: `Bearer ${user.token}` } },
         );
         if (res.data?.assessmentData) {
           setAssessment(res.data);
@@ -37,7 +39,7 @@ const InitialAssessmentPage = () => {
         console.error("Error fetching assessment:", err);
         setError(
           err.response?.data?.message ||
-            "Failed to load assessment. Please try again."
+            "Failed to load assessment. Please try again.",
         );
       } finally {
         setLoading(false);
@@ -48,14 +50,64 @@ const InitialAssessmentPage = () => {
 
   const handleAnswerChange = (questionId, value) => {
     setAnswers((prev) => ({ ...prev, [questionId]: Number(value) }));
+    // Clear validation error when user answers a question
+    if (validationError) {
+      setValidationError(null);
+    }
+  };
+
+  // Get all questions for validation
+  const getAllQuestions = () => {
+    return (
+      assessment?.assessmentData?.sections?.flatMap((section) =>
+        section?.questions?.map((q) => ({
+          ...q,
+          category: section.category,
+          scaleOptions: q.scale?.options || defaultScaleOptions,
+        })),
+      ) || []
+    );
+  };
+
+  // Get unanswered questions
+  const getUnansweredQuestions = () => {
+    const allQuestions = getAllQuestions();
+    return allQuestions.filter((q) => answers[q.id] === undefined);
+  };
+
+  // Validate all questions are answered
+  const validateForm = () => {
+    const unanswered = getUnansweredQuestions();
+    if (unanswered.length > 0) {
+      const unansweredCount = unanswered.length;
+      setValidationError(
+        `Please answer all questions before submitting. You have ${unansweredCount} unanswered question${unansweredCount > 1 ? "s" : ""}.`,
+      );
+      setAttemptedSubmit(true);
+      // Scroll to the first unanswered question
+      const firstUnansweredId = unanswered[0].id;
+      const element = document.querySelector(
+        `[name="question-${firstUnansweredId}"]`,
+      );
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async () => {
+    // Validate before submitting
+    if (!validateForm()) {
+      return;
+    }
+
     try {
       await axios.post(
         "http://localhost:3000/api/initialAssessment/submitInitialAssessment",
         { answers },
-        { headers: { Authorization: `Bearer ${user.token}` } }
+        { headers: { Authorization: `Bearer ${user.token}` } },
       );
 
       alert("Assessment submitted successfully!");
@@ -84,19 +136,19 @@ const InitialAssessmentPage = () => {
   }
 
   // Calculate progress
-  const allQuestions =
-    assessment?.assessmentData?.sections?.flatMap((section) =>
-      section?.questions?.map((q) => ({
-        ...q,
-        category: section.category,
-        scaleOptions: q.scale?.options || defaultScaleOptions,
-      }))
-    ) || [];
+  const allQuestions = getAllQuestions();
+  const answeredCount = Object.keys(answers).length;
+  const totalQuestions = allQuestions.length;
 
   const progress =
-    allQuestions.length > 0
-      ? Math.round(Object.keys(answers).length / allQuestions.length) * 100
-      : 0;
+    totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0;
+
+  const isComplete = answeredCount === totalQuestions && totalQuestions > 0;
+
+  // Check if a specific question is unanswered (for highlighting)
+  const isQuestionUnanswered = (questionId) => {
+    return attemptedSubmit && answers[questionId] === undefined;
+  };
 
   return (
     <div className="container py-4">
@@ -137,7 +189,23 @@ const InitialAssessmentPage = () => {
           </li>
         </ul>
       </p>
-      <ProgressBar now={progress} label={`${progress}%`} className="mb-4" />
+      <ProgressBar
+        now={progress}
+        label={`${answeredCount}/${totalQuestions} (${progress}%)`}
+        className="mb-4"
+        variant={isComplete ? "success" : "primary"}
+      />
+
+      {validationError && (
+        <Alert
+          variant="danger"
+          className="mb-4"
+          dismissible
+          onClose={() => setValidationError(null)}
+        >
+          {validationError}
+        </Alert>
+      )}
 
       {allQuestions.length === 0 ? (
         <Alert variant="warning">No assessment questions found.</Alert>
@@ -148,10 +216,19 @@ const InitialAssessmentPage = () => {
               <h4 className="mb-3">{section.category}</h4>
               {section.questions.map((q, idx) => {
                 const options = q.scale?.options || defaultScaleOptions;
+                const unanswered = isQuestionUnanswered(q.id);
                 return (
-                  <Form.Group key={q.id} className="mb-4 p-3 border rounded">
+                  <Form.Group
+                    key={q.id}
+                    className={`mb-4 p-3 border rounded ${
+                      unanswered ? "border-danger bg-danger bg-opacity-10" : ""
+                    }`}
+                  >
                     <Form.Label className="fw-bold d-block">
                       {idx + 1}. {q.question}
+                      {unanswered && (
+                        <span className="text-danger ms-2">(Required)</span>
+                      )}
                     </Form.Label>
                     <div className="mt-2">
                       {options.map((option) => (
@@ -177,13 +254,26 @@ const InitialAssessmentPage = () => {
         </Form>
       )}
 
-      <div className="d-flex justify-content-end mt-4">
+      <div className="d-flex justify-content-between align-items-center mt-4">
+        <div className="text-muted">
+          {!isComplete && (
+            <small>
+              {totalQuestions - answeredCount} question
+              {totalQuestions - answeredCount !== 1 ? "s" : ""} remaining
+            </small>
+          )}
+          {isComplete && (
+            <small className="text-success">
+              All questions answered. Ready to submit!
+            </small>
+          )}
+        </div>
         <Button
-          variant="primary"
+          variant={isComplete ? "success" : "primary"}
           onClick={handleSubmit}
-          disabled={progress < 100 || allQuestions.length === 0}
+          disabled={allQuestions.length === 0}
         >
-          {progress < 100 ? "Complete All Questions" : "Submit Assessment"}
+          {isComplete ? "Submit Assessment" : "Submit Assessment"}
         </Button>
       </div>
     </div>
