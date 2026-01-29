@@ -31,6 +31,73 @@ import moment from "moment";
 
 const { Title, Text } = Typography;
 
+// DASS-21 severity interpretation functions
+const getDepressionSeverity = (score) => {
+  if (score <= 9) return { level: "Normal", color: "success" };
+  if (score <= 13) return { level: "Mild", color: "processing" };
+  if (score <= 20) return { level: "Moderate", color: "warning" };
+  if (score <= 27) return { level: "Severe", color: "error" };
+  return { level: "Extremely Severe", color: "error" };
+};
+
+const getAnxietySeverity = (score) => {
+  if (score <= 7) return { level: "Normal", color: "success" };
+  if (score <= 9) return { level: "Mild", color: "processing" };
+  if (score <= 14) return { level: "Moderate", color: "warning" };
+  if (score <= 19) return { level: "Severe", color: "error" };
+  return { level: "Extremely Severe", color: "error" };
+};
+
+const getStressSeverity = (score) => {
+  if (score <= 14) return { level: "Normal", color: "success" };
+  if (score <= 18) return { level: "Mild", color: "processing" };
+  if (score <= 25) return { level: "Moderate", color: "warning" };
+  if (score <= 33) return { level: "Severe", color: "error" };
+  return { level: "Extremely Severe", color: "error" };
+};
+
+const getTotalScoreZone = (total, depression, anxiety, stress) => {
+  // Determine zone based on highest severity among the three subscales
+  const depSeverity = getDepressionSeverity(depression);
+  const anxSeverity = getAnxietySeverity(anxiety);
+  const strSeverity = getStressSeverity(stress);
+
+  const severities = [depSeverity, anxSeverity, strSeverity];
+  const hasExtremelySevere = severities.some(
+    (s) => s.level === "Extremely Severe",
+  );
+  const hasSevere = severities.some((s) => s.level === "Severe");
+  const hasModerate = severities.some((s) => s.level === "Moderate");
+  const hasMild = severities.some((s) => s.level === "Mild");
+
+  if (hasExtremelySevere || hasSevere) {
+    return {
+      zone: "Red",
+      color: "error",
+      description: "Needs immediate attention",
+    };
+  }
+  if (hasModerate) {
+    return {
+      zone: "Yellow",
+      color: "warning",
+      description: "Requires monitoring",
+    };
+  }
+  if (hasMild) {
+    return {
+      zone: "Yellow",
+      color: "warning",
+      description: "Mild concerns present",
+    };
+  }
+  return {
+    zone: "Green",
+    color: "success",
+    description: "Within normal range",
+  };
+};
+
 const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
   if (!studentProfile) {
     return (
@@ -119,13 +186,13 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
             <Descriptions.Item label="Last Login">
               {studentProfile.user.lastLogin
                 ? moment(studentProfile.user.lastLogin).format(
-                    "MMM DD, YYYY HH:mm"
+                    "MMM DD, YYYY HH:mm",
                   )
                 : "Never logged in"}
             </Descriptions.Item>
             <Descriptions.Item label="Last Updated">
               {moment(studentProfile.user.updatedAt).format(
-                "MMM DD, YYYY HH:mm"
+                "MMM DD, YYYY HH:mm",
               )}
             </Descriptions.Item>
           </Descriptions>
@@ -241,8 +308,8 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
                   ? getMoodColor(latestMoodEntry.moodLevel) === "success"
                     ? "#52c41a"
                     : getMoodColor(latestMoodEntry.moodLevel) === "warning"
-                    ? "#faad14"
-                    : "#f5222d"
+                      ? "#faad14"
+                      : "#f5222d"
                   : undefined,
               }}
             />
@@ -276,38 +343,104 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
         {initialAssessment && (
           <div style={{ marginTop: 16 }}>
             <Divider orientation="left" orientationMargin="0">
-              Initial Assessment Scores
+              Initial Assessment (DASS-21)
             </Divider>
-            <Row gutter={16}>
-              <Col span={6}>
-                <Statistic
-                  title="Anxiety"
-                  value={initialAssessment.anxietyScore}
-                  precision={1}
-                />
-              </Col>
-              <Col span={6}>
-                <Statistic
-                  title="Depression"
-                  value={initialAssessment.depressionScore}
-                  precision={1}
-                />
-              </Col>
-              <Col span={6}>
-                <Statistic
-                  title="Stress"
-                  value={initialAssessment.stressScore}
-                  precision={1}
-                />
-              </Col>
-              <Col span={6}>
-                <Statistic
-                  title="Total"
-                  value={initialAssessment.totalScore}
-                  precision={1}
-                />
-              </Col>
-            </Row>
+            {(() => {
+              const depSeverity = getDepressionSeverity(
+                initialAssessment.depressionScore,
+              );
+              const anxSeverity = getAnxietySeverity(
+                initialAssessment.anxietyScore,
+              );
+              const strSeverity = getStressSeverity(
+                initialAssessment.stressScore,
+              );
+              const totalZone = getTotalScoreZone(
+                initialAssessment.totalScore,
+                initialAssessment.depressionScore,
+                initialAssessment.anxietyScore,
+                initialAssessment.stressScore,
+              );
+
+              return (
+                <>
+                  <Row gutter={16}>
+                    <Col span={6}>
+                      <Statistic
+                        title="Depression"
+                        value={initialAssessment.depressionScore}
+                        precision={0}
+                      />
+                      <Tag color={depSeverity.color} style={{ marginTop: 4 }}>
+                        {depSeverity.level}
+                      </Tag>
+                    </Col>
+                    <Col span={6}>
+                      <Statistic
+                        title="Anxiety"
+                        value={initialAssessment.anxietyScore}
+                        precision={0}
+                      />
+                      <Tag color={anxSeverity.color} style={{ marginTop: 4 }}>
+                        {anxSeverity.level}
+                      </Tag>
+                    </Col>
+                    <Col span={6}>
+                      <Statistic
+                        title="Stress"
+                        value={initialAssessment.stressScore}
+                        precision={0}
+                      />
+                      <Tag color={strSeverity.color} style={{ marginTop: 4 }}>
+                        {strSeverity.level}
+                      </Tag>
+                    </Col>
+                    <Col span={6}>
+                      <Statistic
+                        title="Total Score"
+                        value={initialAssessment.totalScore}
+                        precision={0}
+                      />
+                      <Tag color={totalZone.color} style={{ marginTop: 4 }}>
+                        {totalZone.zone} Zone
+                      </Tag>
+                    </Col>
+                  </Row>
+                  <div
+                    style={{
+                      marginTop: 12,
+                      padding: "8px 12px",
+                      backgroundColor:
+                        totalZone.color === "error"
+                          ? "#fff2f0"
+                          : totalZone.color === "warning"
+                            ? "#fffbe6"
+                            : "#f6ffed",
+                      borderRadius: 4,
+                      border: `1px solid ${
+                        totalZone.color === "error"
+                          ? "#ffccc7"
+                          : totalZone.color === "warning"
+                            ? "#ffe58f"
+                            : "#b7eb8f"
+                      }`,
+                    }}
+                  >
+                    <Text>
+                      <strong>Overall Assessment:</strong>{" "}
+                      {totalZone.description}
+                    </Text>
+                    <br />
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Completed on:{" "}
+                      {moment(initialAssessment.createdAt).format(
+                        "MMM DD, YYYY",
+                      )}
+                    </Text>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         )}
       </Card>
@@ -370,7 +503,7 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
       return (
         1 +
         Math.round(
-          ((d - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7
+          ((d - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7,
         )
       );
     };
@@ -399,8 +532,8 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
                               weekStat.percentage >= 80
                                 ? "green"
                                 : weekStat.percentage >= 60
-                                ? "orange"
-                                : "red"
+                                  ? "orange"
+                                  : "red"
                             }
                           >
                             {weekStat.percentage}%
@@ -484,8 +617,8 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
                         intervention.status === "COMPLETED"
                           ? "green"
                           : intervention.status === "IN_PROGRESS"
-                          ? "blue"
-                          : "default"
+                            ? "blue"
+                            : "default"
                       }
                     >
                       {intervention.status}
