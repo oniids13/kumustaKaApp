@@ -202,29 +202,17 @@ const GoalTracker = () => {
       monthToWeeks[idx] = new Set();
     });
 
-    // For each day of the year, add its week number to the corresponding month
-    for (let month = 0; month < 12; month++) {
-      const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
-
-      // Process each day of the month
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(currentYear, month, day);
-        const [year, weekNumber] = getWeekNumber(date);
-
-        // Only add weeks that belong to the current year to avoid cross-year boundary issues
-        if (year === currentYear) {
-          monthToWeeks[month].add(weekNumber);
-        } else if (month === 11 && year > currentYear) {
-          // For December days that might belong to next year's week 1,
-          // We want to show them as part of the last week of current year
-          const lastWeekOfYear = getLastWeekOfYear(currentYear);
-          monthToWeeks[month].add(lastWeekOfYear);
-        } else if (month === 0 && year < currentYear) {
-          // For January days that might belong to previous year's last week,
-          // assign them to week 1
-          monthToWeeks[month].add(1);
-        }
-      }
+    // Helper function to get the Monday of an ISO week
+    function getMondayOfWeek(year, weekNumber) {
+      // January 4th is always in week 1 of the ISO year
+      const jan4 = new Date(Date.UTC(year, 0, 4));
+      // Get the Monday of week 1
+      const dayOfWeek = jan4.getUTCDay() || 7; // Convert Sunday (0) to 7
+      const monday = new Date(jan4);
+      monday.setUTCDate(jan4.getUTCDate() - dayOfWeek + 1);
+      // Add (weekNumber - 1) weeks to get the Monday of the target week
+      monday.setUTCDate(monday.getUTCDate() + (weekNumber - 1) * 7);
+      return monday;
     }
 
     // Helper function to get the last week number of a year
@@ -247,6 +235,23 @@ const GoalTracker = () => {
       }
 
       return lastDayWeekData[1];
+    }
+
+    // Get total weeks in the current year
+    const totalWeeks = getLastWeekOfYear(currentYear);
+
+    // Assign each week to the month where its Monday falls
+    for (let weekNum = 1; weekNum <= totalWeeks; weekNum++) {
+      const monday = getMondayOfWeek(currentYear, weekNum);
+      const monthIndex = monday.getUTCMonth();
+
+      // Only add if the Monday falls within the current year
+      if (monday.getUTCFullYear() === currentYear) {
+        monthToWeeks[monthIndex].add(weekNum);
+      } else if (monday.getUTCFullYear() < currentYear) {
+        // If Monday is in previous year (can happen for week 1), assign to January
+        monthToWeeks[0].add(weekNum);
+      }
     }
 
     // Convert the map to the expected array format
