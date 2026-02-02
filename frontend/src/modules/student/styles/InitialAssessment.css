@@ -1,0 +1,104 @@
+/* InitialAssessment.css */
+
+.assessment-page {
+  padding-bottom: 50px;
+}
+
+.assessment-progress-bar {
+  position: fixed;
+  top: 82px;
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background-color: #ffffff;
+  padding: 15px 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-bottom: 2px solid #e9ecef;
+}
+
+.assessment-progress-bar .progress-content {
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.assessment-progress-bar .progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.assessment-progress-bar .progress-text {
+  font-weight: 600;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.assessment-progress-bar .progress-percentage {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.assessment-progress-bar .progress-percentage.complete {
+  color: #198754;
+}
+
+.assessment-progress-bar .progress-percentage.incomplete {
+  color: #0d6efd;
+}
+
+.assessment-progress-bar .progress {
+  height: 14px;
+  border-radius: 7px;
+  background-color: #e9ecef;
+}
+
+.assessment-progress-bar .progress-bar {
+  border-radius: 7px;
+}
+
+.assessment-progress-bar .progress-status {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.assessment-progress-bar .progress-status.remaining {
+  color: #6c757d;
+}
+
+.assessment-progress-bar .progress-status.complete {
+  color: #198754;
+  font-weight: 600;
+}
+
+/* Spacer to push content below fixed progress bar */
+.assessment-spacer {
+  height: 110px;
+}
+
+.assessment-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.assessment-intro {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  border-left: 4px solid #0d6efd;
+}
+
+.assessment-intro h2 {
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.assessment-intro ul {
+  margin-bottom: 0;
+}
+
+.assessment-intro li {
+  margin-bottom: 5px;
+}
