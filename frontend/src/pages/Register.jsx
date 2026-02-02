@@ -12,6 +12,7 @@ const RegisterPage = () => {
     phone: "",
     firstName: "",
     lastName: "",
+    gender: "",
     passcode: "",
     emergencyContactName: "",
     emergencyContactPhone: "",
@@ -97,6 +98,7 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     firstName: "",
     lastName: "",
     phone: "",
+    gender: "",
     role: "STUDENT",
     passcode: "",
     emergencyContactName: "",
@@ -132,6 +134,13 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     { value: "Friend", label: "Friend" },
     { value: "Relative", label: "Relative" },
     { value: "Other", label: "Other" },
+  ];
+
+  const GENDERS = [
+    { value: "MALE", label: "Male" },
+    { value: "FEMALE", label: "Female" },
+    { value: "OTHER", label: "Other" },
+    { value: "PREFER_NOT_TO_SAY", label: "Prefer not to say" },
   ];
 
   const ADMIN_PASSCODE = "TEST";
@@ -240,6 +249,7 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       phone: "",
       firstName: "",
       lastName: "",
+      gender: "",
       passcode: "",
       emergencyContactName: "",
       emergencyContactPhone: "",
@@ -343,6 +353,11 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       
       if (!requiresPasscode) {
         delete data.passcode;
+      }
+
+      // Remove empty gender (optional field)
+      if (!data.gender) {
+        delete data.gender;
       }
       
       // Only include emergency contact data for students
@@ -453,6 +468,26 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
           </small>
         </div>
         {errors.phone && <span className="error-message">{errors.phone}</span>}
+      </div>
+
+      {/* Gender Selection */}
+      <div className="form-group">
+        <label htmlFor="gender">Gender</label>
+        <select
+          id="gender"
+          name="gender"
+          value={formData.gender}
+          onChange={handleChange}
+          className={errors.gender ? "error" : ""}
+        >
+          <option value="">Select gender (optional)</option>
+          {GENDERS.map((gender) => (
+            <option key={gender.value} value={gender.value}>
+              {gender.label}
+            </option>
+          ))}
+        </select>
+        {errors.gender && <span className="error-message">{errors.gender}</span>}
       </div>
 
       {/* Role Selection */}

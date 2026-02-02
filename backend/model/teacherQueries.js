@@ -31,6 +31,7 @@ const getAllStudents = async () => {
             lastName: true,
             email: true,
             avatar: true,
+            gender: true,
           },
         },
       },
@@ -48,6 +49,7 @@ const getAllStudents = async () => {
       lastName: student.user.lastName,
       email: student.user.email,
       avatar: student.user.avatar,
+      gender: student.user.gender,
     }));
   } catch (error) {
     console.error("Error fetching students:", error);
@@ -101,7 +103,7 @@ const getMentalHealthTrends = async (params, teacherId) => {
             },
           };
           console.log(
-            `Week filter: ${weekStart.toISOString()} to ${endOfToday.toISOString()}`
+            `Week filter: ${weekStart.toISOString()} to ${endOfToday.toISOString()}`,
           );
           break;
         case "month":
@@ -186,7 +188,7 @@ const getMentalHealthTrends = async (params, teacherId) => {
     });
 
     console.log(
-      `Found ${moodEntries.length} mood entries and ${surveyResponses.length} survey responses`
+      `Found ${moodEntries.length} mood entries and ${surveyResponses.length} survey responses`,
     );
 
     // Process data for mood trends over time using survey responses and zones
@@ -242,7 +244,7 @@ const generateMentalHealthReport = async (params, teacherId) => {
 
     // Calculate average survey responses per week
     const avgSurveyResponsesPerWeek = Math.round(
-      totalResponses / weeksDifference
+      totalResponses / weeksDifference,
     );
 
     // Calculate total mood entries from dailyMoodTrends
@@ -258,7 +260,7 @@ const generateMentalHealthReport = async (params, teacherId) => {
       : 0;
 
     const avgMoodEntriesPerWeek = Math.round(
-      totalMoodEntries / weeksDifference
+      totalMoodEntries / weeksDifference,
     );
 
     // Generate some basic issue categories based on available data
@@ -276,7 +278,7 @@ const generateMentalHealthReport = async (params, teacherId) => {
         params.reportType.charAt(0).toUpperCase() + params.reportType.slice(1)
       }`,
       period: `${new Date(params.startDate).toLocaleDateString()} - ${new Date(
-        params.endDate
+        params.endDate,
       ).toLocaleDateString()}`,
       summary: {
         totalResponses: totalResponses,
@@ -491,12 +493,12 @@ const getAcademicPerformanceIndicators = async (teacherId) => {
       quizAttempts.reduce(
         (sum, attempt) =>
           sum + (attempt.score / attempt.quiz.totalPoints) * 100,
-        0
+        0,
       ) / totalAttempts;
 
     // Calculate pass rate (assuming 60% is passing)
     const passCount = quizAttempts.filter(
-      (attempt) => attempt.score / attempt.quiz.totalPoints >= 0.6
+      (attempt) => attempt.score / attempt.quiz.totalPoints >= 0.6,
     ).length;
 
     const passRate = (passCount / totalAttempts) * 100;
@@ -612,7 +614,7 @@ const deleteForumPost = async (postId) => {
  */
 const processMoodTrendsData = (responses, period) => {
   console.log(
-    `Processing ${responses.length} survey responses for mood trends`
+    `Processing ${responses.length} survey responses for mood trends`,
   );
 
   if (!responses || !responses.length) {
@@ -716,7 +718,7 @@ const processMoodTrendsData = (responses, period) => {
       } else {
         // If zone isn't one of the expected values, try to determine from percentage
         console.log(
-          `Warning: Unknown zone value '${response.zone}' for response ID ${response.id}`
+          `Warning: Unknown zone value '${response.zone}' for response ID ${response.id}`,
         );
         if (response.percentage !== undefined) {
           const percentage = parseFloat(response.percentage);
@@ -729,7 +731,7 @@ const processMoodTrendsData = (responses, period) => {
           }
         } else {
           console.log(
-            `Warning: Missing zone data for response ID ${response.id}`
+            `Warning: Missing zone data for response ID ${response.id}`,
           );
         }
       }
@@ -744,7 +746,7 @@ const processMoodTrendsData = (responses, period) => {
   let result = Object.values(groupedByPeriod);
   console.log(
     `Grouped data into ${result.length} periods:`,
-    result.map((r) => r.name)
+    result.map((r) => r.name),
   );
 
   if (period === "week") {
@@ -887,32 +889,32 @@ const generateRecommendedActions = (trendsData) => {
   // Add mood-based recommendations
   if (averageMood === "Negative") {
     recommendations.push(
-      "Consider scheduling regular check-ins or support groups for students"
+      "Consider scheduling regular check-ins or support groups for students",
     );
     recommendations.push("Share resources for coping with stress and anxiety");
     recommendations.push("Provide mental health awareness workshops");
   } else if (averageMood === "Neutral") {
     recommendations.push(
-      "Monitor student wellbeing and provide preventive support"
+      "Monitor student wellbeing and provide preventive support",
     );
     recommendations.push("Encourage open communication about mental health");
     recommendations.push("Implement stress management techniques in classroom");
   } else if (averageMood === "Positive") {
     recommendations.push("Continue current supportive practices");
     recommendations.push(
-      "Share positive mental health strategies with other educators"
+      "Share positive mental health strategies with other educators",
     );
     recommendations.push(
-      "Maintain regular check-ins to sustain positive trends"
+      "Maintain regular check-ins to sustain positive trends",
     );
   } else {
     // No data case
     recommendations.push(
-      "Encourage students to participate in mental health surveys"
+      "Encourage students to participate in mental health surveys",
     );
     recommendations.push("Implement regular mood check-ins in classroom");
     recommendations.push(
-      "Provide information about available mental health resources"
+      "Provide information about available mental health resources",
     );
   }
 
@@ -952,7 +954,7 @@ const processDailyMoodTrends = (moodEntries) => {
 
   // Convert to array and sort by date
   return Object.values(groupedByDate).sort(
-    (a, b) => new Date(a.date) - new Date(b.date)
+    (a, b) => new Date(a.date) - new Date(b.date),
   );
 };
 

@@ -134,6 +134,7 @@ const getAllUsers = async () => {
         status: true,
         avatar: true,
         phone: true,
+        gender: true,
         createdAt: true,
         lastLogin: true,
       },
@@ -160,6 +161,7 @@ const getUserById = async (id) => {
         status: true,
         avatar: true,
         phone: true,
+        gender: true,
         createdAt: true,
         lastLogin: true,
       },
@@ -222,6 +224,7 @@ const createUser = async (userData) => {
       password,
       role,
       phone,
+      gender,
       status = "ACTIVE",
     } = userData;
 
@@ -248,6 +251,7 @@ const createUser = async (userData) => {
         role,
         status,
         phone: phone || "",
+        gender: gender || null,
         // Create the role-specific profile based on role
         ...(role === "STUDENT" && {
           student: { create: {} },
@@ -277,6 +281,7 @@ const createUser = async (userData) => {
       email: newUser.email,
       role: newUser.role,
       status: newUser.status,
+      gender: newUser.gender,
       createdAt: newUser.createdAt,
     };
   } catch (error) {
@@ -287,7 +292,7 @@ const createUser = async (userData) => {
 
 const updateUser = async (id, userData) => {
   try {
-    const { firstName, lastName, email, phone, status } = userData;
+    const { firstName, lastName, email, phone, gender, status } = userData;
 
     const existingUser = await prisma.user.findUnique({
       where: { id },
@@ -316,6 +321,8 @@ const updateUser = async (id, userData) => {
         lastName,
         email,
         phone: phone || existingUser.phone,
+        // Only update gender if it's provided
+        ...(gender !== undefined && { gender: gender || null }),
         // Only update status if it's provided
         ...(status && { status }),
         // Role changes would require more complex logic to handle profile models
@@ -329,6 +336,7 @@ const updateUser = async (id, userData) => {
         role: true,
         status: true,
         phone: true,
+        gender: true,
         createdAt: true,
       },
     });
@@ -412,6 +420,7 @@ const updateUserStatus = async (id, status) => {
         status: true,
         avatar: true,
         phone: true,
+        gender: true,
         createdAt: true,
         lastLogin: true,
       },

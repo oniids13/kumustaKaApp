@@ -27,6 +27,8 @@ import {
   UnlockOutlined,
   SearchOutlined,
   EyeOutlined,
+  ManOutlined,
+  WomanOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import moment from "moment";
@@ -96,6 +98,7 @@ const UserManagement = () => {
       lastName: record.lastName,
       email: record.email,
       phone: record.phone,
+      gender: record.gender,
       role: record.role,
       status: record.status,
     });
@@ -252,6 +255,21 @@ const UserManagement = () => {
     }
   };
 
+  const getGenderDisplay = (gender) => {
+    switch (gender) {
+      case "MALE":
+        return { label: "Male", icon: <ManOutlined />, color: "blue" };
+      case "FEMALE":
+        return { label: "Female", icon: <WomanOutlined />, color: "magenta" };
+      case "OTHER":
+        return { label: "Other", icon: <UserOutlined />, color: "purple" };
+      case "PREFER_NOT_TO_SAY":
+        return { label: "Prefer not to say", icon: <UserOutlined />, color: "default" };
+      default:
+        return null;
+    }
+  };
+
   const columns = [
     {
       title: "User",
@@ -288,6 +306,28 @@ const UserManagement = () => {
         { text: "Admin", value: "ADMIN" },
       ],
       onFilter: (value, record) => record.role === value,
+    },
+    {
+      title: "Gender",
+      dataIndex: "gender",
+      key: "gender",
+      render: (gender) => {
+        const genderInfo = getGenderDisplay(gender);
+        if (!genderInfo) return <Text type="secondary">-</Text>;
+        return (
+          <Space size="small">
+            {genderInfo.icon}
+            <Tag color={genderInfo.color}>{genderInfo.label}</Tag>
+          </Space>
+        );
+      },
+      filters: [
+        { text: "Male", value: "MALE" },
+        { text: "Female", value: "FEMALE" },
+        { text: "Other", value: "OTHER" },
+        { text: "Prefer not to say", value: "PREFER_NOT_TO_SAY" },
+      ],
+      onFilter: (value, record) => record.gender === value,
     },
     {
       title: "Status",
@@ -517,6 +557,18 @@ const UserManagement = () => {
               <Password placeholder="Enter password" />
             </Form.Item>
           )}
+
+          <Form.Item
+            name="gender"
+            label="Gender"
+          >
+            <Select placeholder="Select gender (optional)" allowClear>
+              <Option value="MALE">Male</Option>
+              <Option value="FEMALE">Female</Option>
+              <Option value="OTHER">Other</Option>
+              <Option value="PREFER_NOT_TO_SAY">Prefer not to say</Option>
+            </Select>
+          </Form.Item>
 
           <Form.Item
             name="role"

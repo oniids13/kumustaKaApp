@@ -17,6 +17,7 @@ model User {
   firstName        String
   lastName         String
   phone            String
+  gender           Gender?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   avatar           String         @default("https://www.gravatar.com/avatar/default?d=identicon")
@@ -381,4 +382,11 @@ enum ResourceType {
   ARTICLE
   VIDEO
   EXERCISE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
 }

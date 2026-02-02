@@ -45,6 +45,7 @@ const getAllStudents = async () => {
             lastName: true,
             email: true,
             avatar: true,
+            gender: true,
           },
         },
       },
@@ -62,6 +63,7 @@ const getAllStudents = async () => {
       lastName: student.user.lastName,
       email: student.user.email,
       avatar: student.user.avatar,
+      gender: student.user.gender,
     }));
   } catch (error) {
     throw error;
@@ -330,7 +332,7 @@ const generateReportData = async (
   studentId,
   startDate,
   endDate,
-  reportType
+  reportType,
 ) => {
   try {
     // Calculate weekly averages
@@ -370,10 +372,10 @@ const generateReportData = async (
 
     // Calculate weekly averages
     const avgSurveyResponsesPerWeek = Math.round(
-      totalResponses / weeksDifference
+      totalResponses / weeksDifference,
     );
     const avgMoodEntriesPerWeek = Math.round(
-      totalMoodEntries / weeksDifference
+      totalMoodEntries / weeksDifference,
     );
 
     // Calculate average mood
@@ -460,32 +462,32 @@ const generateRecommendedActions = (trendsData) => {
   // Add mood-based recommendations
   if (averageMood === "Negative") {
     recommendations.push(
-      "Schedule individual counseling sessions for students in red zones"
+      "Schedule individual counseling sessions for students in red zones",
     );
     recommendations.push(
-      "Implement group therapy sessions for stress management"
+      "Implement group therapy sessions for stress management",
     );
     recommendations.push("Develop crisis intervention protocols");
   } else if (averageMood === "Neutral") {
     recommendations.push(
-      "Monitor students closely and provide preventive interventions"
+      "Monitor students closely and provide preventive interventions",
     );
     recommendations.push("Conduct mental health awareness workshops");
     recommendations.push("Establish peer support programs");
   } else if (averageMood === "Positive") {
     recommendations.push("Continue current supportive practices");
     recommendations.push(
-      "Maintain regular check-ins to sustain positive trends"
+      "Maintain regular check-ins to sustain positive trends",
     );
     recommendations.push("Share successful strategies with other counselors");
   } else {
     // No data case
     recommendations.push(
-      "Encourage student participation in mental health assessments"
+      "Encourage student participation in mental health assessments",
     );
     recommendations.push("Implement regular mental health screening programs");
     recommendations.push(
-      "Provide information about available counseling resources"
+      "Provide information about available counseling resources",
     );
   }
 
@@ -522,7 +524,7 @@ const generatePdfReport = (doc, data, options) => {
     doc.text(
       `Average Survey Responses per Week: ${
         data.summary?.avgSurveyResponsesPerWeek || 0
-      }`
+      }`,
     );
     doc.moveDown(0.3);
     doc.text(`Total Mood Entries: ${data.summary?.totalMoodEntries || 0}`);
@@ -530,7 +532,7 @@ const generatePdfReport = (doc, data, options) => {
     doc.text(
       `Average Mood Entries per Week: ${
         data.summary?.avgMoodEntriesPerWeek || 0
-      }`
+      }`,
     );
     doc.moveDown(0.3);
     doc.text(`Overall Mood Trend: ${data.summary?.averageMood || "No Data"}`);
@@ -560,7 +562,7 @@ const generatePdfReport = (doc, data, options) => {
         .fontSize(12)
         .text(
           "This data represents the distribution of students across mental health zones over time:",
-          { align: "left" }
+          { align: "left" },
         );
       doc.moveDown();
 
@@ -609,19 +611,19 @@ const generatePdfReport = (doc, data, options) => {
           (period["Green (Positive)"] || 0).toString(),
           tableLeft + colWidth,
           y,
-          { width: colWidth }
+          { width: colWidth },
         );
         doc.text(
           (period["Yellow (Moderate)"] || 0).toString(),
           tableLeft + colWidth * 2,
           y,
-          { width: colWidth }
+          { width: colWidth },
         );
         doc.text(
           (period["Red (Needs Attention)"] || 0).toString(),
           tableLeft + colWidth * 3,
           y,
-          { width: colWidth }
+          { width: colWidth },
         );
         doc.text(total.toString(), tableLeft + colWidth * 4, y, {
           width: colWidth,
@@ -640,7 +642,7 @@ const generatePdfReport = (doc, data, options) => {
         .fontSize(12)
         .text(
           "This data shows daily mood entry patterns based on mood levels:",
-          { align: "left" }
+          { align: "left" },
         );
       doc.moveDown();
 
@@ -685,7 +687,7 @@ const generatePdfReport = (doc, data, options) => {
           (day.needsAttention || 0).toString(),
           tableLeft + colWidth * 3,
           y,
-          { width: colWidth }
+          { width: colWidth },
         );
       });
 
@@ -695,7 +697,7 @@ const generatePdfReport = (doc, data, options) => {
           .fontSize(10)
           .text(
             `Note: Showing last 14 days of data. Total days in period: ${dailyMoodTrends.length}`,
-            { align: "center", fillColor: "gray" }
+            { align: "center", fillColor: "gray" },
           );
       }
     }
@@ -713,7 +715,7 @@ const generatePdfReport = (doc, data, options) => {
         .fontSize(12)
         .text(
           "This data shows when students are most likely to submit mood entries:",
-          { align: "left" }
+          { align: "left" },
         );
       doc.moveDown();
 
@@ -728,7 +730,7 @@ const generatePdfReport = (doc, data, options) => {
             ? Math.round(
                 (timeframe.value /
                   timeframeTrends.reduce((sum, t) => sum + t.value, 0)) *
-                  100
+                  100,
               )
             : 0;
 
@@ -752,7 +754,7 @@ const generatePdfReport = (doc, data, options) => {
       doc
         .fontSize(12)
         .text(
-          "No trend data available for the selected period. This may be because:"
+          "No trend data available for the selected period. This may be because:",
         );
       doc.moveDown();
       doc.text("• No survey responses were submitted during this period");
@@ -760,7 +762,7 @@ const generatePdfReport = (doc, data, options) => {
       doc.text("• The selected date range contains no data");
       doc.moveDown();
       doc.text(
-        "Please try selecting a different date range or encourage students to participate in surveys and mood tracking."
+        "Please try selecting a different date range or encourage students to participate in surveys and mood tracking.",
       );
     }
 
@@ -772,7 +774,7 @@ const generatePdfReport = (doc, data, options) => {
         "Confidential: This report contains sensitive mental health information and should be handled with care.",
         50,
         doc.page.height - 50,
-        { align: "center", width: doc.page.width - 100 }
+        { align: "center", width: doc.page.width - 100 },
       );
   } catch (error) {
     console.error("Error generating PDF:", error);
@@ -868,7 +870,7 @@ const generateCsvReport = (data, options) => {
         data.trends.moodTrends.map((period) => ({
           issue: period.name,
           count: period["Green (Positive)"],
-        }))
+        })),
       );
   }
 
@@ -1389,7 +1391,7 @@ const processDailyMoodTrends = (moodEntries) => {
 
   // Convert to array and sort by date
   const result = Object.values(groupedByDate).sort(
-    (a, b) => new Date(a.date) - new Date(b.date)
+    (a, b) => new Date(a.date) - new Date(b.date),
   );
 
   return result;
@@ -1412,6 +1414,7 @@ const getStudentById = async (studentId) => {
             lastName: true,
             email: true,
             avatar: true,
+            gender: true,
           },
         },
       },
@@ -1428,6 +1431,7 @@ const getStudentById = async (studentId) => {
       lastName: student.user.lastName,
       email: student.user.email,
       avatar: student.user.avatar,
+      gender: student.user.gender,
     };
   } catch (error) {
     throw error;
@@ -1450,6 +1454,7 @@ const getStudentProfile = async (studentId) => {
             email: true,
             avatar: true,
             phone: true,
+            gender: true,
             createdAt: true,
             lastLogin: true,
             updatedAt: true,

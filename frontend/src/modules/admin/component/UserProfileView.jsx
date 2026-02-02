@@ -21,6 +21,8 @@ import {
   MailOutlined,
   CalendarOutlined,
   AlertOutlined,
+  ManOutlined,
+  WomanOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 
@@ -58,6 +60,21 @@ const UserProfileView = ({ visible, onClose, userProfile, loading }) => {
         return "blue";
       default:
         return "default";
+    }
+  };
+
+  const getGenderDisplay = (gender) => {
+    switch (gender) {
+      case "MALE":
+        return { label: "Male", icon: <ManOutlined />, color: "blue" };
+      case "FEMALE":
+        return { label: "Female", icon: <WomanOutlined />, color: "magenta" };
+      case "OTHER":
+        return { label: "Other", icon: <UserOutlined />, color: "purple" };
+      case "PREFER_NOT_TO_SAY":
+        return { label: "Prefer not to say", icon: <UserOutlined />, color: "default" };
+      default:
+        return null;
     }
   };
 
@@ -110,6 +127,18 @@ const UserProfileView = ({ visible, onClose, userProfile, loading }) => {
               <Tag color={getRoleColor(userProfile.role)}>
                 {userProfile.role}
               </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Gender">
+              {userProfile.gender ? (
+                <Space>
+                  {getGenderDisplay(userProfile.gender)?.icon}
+                  <Tag color={getGenderDisplay(userProfile.gender)?.color}>
+                    {getGenderDisplay(userProfile.gender)?.label}
+                  </Tag>
+                </Space>
+              ) : (
+                <Text type="secondary">Not specified</Text>
+              )}
             </Descriptions.Item>
             <Descriptions.Item label="Status">
               <Badge

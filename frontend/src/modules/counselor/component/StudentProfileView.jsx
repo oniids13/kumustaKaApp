@@ -26,6 +26,8 @@ import {
   FileTextOutlined,
   AlertOutlined,
   BookOutlined,
+  ManOutlined,
+  WomanOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 
@@ -137,6 +139,21 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
     return "error";
   };
 
+  const getGenderDisplay = (gender) => {
+    switch (gender) {
+      case "MALE":
+        return { label: "Male", icon: <ManOutlined />, color: "blue" };
+      case "FEMALE":
+        return { label: "Female", icon: <WomanOutlined />, color: "magenta" };
+      case "OTHER":
+        return { label: "Other", icon: <UserOutlined />, color: "purple" };
+      case "PREFER_NOT_TO_SAY":
+        return { label: "Prefer not to say", icon: <UserOutlined />, color: "default" };
+      default:
+        return null;
+    }
+  };
+
   const renderBasicInfo = () => (
     <Card title="Basic Information" style={{ marginBottom: 16 }}>
       <Row gutter={16}>
@@ -170,6 +187,18 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
                 <PhoneOutlined />
                 {studentProfile.user.phone || "Not provided"}
               </Space>
+            </Descriptions.Item>
+            <Descriptions.Item label="Gender">
+              {studentProfile.user.gender ? (
+                <Space>
+                  {getGenderDisplay(studentProfile.user.gender)?.icon}
+                  <Tag color={getGenderDisplay(studentProfile.user.gender)?.color}>
+                    {getGenderDisplay(studentProfile.user.gender)?.label}
+                  </Tag>
+                </Space>
+              ) : (
+                <Text type="secondary">Not specified</Text>
+              )}
             </Descriptions.Item>
             <Descriptions.Item label="Status">
               <Badge

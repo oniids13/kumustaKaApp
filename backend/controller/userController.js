@@ -23,6 +23,10 @@ const validateUser = [
     body('phone')
         .matches(/^09\d{9}$/)
         .withMessage('Phone number must be exactly 11 digits starting with 09'),
+    body('gender')
+        .optional()
+        .isIn(['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY'])
+        .withMessage('Invalid gender selection'),
     // Emergency contact validation for students
     body('emergencyContactName')
         .if(body('role').equals('STUDENT'))
@@ -78,6 +82,7 @@ const createUserController = [validateUser, async (req, res) => {
         firstName, 
         lastName, 
         phone, 
+        gender,
         role,
         emergencyContactName,
         emergencyContactPhone,
@@ -96,6 +101,7 @@ const createUserController = [validateUser, async (req, res) => {
             firstName, 
             lastName, 
             phone, 
+            gender,
             role
         };
 

@@ -117,7 +117,7 @@ function getRandomRecentDate() {
 
   return new Date(
     pastMonth.getTime() +
-      Math.random() * (today.getTime() - pastMonth.getTime())
+      Math.random() * (today.getTime() - pastMonth.getTime()),
   );
 }
 
@@ -431,6 +431,7 @@ async function main() {
       firstName: "Admin",
       lastName: "User",
       phone: "09123456789",
+      gender: "MALE",
       avatar: getGravatar("admin@kumustaka.com"),
       admin: {
         create: {},
@@ -456,6 +457,7 @@ async function main() {
       firstName: "Grace",
       lastName: "Santos",
       phone: "09987654321",
+      gender: "FEMALE",
       avatar: getGravatar("counselor@kumustaka.com"),
       counselor: {
         create: {},
@@ -467,7 +469,7 @@ async function main() {
     },
   });
   console.log(
-    `👨‍⚕️ Created counselor: ${counselor.firstName} ${counselor.lastName}`
+    `👨‍⚕️ Created counselor: ${counselor.firstName} ${counselor.lastName}`,
   );
 
   // Create a sample teacher
@@ -483,6 +485,7 @@ async function main() {
       firstName: "Miguel",
       lastName: "Reyes",
       phone: "09567891234",
+      gender: "MALE",
       avatar: getGravatar("teacher@kumustaka.com"),
       teacher: {
         create: {},
@@ -505,42 +508,49 @@ async function main() {
       lastName: "Dela Cruz",
       email: "juan.delacruz@student.kumustaka.com",
       phone: "09123478901",
+      gender: "MALE",
     },
     {
       firstName: "Maria",
       lastName: "Santos",
       email: "maria.santos@student.kumustaka.com",
       phone: "09234589012",
+      gender: "FEMALE",
     },
     {
       firstName: "Pedro",
       lastName: "Reyes",
       email: "pedro.reyes@student.kumustaka.com",
       phone: "09345690123",
+      gender: "MALE",
     },
     {
       firstName: "Ana",
       lastName: "Garcia",
       email: "ana.garcia@student.kumustaka.com",
       phone: "09456701234",
+      gender: "FEMALE",
     },
     {
       firstName: "Carlo",
       lastName: "Mendoza",
       email: "carlo.mendoza@student.kumustaka.com",
       phone: "09567812345",
+      gender: "MALE",
     },
     {
       firstName: "Sophia",
       lastName: "Lim",
       email: "sophia.lim@student.kumustaka.com",
       phone: "09678923456",
+      gender: "FEMALE",
     },
     {
       firstName: "Miguel",
       lastName: "Tan",
       email: "miguel.tan@student.kumustaka.com",
       phone: "09789034567",
+      gender: "MALE",
     },
   ];
 
@@ -560,6 +570,7 @@ async function main() {
         firstName: data.firstName,
         lastName: data.lastName,
         phone: data.phone,
+        gender: data.gender,
         avatar: getGravatar(data.email),
         student: {
           create: {},
@@ -677,7 +688,7 @@ async function main() {
       const weekDate = new Date();
       weekDate.setDate(today.getDate() - week * 7);
       const weekNumber = Math.floor(
-        weekDate.getTime() / (7 * 24 * 60 * 60 * 1000)
+        weekDate.getTime() / (7 * 24 * 60 * 60 * 1000),
       );
       const year = weekDate.getFullYear();
 
@@ -809,7 +820,7 @@ async function main() {
       const commenter = students[Math.floor(Math.random() * students.length)];
       const commentDate = new Date(postDate);
       commentDate.setHours(
-        postDate.getHours() + Math.floor(Math.random() * 48)
+        postDate.getHours() + Math.floor(Math.random() * 48),
       ); // Comment within 48 hours
 
       await prisma.comment.create({

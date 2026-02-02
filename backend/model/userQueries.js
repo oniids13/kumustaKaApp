@@ -4,7 +4,7 @@ const { validPassword } = require("../utils/passwordUtil");
 const { getGravatar } = require("../utils/avatar");
 
 const createUser = async (userData) => {
-  const { email, salt, hash, role, firstName, lastName, phone, emergencyContact } = userData;
+  const { email, salt, hash, role, firstName, lastName, phone, gender, emergencyContact } = userData;
   try {
     const userCreateData = {
       email,
@@ -14,6 +14,7 @@ const createUser = async (userData) => {
       firstName,
       lastName,
       phone,
+      gender,
       avatar: getGravatar(email),
     };
 
@@ -60,6 +61,7 @@ const createUser = async (userData) => {
         firstName: true,
         lastName: true,
         phone: true,
+        gender: true,
         role: true,
         avatar: true,
         ...(role === "ADMIN" && { admin: true }),
