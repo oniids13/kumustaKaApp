@@ -28,6 +28,7 @@ import {
   BookOutlined,
   ManOutlined,
   WomanOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 
@@ -66,7 +67,7 @@ const getTotalScoreZone = (total, depression, anxiety, stress) => {
 
   const severities = [depSeverity, anxSeverity, strSeverity];
   const hasExtremelySevere = severities.some(
-    (s) => s.level === "Extremely Severe",
+    (s) => s.level === "Extremely Severe"
   );
   const hasSevere = severities.some((s) => s.level === "Severe");
   const hasModerate = severities.some((s) => s.level === "Moderate");
@@ -148,7 +149,11 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
       case "OTHER":
         return { label: "Other", icon: <UserOutlined />, color: "purple" };
       case "PREFER_NOT_TO_SAY":
-        return { label: "Prefer not to say", icon: <UserOutlined />, color: "default" };
+        return {
+          label: "Prefer not to say",
+          icon: <UserOutlined />,
+          color: "default",
+        };
       default:
         return null;
     }
@@ -192,7 +197,9 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
               {studentProfile.user.gender ? (
                 <Space>
                   {getGenderDisplay(studentProfile.user.gender)?.icon}
-                  <Tag color={getGenderDisplay(studentProfile.user.gender)?.color}>
+                  <Tag
+                    color={getGenderDisplay(studentProfile.user.gender)?.color}
+                  >
                     {getGenderDisplay(studentProfile.user.gender)?.label}
                   </Tag>
                 </Space>
@@ -215,13 +222,28 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
             <Descriptions.Item label="Last Login">
               {studentProfile.user.lastLogin
                 ? moment(studentProfile.user.lastLogin).format(
-                    "MMM DD, YYYY HH:mm",
+                    "MMM DD, YYYY HH:mm"
                   )
                 : "Never logged in"}
             </Descriptions.Item>
             <Descriptions.Item label="Last Updated">
               {moment(studentProfile.user.updatedAt).format(
-                "MMM DD, YYYY HH:mm",
+                "MMM DD, YYYY HH:mm"
+              )}
+            </Descriptions.Item>
+            <Descriptions.Item label="Section" span={2}>
+              {studentProfile.section ? (
+                <Space>
+                  <TeamOutlined />
+                  <Tag color="purple">{studentProfile.section.name}</Tag>
+                  {studentProfile.section.gradeLevel && (
+                    <Text type="secondary">
+                      ({studentProfile.section.gradeLevel})
+                    </Text>
+                  )}
+                </Space>
+              ) : (
+                <Text type="secondary">No section assigned</Text>
               )}
             </Descriptions.Item>
           </Descriptions>
@@ -337,8 +359,8 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
                   ? getMoodColor(latestMoodEntry.moodLevel) === "success"
                     ? "#52c41a"
                     : getMoodColor(latestMoodEntry.moodLevel) === "warning"
-                      ? "#faad14"
-                      : "#f5222d"
+                    ? "#faad14"
+                    : "#f5222d"
                   : undefined,
               }}
             />
@@ -376,19 +398,19 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
             </Divider>
             {(() => {
               const depSeverity = getDepressionSeverity(
-                initialAssessment.depressionScore,
+                initialAssessment.depressionScore
               );
               const anxSeverity = getAnxietySeverity(
-                initialAssessment.anxietyScore,
+                initialAssessment.anxietyScore
               );
               const strSeverity = getStressSeverity(
-                initialAssessment.stressScore,
+                initialAssessment.stressScore
               );
               const totalZone = getTotalScoreZone(
                 initialAssessment.totalScore,
                 initialAssessment.depressionScore,
                 initialAssessment.anxietyScore,
-                initialAssessment.stressScore,
+                initialAssessment.stressScore
               );
 
               return (
@@ -443,15 +465,15 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
                         totalZone.color === "error"
                           ? "#fff2f0"
                           : totalZone.color === "warning"
-                            ? "#fffbe6"
-                            : "#f6ffed",
+                          ? "#fffbe6"
+                          : "#f6ffed",
                       borderRadius: 4,
                       border: `1px solid ${
                         totalZone.color === "error"
                           ? "#ffccc7"
                           : totalZone.color === "warning"
-                            ? "#ffe58f"
-                            : "#b7eb8f"
+                          ? "#ffe58f"
+                          : "#b7eb8f"
                       }`,
                     }}
                   >
@@ -463,7 +485,7 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
                     <Text type="secondary" style={{ fontSize: 12 }}>
                       Completed on:{" "}
                       {moment(initialAssessment.createdAt).format(
-                        "MMM DD, YYYY",
+                        "MMM DD, YYYY"
                       )}
                     </Text>
                   </div>
@@ -532,7 +554,7 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
       return (
         1 +
         Math.round(
-          ((d - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7,
+          ((d - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7
         )
       );
     };
@@ -561,8 +583,8 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
                               weekStat.percentage >= 80
                                 ? "green"
                                 : weekStat.percentage >= 60
-                                  ? "orange"
-                                  : "red"
+                                ? "orange"
+                                : "red"
                             }
                           >
                             {weekStat.percentage}%
@@ -646,8 +668,8 @@ const StudentProfileView = ({ visible, onClose, studentProfile, loading }) => {
                         intervention.status === "COMPLETED"
                           ? "green"
                           : intervention.status === "IN_PROGRESS"
-                            ? "blue"
-                            : "default"
+                          ? "blue"
+                          : "default"
                       }
                     >
                       {intervention.status}

@@ -23,6 +23,7 @@ import {
   AlertOutlined,
   ManOutlined,
   WomanOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 
@@ -72,7 +73,11 @@ const UserProfileView = ({ visible, onClose, userProfile, loading }) => {
       case "OTHER":
         return { label: "Other", icon: <UserOutlined />, color: "purple" };
       case "PREFER_NOT_TO_SAY":
-        return { label: "Prefer not to say", icon: <UserOutlined />, color: "default" };
+        return {
+          label: "Prefer not to say",
+          icon: <UserOutlined />,
+          color: "default",
+        };
       default:
         return null;
     }
@@ -160,6 +165,54 @@ const UserProfileView = ({ visible, onClose, userProfile, loading }) => {
             <Descriptions.Item label="Last Updated">
               {moment(userProfile.updatedAt).format("MMM DD, YYYY HH:mm")}
             </Descriptions.Item>
+            {userProfile.role === "STUDENT" && (
+              <Descriptions.Item label="Section" span={2}>
+                {userProfile.student?.section ? (
+                  <Space>
+                    <TeamOutlined />
+                    <Tag color="purple">{userProfile.student.section.name}</Tag>
+                    {userProfile.student.section.gradeLevel && (
+                      <Text type="secondary">
+                        ({userProfile.student.section.gradeLevel})
+                      </Text>
+                    )}
+                  </Space>
+                ) : (
+                  <Text type="secondary">No section assigned</Text>
+                )}
+              </Descriptions.Item>
+            )}
+            {userProfile.role === "TEACHER" && (
+              <Descriptions.Item label="Assigned Section" span={2}>
+                {userProfile.teacher?.section ? (
+                  <Space>
+                    <TeamOutlined />
+                    <Tag color="green">{userProfile.teacher.section.name}</Tag>
+                    {userProfile.teacher.section.gradeLevel && (
+                      <Text type="secondary">
+                        ({userProfile.teacher.section.gradeLevel})
+                      </Text>
+                    )}
+                  </Space>
+                ) : (
+                  <Text type="secondary">No section assigned</Text>
+                )}
+              </Descriptions.Item>
+            )}
+            {userProfile.role === "COUNSELOR" &&
+              userProfile.counselor?.sections?.length > 0 && (
+                <Descriptions.Item label="Assigned Sections" span={2}>
+                  <Space wrap>
+                    <TeamOutlined />
+                    {userProfile.counselor.sections.map((section) => (
+                      <Tag key={section.id} color="orange">
+                        {section.name}
+                        {section.gradeLevel && ` (${section.gradeLevel})`}
+                      </Tag>
+                    ))}
+                  </Space>
+                </Descriptions.Item>
+              )}
           </Descriptions>
         </Col>
       </Row>

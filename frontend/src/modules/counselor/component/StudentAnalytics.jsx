@@ -535,6 +535,17 @@ const StudentAnalytics = ({ initialStudentId }) => {
               {students.map((student) => (
                 <Option key={student.id} value={student.id}>
                   {student.firstName} {student.lastName}
+                  {student.section && (
+                    <span
+                      style={{
+                        color: "#8c8c8c",
+                        marginLeft: "8px",
+                        fontSize: "12px",
+                      }}
+                    >
+                      ({student.section.name})
+                    </span>
+                  )}
                 </Option>
               ))}
             </Select>

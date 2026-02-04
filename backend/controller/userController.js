@@ -5,6 +5,7 @@ const {
   getUserById,
   changeUserPassword,
   getUserForPasswordChange,
+  getCurrentUserProfile,
 } = require("../model/userQueries");
 const { getSectionByCode } = require("../model/sectionQueries");
 
@@ -261,8 +262,28 @@ const changePasswordController = [
   },
 ];
 
+/**
+ * Get current user's profile information
+ */
+const getProfileController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const profile = await getCurrentUserProfile(userId);
+    
+    if (!profile) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+    
+    return res.status(200).json({ profile });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   createUserController,
   getUserByIdController,
   changePasswordController,
+  getProfileController,
 };

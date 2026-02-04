@@ -290,6 +290,90 @@ const getUserForPasswordChange = async (userId) => {
   }
 };
 
+/**
+ * Get current user's complete profile information
+ */
+const getCurrentUserProfile = async (userId) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        gender: true,
+        role: true,
+        status: true,
+        avatar: true,
+        createdAt: true,
+        updatedAt: true,
+        lastLogin: true,
+        student: {
+          select: {
+            id: true,
+            section: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                gradeLevel: true,
+              },
+            },
+            emergencyContacts: {
+              orderBy: { isPrimary: "desc" },
+              select: {
+                id: true,
+                name: true,
+                phone: true,
+                relationship: true,
+                isPrimary: true,
+              },
+            },
+          },
+        },
+        teacher: {
+          select: {
+            id: true,
+            section: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                gradeLevel: true,
+              },
+            },
+          },
+        },
+        counselor: {
+          select: {
+            id: true,
+            sections: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                gradeLevel: true,
+              },
+            },
+          },
+        },
+        admin: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    return user;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   createUser,
   getUserLogin,
@@ -297,4 +381,5 @@ module.exports = {
   updateUserLastLogin,
   changeUserPassword,
   getUserForPasswordChange,
+  getCurrentUserProfile,
 };

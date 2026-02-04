@@ -264,7 +264,11 @@ const UserManagement = () => {
       case "OTHER":
         return { label: "Other", icon: <UserOutlined />, color: "purple" };
       case "PREFER_NOT_TO_SAY":
-        return { label: "Prefer not to say", icon: <UserOutlined />, color: "default" };
+        return {
+          label: "Prefer not to say",
+          icon: <UserOutlined />,
+          color: "default",
+        };
       default:
         return null;
     }
@@ -306,6 +310,48 @@ const UserManagement = () => {
         { text: "Admin", value: "ADMIN" },
       ],
       onFilter: (value, record) => record.role === value,
+    },
+    {
+      title: "Section",
+      key: "section",
+      render: (_, record) => {
+        // For students
+        if (record.role === "STUDENT" && record.student?.section) {
+          return (
+            <Tag color="purple" style={{ fontSize: "11px" }}>
+              {record.student.section.name}
+            </Tag>
+          );
+        }
+        // For teachers
+        if (record.role === "TEACHER" && record.teacher?.section) {
+          return (
+            <Tag color="green" style={{ fontSize: "11px" }}>
+              {record.teacher.section.name}
+            </Tag>
+          );
+        }
+        // For counselors with multiple sections
+        if (
+          record.role === "COUNSELOR" &&
+          record.counselor?.sections?.length > 0
+        ) {
+          return (
+            <Tooltip
+              title={record.counselor.sections.map((s) => s.name).join(", ")}
+            >
+              <Tag color="orange" style={{ fontSize: "11px" }}>
+                {record.counselor.sections.length} section(s)
+              </Tag>
+            </Tooltip>
+          );
+        }
+        return (
+          <Text type="secondary" style={{ fontSize: "11px" }}>
+            -
+          </Text>
+        );
+      },
     },
     {
       title: "Gender",
@@ -558,10 +604,7 @@ const UserManagement = () => {
             </Form.Item>
           )}
 
-          <Form.Item
-            name="gender"
-            label="Gender"
-          >
+          <Form.Item name="gender" label="Gender">
             <Select placeholder="Select gender (optional)" allowClear>
               <Option value="MALE">Male</Option>
               <Option value="FEMALE">Female</Option>

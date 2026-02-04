@@ -1,9 +1,10 @@
 import { useState } from "react";
 import ChangePassword from "./ChangePassword";
+import ProfileInformation from "./ProfileInformation";
 import "../styles/UserSettings.css";
 
 const UserSettings = () => {
-  const [activeTab, setActiveTab] = useState("password");
+  const [activeTab, setActiveTab] = useState("profile");
 
   return (
     <div className="user-settings-container">
@@ -13,26 +14,22 @@ const UserSettings = () => {
 
       <div className="user-settings-tabs">
         <button
-          className={`settings-tab ${activeTab === "password" ? "active" : ""}`}
-          onClick={() => setActiveTab("password")}
-        >
-          Change Password
-        </button>
-        <button
           className={`settings-tab ${activeTab === "profile" ? "active" : ""}`}
           onClick={() => setActiveTab("profile")}
         >
           Profile Information
         </button>
+        <button
+          className={`settings-tab ${activeTab === "password" ? "active" : ""}`}
+          onClick={() => setActiveTab("password")}
+        >
+          Change Password
+        </button>
       </div>
 
       <div className="settings-content">
+        {activeTab === "profile" && <ProfileInformation />}
         {activeTab === "password" && <ChangePassword />}
-        {activeTab === "profile" && (
-          <div className="profile-info">
-            <p>Profile settings will be implemented in a future update.</p>
-          </div>
-        )}
       </div>
     </div>
   );

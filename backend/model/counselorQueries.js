@@ -48,6 +48,14 @@ const getAllStudents = async () => {
             gender: true,
           },
         },
+        section: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            gradeLevel: true,
+          },
+        },
       },
       orderBy: {
         user: {
@@ -64,6 +72,7 @@ const getAllStudents = async () => {
       email: student.user.email,
       avatar: student.user.avatar,
       gender: student.user.gender,
+      section: student.section,
     }));
   } catch (error) {
     throw error;
@@ -1460,6 +1469,14 @@ const getStudentProfile = async (studentId) => {
             updatedAt: true,
             role: true,
             status: true,
+          },
+        },
+        section: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            gradeLevel: true,
           },
         },
         emergencyContacts: {

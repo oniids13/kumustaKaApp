@@ -137,6 +137,45 @@ const getAllUsers = async () => {
         gender: true,
         createdAt: true,
         lastLogin: true,
+        student: {
+          select: {
+            id: true,
+            section: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                gradeLevel: true,
+              },
+            },
+          },
+        },
+        teacher: {
+          select: {
+            id: true,
+            section: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                gradeLevel: true,
+              },
+            },
+          },
+        },
+        counselor: {
+          select: {
+            id: true,
+            sections: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                gradeLevel: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -189,14 +228,41 @@ const getUserProfile = async (id) => {
             emergencyContacts: {
               orderBy: { isPrimary: "desc" },
             },
+            section: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                gradeLevel: true,
+              },
+            },
           },
         },
-        teacher: true,
+        teacher: {
+          include: {
+            section: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                gradeLevel: true,
+              },
+            },
+          },
+        },
         counselor: {
           include: {
             interventions: {
               orderBy: { createdAt: "desc" },
               take: 5,
+            },
+            sections: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                gradeLevel: true,
+              },
             },
           },
         },
