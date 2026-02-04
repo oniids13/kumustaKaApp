@@ -17,6 +17,24 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
+// Helper function to get user's section
+const getUserSection = async (userId, role) => {
+  if (role === "STUDENT") {
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      select: { sectionId: true },
+    });
+    return student?.sectionId || null;
+  } else if (role === "TEACHER") {
+    const teacher = await prisma.teacher.findUnique({
+      where: { userId },
+      select: { sectionId: true },
+    });
+    return teacher?.sectionId || null;
+  }
+  return null;
+};
+
 // Post Related Controller
 
 const createForumPostController = async (req, res) => {
@@ -31,6 +49,17 @@ const createForumPostController = async (req, res) => {
   }
 
   try {
+    // Get user's section for students and teachers
+    const sectionId = await getUserSection(userId, role);
+
+    // Students must be in a section to post
+    if (role === "STUDENT" && !sectionId) {
+      return res.status(403).json({
+        message:
+          "You must be assigned to a section before you can create posts",
+      });
+    }
+
     const imageUrls = [];
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
@@ -48,7 +77,8 @@ const createForumPostController = async (req, res) => {
       content,
       imageUrls,
       userId,
-      role
+      role,
+      sectionId
     );
     return res.status(201).json(newPost);
   } catch (error) {
@@ -73,19 +103,35 @@ const createForumPostController = async (req, res) => {
 
 const getAllForumPostsController = async (req, res) => {
   const userId = req.user.id;
+  const role = req.user.role;
 
   try {
-    const publishedPosts = await getAllPosts(true, userId);
-    const unpublishedPosts = await getAllPosts(false, userId);
+    // Get user's section for filtering
+    const sectionId = await getUserSection(userId, role);
 
-    const allPosts = publishedPosts.concat(unpublishedPosts);
-    if (allPosts.length > 0) {
-      return res
-        .status(200)
-        .json({ success: "All Posts", publishedPosts, unpublishedPosts });
+    // Students must be in a section to view posts
+    if (role === "STUDENT" && !sectionId) {
+      return res.status(403).json({
+        message: "You must be assigned to a section to view posts",
+        publishedPosts: [],
+        unpublishedPosts: [],
+      });
     }
 
-    return res.status(404).json({ message: "No posts found" });
+    // Get posts filtered by section for students and teachers
+    // Counselors and admins can see all posts
+    const publishedPosts = await getAllPosts(true, userId, sectionId, role);
+    const unpublishedPosts = await getAllPosts(false, userId, sectionId, role);
+
+    const allPosts = publishedPosts.concat(unpublishedPosts);
+
+    // Return empty arrays instead of 404 when no posts found
+    return res.status(200).json({
+      success: "All Posts",
+      publishedPosts,
+      unpublishedPosts,
+      sectionId, // Include section info for frontend
+    });
   } catch (error) {
     console.error("Error retrieving posts:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -313,6 +359,7 @@ const getPendingPostsCount = async (req, res) => {
     // Check if user is a teacher
     const teacher = await prisma.teacher.findUnique({
       where: { userId: req.user.id },
+      select: { sectionId: true },
     });
 
     if (!teacher) {
@@ -321,11 +368,18 @@ const getPendingPostsCount = async (req, res) => {
         .json({ error: "Only teachers can access this endpoint" });
     }
 
-    // Count unpublished posts
+    // Build where clause - filter by section if teacher has one
+    const whereClause = {
+      isPublished: false,
+    };
+
+    if (teacher.sectionId) {
+      whereClause.sectionId = teacher.sectionId;
+    }
+
+    // Count unpublished posts in teacher's section
     const pendingCount = await prisma.forumPost.count({
-      where: {
-        isPublished: false,
-      },
+      where: whereClause,
     });
 
     return res.status(200).json({ pendingCount });

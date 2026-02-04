@@ -20,7 +20,7 @@ const PostApproval = () => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        },
+        }
       );
       setUnpublishedPosts(response.data.unpublishedPosts);
       setLoading(false);
@@ -44,7 +44,7 @@ const PostApproval = () => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        },
+        }
       );
       message.success("Post approved successfully");
       fetchUnpublishedPosts();
@@ -64,7 +64,7 @@ const PostApproval = () => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        },
+        }
       );
       message.success("Post deleted successfully");
       fetchUnpublishedPosts();
@@ -125,9 +125,23 @@ const PostApproval = () => {
                     <h6 className="mb-0">
                       {author.firstName} {author.lastName}
                     </h6>
-                    <small className="text-muted">
-                      {formatDate(post.createdAt)}
-                    </small>
+                    <div className="d-flex align-items-center gap-2">
+                      <small className="text-muted">
+                        {formatDate(post.createdAt)}
+                      </small>
+                      {post.section && (
+                        <span
+                          className="badge"
+                          style={{
+                            fontSize: "10px",
+                            backgroundColor: "#9b59b6",
+                            color: "white",
+                          }}
+                        >
+                          {post.section.name}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <Title level={4}>{post.title}</Title>

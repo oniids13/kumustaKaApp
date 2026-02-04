@@ -843,7 +843,13 @@ async function main() {
     const randomStudent = students[Math.floor(Math.random() * students.length)];
     const postDate = getRandomRecentDate();
 
-    // Create the post
+    // Get the student's section ID
+    const studentWithSection = await prisma.student.findUnique({
+      where: { userId: randomStudent.id },
+      select: { sectionId: true },
+    });
+
+    // Create the post with section
     const post = await prisma.forumPost.create({
       data: {
         title: topic.title,
@@ -852,6 +858,7 @@ async function main() {
           "\n\n" +
           faker.lorem.paragraphs(Math.floor(Math.random() * 2) + 1),
         authorId: randomStudent.id,
+        sectionId: studentWithSection?.sectionId || null,
         createdAt: postDate,
         isPublished: true,
         images: [],

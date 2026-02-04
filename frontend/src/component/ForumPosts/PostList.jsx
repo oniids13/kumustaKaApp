@@ -11,11 +11,13 @@ const PostList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reactingPostId, setReactingPostId] = useState(null);
+  const [noSectionAssigned, setNoSectionAssigned] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("userData")) || {};
 
   const fetchPosts = async () => {
     setLoading(true);
+    setNoSectionAssigned(false);
     try {
       const response = await axios.get(
         "http://localhost:3000/api/forum/allPosts",
@@ -25,6 +27,13 @@ const PostList = () => {
           },
         }
       );
+
+      // Check if user needs to be assigned to a section
+      if (response.data.message && response.data.message.includes("section")) {
+        setNoSectionAssigned(true);
+        setPosts([]);
+        return;
+      }
 
       const validatedPosts = response.data.publishedPosts.map((post) => ({
         ...post,
@@ -45,7 +54,13 @@ const PostList = () => {
       setPosts(validatedPosts);
     } catch (error) {
       console.error("Fetch error:", error);
-      setError("Failed to load posts");
+      // Check if error is about section assignment
+      if (error.response?.data?.message?.includes("section")) {
+        setNoSectionAssigned(true);
+        setPosts([]);
+      } else {
+        setError("Failed to load posts");
+      }
     } finally {
       setLoading(false);
     }
@@ -165,11 +180,28 @@ const PostList = () => {
   if (error) {
     return <div className="alert alert-danger">{error}</div>;
   }
+
+  // Show message if user isn't assigned to a section
+  if (noSectionAssigned) {
+    return (
+      <div className="alert alert-warning">
+        <h5 className="alert-heading">
+          <i className="fas fa-exclamation-triangle me-2"></i>
+          No Section Assigned
+        </h5>
+        <p className="mb-0">
+          You need to be assigned to a class section to view and create posts.
+          Please contact your teacher or administrator for your section code.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="post-list">
       {posts.length === 0 ? (
         <div className="alert alert-info">
-          No posts yet. Be the first to share!
+          No posts yet in your section. Be the first to share!
         </div>
       ) : (
         posts.map((post) => {
@@ -212,10 +244,31 @@ const PostList = () => {
                     <div className="text-start">
                       <h6 className="mb-0">
                         {author.firstName} {author.lastName}
+                        {post.author?.role === "TEACHER" && (
+                          <span
+                            className="badge bg-success ms-2"
+                            style={{ fontSize: "10px" }}
+                          >
+                            Teacher
+                          </span>
+                        )}
                       </h6>
-                      <small className="text-muted">
-                        {formatDate(post.createdAt)}
-                      </small>
+                      <div className="d-flex align-items-center gap-2">
+                        <small className="text-muted">
+                          {formatDate(post.createdAt)}
+                        </small>
+                        {post.section && (
+                          <span
+                            className="badge bg-purple"
+                            style={{
+                              fontSize: "10px",
+                              backgroundColor: "#9b59b6",
+                            }}
+                          >
+                            {post.section.name}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 

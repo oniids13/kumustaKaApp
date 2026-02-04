@@ -43,7 +43,11 @@ const CreatePostForm = ({ onPostCreated }) => {
       }
     } catch (error) {
       console.error("Error creating post:", error);
-      alert(error.response?.data?.error || "Failed to create post");
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Failed to create post";
+      alert(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

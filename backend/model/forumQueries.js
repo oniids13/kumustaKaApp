@@ -4,16 +4,30 @@ const { cloudinary } = require("../services/cloudinary.service");
 
 // Post Related Queries
 
-const createNewPost = async (title, content, imageUrls, authorId, role) => {
+const createNewPost = async (
+  title,
+  content,
+  imageUrls,
+  authorId,
+  role,
+  sectionId = null
+) => {
   try {
+    const postData = {
+      title,
+      content,
+      images: imageUrls,
+      author: { connect: { id: authorId } },
+      isPublished: role === "TEACHER" ? true : false,
+    };
+
+    // Associate post with section if provided
+    if (sectionId) {
+      postData.section = { connect: { id: sectionId } };
+    }
+
     const newPost = await prisma.forumPost.create({
-      data: {
-        title,
-        content,
-        images: imageUrls,
-        author: { connect: { id: authorId } },
-        isPublished: role === "TEACHER" ? true : false,
-      },
+      data: postData,
       select: {
         id: true,
         title: true,
@@ -21,8 +35,15 @@ const createNewPost = async (title, content, imageUrls, authorId, role) => {
         images: true,
         author: { select: { firstName: true, lastName: true } },
         authorId: true,
+        sectionId: true,
         isPublished: true,
         createdAt: true,
+        section: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
     return newPost;
@@ -31,12 +52,27 @@ const createNewPost = async (title, content, imageUrls, authorId, role) => {
   }
 };
 
-const getAllPosts = async (status, currentUserId) => {
+const getAllPosts = async (
+  status,
+  currentUserId,
+  sectionId = null,
+  userRole = null
+) => {
   try {
+    // Build the where clause
+    const whereClause = {
+      isPublished: status,
+    };
+
+    // For students, only show posts from their section
+    // For teachers, show posts from their section
+    // For counselors/admins, show all posts (sectionId will be null)
+    if (sectionId && (userRole === "STUDENT" || userRole === "TEACHER")) {
+      whereClause.sectionId = sectionId;
+    }
+
     const allPosts = await prisma.forumPost.findMany({
-      where: {
-        isPublished: status,
-      },
+      where: whereClause,
       include: {
         author: {
           select: {
@@ -44,6 +80,14 @@ const getAllPosts = async (status, currentUserId) => {
             firstName: true,
             lastName: true,
             avatar: true,
+            role: true,
+          },
+        },
+        section: {
+          select: {
+            id: true,
+            name: true,
+            gradeLevel: true,
           },
         },
         comments: {

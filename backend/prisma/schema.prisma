@@ -144,6 +144,7 @@ model Section {
   teacher     Teacher?
   students    Student[]
   counselors  Counselor[] @relation("CounselorSections")
+  forumPosts  ForumPost[]
 
   @@map("sections")
 }
@@ -236,13 +237,16 @@ model ForumPost {
   title       String
   content     String
   authorId    String
+  sectionId   String?
   createdAt   DateTime   @default(now())
   isPublished Boolean    @default(false)
   images      Json
   comments    Comment[]
   author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  section     Section?   @relation(fields: [sectionId], references: [id])
   reactions   Reaction[]
 
+  @@index([sectionId])
   @@map("forum_posts")
 }
 
