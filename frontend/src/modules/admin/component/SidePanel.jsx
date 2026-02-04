@@ -7,6 +7,7 @@ import {
   FaDatabase,
   FaUsersCog,
   FaKey,
+  FaLayerGroup,
 } from "react-icons/fa";
 import "../styles/SidePanel.css";
 
@@ -39,6 +40,14 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
           onClick={() => setActiveModule("users")}
         >
           <FaUsers /> User Management
+        </button>
+        <button
+          className={`nav-button ${
+            activeModule === "sections" ? "active" : ""
+          }`}
+          onClick={() => setActiveModule("sections")}
+        >
+          <FaLayerGroup /> Section Management
         </button>
         {/* <button
           className={`nav-button ${activeModule === "roles" ? "active" : ""}`}

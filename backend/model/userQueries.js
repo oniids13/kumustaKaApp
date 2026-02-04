@@ -4,7 +4,18 @@ const { validPassword } = require("../utils/passwordUtil");
 const { getGravatar } = require("../utils/avatar");
 
 const createUser = async (userData) => {
-  const { email, salt, hash, role, firstName, lastName, phone, gender, emergencyContact } = userData;
+  const {
+    email,
+    salt,
+    hash,
+    role,
+    firstName,
+    lastName,
+    phone,
+    gender,
+    emergencyContact,
+    sectionId,
+  } = userData;
   try {
     const userCreateData = {
       email,
@@ -29,23 +40,27 @@ const createUser = async (userData) => {
         userCreateData.counselor = { create: {} };
         break;
       case "STUDENT":
-        // Create student with emergency contact if provided
-        if (emergencyContact) {
-          userCreateData.student = { 
-            create: {
-              emergencyContacts: {
-                create: {
-                  name: emergencyContact.name,
-                  phone: emergencyContact.phone,
-                  relationship: emergencyContact.relationship,
-                  isPrimary: emergencyContact.isPrimary || true
-                }
-              }
-            }
-          };
-        } else {
-          userCreateData.student = { create: {} };
+        // Create student with emergency contact and section if provided
+        const studentCreateData = {};
+
+        // Add section if provided
+        if (sectionId) {
+          studentCreateData.sectionId = sectionId;
         }
+
+        // Add emergency contact if provided
+        if (emergencyContact) {
+          studentCreateData.emergencyContacts = {
+            create: {
+              name: emergencyContact.name,
+              phone: emergencyContact.phone,
+              relationship: emergencyContact.relationship,
+              isPrimary: emergencyContact.isPrimary || true,
+            },
+          };
+        }
+
+        userCreateData.student = { create: studentCreateData };
         break;
       default:
         throw new Error("Invalid role");
@@ -66,7 +81,7 @@ const createUser = async (userData) => {
         avatar: true,
         ...(role === "ADMIN" && { admin: true }),
         ...(role === "TEACHER" && { teacher: true }),
-        ...(role === "STUDENT" && { 
+        ...(role === "STUDENT" && {
           student: {
             select: {
               id: true,
@@ -76,11 +91,11 @@ const createUser = async (userData) => {
                   name: true,
                   phone: true,
                   relationship: true,
-                  isPrimary: true
-                }
-              }
-            }
-          }
+                  isPrimary: true,
+                },
+              },
+            },
+          },
         }),
         ...(role === "COUNSELOR" && { counselor: true }),
       },
@@ -94,8 +109,12 @@ const createUser = async (userData) => {
         salt,
       },
     });
-    
-    console.log(`[INFO] Created user with role ${role}${emergencyContact ? ' and emergency contact' : ''}`);
+
+    console.log(
+      `[INFO] Created user with role ${role}${
+        emergencyContact ? " and emergency contact" : ""
+      }`
+    );
     return user;
   } catch (error) {
     console.error("Error creating user:", error);
@@ -128,7 +147,9 @@ const getUserLogin = async (email, password) => {
 
     // Check if user account is active
     if (user.status !== "ACTIVE") {
-      return { message: "Account is deactivated. Please contact administrator." };
+      return {
+        message: "Account is deactivated. Please contact administrator.",
+      };
     }
 
     const isValid = validPassword(password, user.hash, user.salt);
@@ -181,18 +202,24 @@ const getUserById = async (id) => {
 
 const changeUserPassword = async (userId, newPasswordData) => {
   const { salt, hash } = newPasswordData;
-  
+
   try {
     // Get the last 3 password hashes and salts
     const previousPasswords = await prisma.passwordHistory.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: 3,
     });
 
     // Check if new password matches any of the previous 3
     for (const prevPassword of previousPasswords) {
-      if (validPassword(newPasswordData.plainPassword, prevPassword.hash, prevPassword.salt)) {
+      if (
+        validPassword(
+          newPasswordData.plainPassword,
+          prevPassword.hash,
+          prevPassword.salt
+        )
+      ) {
         throw new Error("REUSED_PASSWORD");
       }
     }
@@ -222,14 +249,14 @@ const changeUserPassword = async (userId, newPasswordData) => {
     // Keep only the last 3 password history records
     const allHistory = await prisma.passwordHistory.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     if (allHistory.length > 3) {
       const toDelete = allHistory.slice(3);
       await prisma.passwordHistory.deleteMany({
         where: {
-          id: { in: toDelete.map(p => p.id) }
+          id: { in: toDelete.map((p) => p.id) },
         },
       });
     }

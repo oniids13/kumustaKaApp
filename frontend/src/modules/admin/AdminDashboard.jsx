@@ -3,6 +3,7 @@ import SidePanel from "./component/SidePanel";
 import DashboardOverview from "./component/DashboardOverview";
 import UserManagement from "./component/UserManagement";
 import RoleManagement from "./component/RoleManagement";
+import SectionManagement from "./component/SectionManagement";
 import SystemConfiguration from "./component/SystemConfiguration";
 import PrivacySettings from "./component/PrivacySettings";
 import ComplianceMonitoring from "./component/ComplianceMonitoring";
@@ -23,6 +24,8 @@ const AdminDashboard = () => {
         return <UserManagement />;
       case "roles":
         return <RoleManagement />;
+      case "sections":
+        return <SectionManagement />;
       case "config":
         return <SystemConfiguration />;
       case "privacy":

@@ -14,6 +14,7 @@ const RegisterPage = () => {
     lastName: "",
     gender: "",
     passcode: "",
+    sectionCode: "",
     emergencyContactName: "",
     emergencyContactPhone: "",
     emergencyContactRelationship: "",
@@ -41,11 +42,11 @@ const RegisterPage = () => {
       }
     } catch (err) {
       console.error("Registration error:", err.response?.data || err.message);
-      
+
       if (err.response?.data?.errors) {
         // Handle validation errors from backend
         const backendErrors = {};
-        err.response.data.errors.forEach(error => {
+        err.response.data.errors.forEach((error) => {
           const field = error.path || error.param;
           backendErrors[field] = error.msg;
         });
@@ -69,9 +70,9 @@ const RegisterPage = () => {
           <p>Create your account to start your wellness journey</p>
         </div>
 
-        <RegistrationForm 
-          onSubmit={handleRegistration} 
-          loading={loading} 
+        <RegistrationForm
+          onSubmit={handleRegistration}
+          loading={loading}
           errors={errors}
           setErrors={setErrors}
         />
@@ -101,6 +102,7 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     gender: "",
     role: "STUDENT",
     passcode: "",
+    sectionCode: "",
     emergencyContactName: "",
     emergencyContactPhone: "",
     emergencyContactRelationship: "",
@@ -117,7 +119,11 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     lastName: false,
     emergencyContactName: false,
     emergencyContactPhone: false,
+    sectionCode: false,
   });
+
+  const [sectionInfo, setSectionInfo] = useState(null);
+  const [verifyingSection, setVerifyingSection] = useState(false);
 
   const ROLES = [
     { value: "STUDENT", label: "Student" },
@@ -144,7 +150,9 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
   ];
 
   const ADMIN_PASSCODE = "TEST";
-  const requiresPasscode = ["ADMIN", "TEACHER", "COUNSELOR"].includes(formData.role);
+  const requiresPasscode = ["ADMIN", "TEACHER", "COUNSELOR"].includes(
+    formData.role
+  );
   const isStudent = formData.role === "STUDENT";
 
   // Validation functions
@@ -166,6 +174,42 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     return /^[A-Za-z\s]+$/.test(name) && name.trim().length >= 2;
   };
 
+  const validateSectionCode = (code) => {
+    return /^[A-Z0-9]{6}$/.test(code.toUpperCase());
+  };
+
+  const verifySectionCode = async (code) => {
+    if (!validateSectionCode(code)) {
+      setSectionInfo(null);
+      return;
+    }
+
+    setVerifyingSection(true);
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/api/sections/verify/${code.toUpperCase()}`
+      );
+      if (response.data.valid) {
+        setSectionInfo(response.data.section);
+        setValidationState((prev) => ({ ...prev, sectionCode: true }));
+        setErrors((prev) => ({ ...prev, sectionCode: "" }));
+      } else {
+        setSectionInfo(null);
+        setValidationState((prev) => ({ ...prev, sectionCode: false }));
+        setErrors((prev) => ({ ...prev, sectionCode: response.data.message }));
+      }
+    } catch (err) {
+      setSectionInfo(null);
+      setValidationState((prev) => ({ ...prev, sectionCode: false }));
+      setErrors((prev) => ({
+        ...prev,
+        sectionCode: err.response?.data?.message || "Invalid section code",
+      }));
+    } finally {
+      setVerifyingSection(false);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -175,7 +219,7 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
 
     // Real-time validation
     let newValidationState = { ...validationState };
-    
+
     if (name === "password") {
       newValidationState.password = validatePassword(value);
       if (errors.password) {
@@ -215,6 +259,22 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
 
     setValidationState(newValidationState);
 
+    // Handle section code changes
+    if (name === "sectionCode") {
+      const upperCode = value.toUpperCase();
+      setFormData((prev) => ({
+        ...prev,
+        sectionCode: upperCode,
+      }));
+      if (upperCode.length === 6) {
+        verifySectionCode(upperCode);
+      } else {
+        setSectionInfo(null);
+        setValidationState((prev) => ({ ...prev, sectionCode: false }));
+      }
+      return;
+    }
+
     // Clear passcode when switching to student role
     if (name === "role" && value === "STUDENT") {
       setFormData((prev) => ({
@@ -223,14 +283,17 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       }));
     }
 
-    // Clear emergency contact fields when switching away from student role
+    // Clear emergency contact and section fields when switching away from student role
     if (name === "role" && value !== "STUDENT") {
       setFormData((prev) => ({
         ...prev,
         emergencyContactName: "",
         emergencyContactPhone: "",
         emergencyContactRelationship: "",
+        sectionCode: "",
       }));
+      setSectionInfo(null);
+      setValidationState((prev) => ({ ...prev, sectionCode: false }));
     }
 
     if (errors.passwordMatch && name.includes("password")) {
@@ -251,6 +314,7 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       lastName: "",
       gender: "",
       passcode: "",
+      sectionCode: "",
       emergencyContactName: "",
       emergencyContactPhone: "",
       emergencyContactRelationship: "",
@@ -262,7 +326,8 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       newErrors.password = "Password must be at least 8 characters long";
       valid = false;
     } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = "Password must contain at least one uppercase letter, one lowercase letter, and one number";
+      newErrors.password =
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number";
       valid = false;
     }
 
@@ -299,7 +364,8 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     }
 
     if (formData.phone && !/^09\d{9}$/.test(formData.phone)) {
-      newErrors.phone = "Phone number must be exactly 11 digits starting with 09";
+      newErrors.phone =
+        "Phone number must be exactly 11 digits starting with 09";
       valid = false;
     }
 
@@ -314,16 +380,30 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       }
     }
 
-    // Validate emergency contact fields for students
+    // Validate section code and emergency contact fields for students
     if (isStudent) {
+      // Section code validation
+      if (!formData.sectionCode.trim()) {
+        newErrors.sectionCode = "Section code is required";
+        valid = false;
+      } else if (!validateSectionCode(formData.sectionCode)) {
+        newErrors.sectionCode = "Section code must be exactly 6 characters";
+        valid = false;
+      } else if (!sectionInfo) {
+        newErrors.sectionCode = "Please enter a valid section code";
+        valid = false;
+      }
+
       if (!formData.emergencyContactName.trim()) {
         newErrors.emergencyContactName = "Emergency contact name is required";
         valid = false;
       } else if (!/^[A-Za-z\s]+$/.test(formData.emergencyContactName)) {
-        newErrors.emergencyContactName = "Name must only contain letters and spaces";
+        newErrors.emergencyContactName =
+          "Name must only contain letters and spaces";
         valid = false;
       } else if (formData.emergencyContactName.trim().length < 2) {
-        newErrors.emergencyContactName = "Name must be at least 2 characters long";
+        newErrors.emergencyContactName =
+          "Name must be at least 2 characters long";
         valid = false;
       }
 
@@ -331,7 +411,8 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
         newErrors.emergencyContactPhone = "Emergency contact phone is required";
         valid = false;
       } else if (!/^09\d{9}$/.test(formData.emergencyContactPhone)) {
-        newErrors.emergencyContactPhone = "Phone number must be exactly 11 digits starting with 09";
+        newErrors.emergencyContactPhone =
+          "Phone number must be exactly 11 digits starting with 09";
         valid = false;
       }
 
@@ -350,7 +431,7 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
     if (validateForm()) {
       const data = { ...formData };
       delete data.confirmPassword;
-      
+
       if (!requiresPasscode) {
         delete data.passcode;
       }
@@ -359,17 +440,18 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       if (!data.gender) {
         delete data.gender;
       }
-      
-      // Only include emergency contact data for students
+
+      // Only include emergency contact and section data for students
       if (!isStudent) {
         delete data.emergencyContactName;
         delete data.emergencyContactPhone;
         delete data.emergencyContactRelationship;
+        delete data.sectionCode;
       } else {
         // Mark emergency contact as primary for students
         data.emergencyContactIsPrimary = true;
       }
-      
+
       onSubmit(data);
     }
   };
@@ -379,7 +461,9 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       <div className="form-row">
         {/* First Name */}
         <div className="form-group">
-          <label htmlFor="firstName">First Name <span className="required-indicator">*</span></label>
+          <label htmlFor="firstName">
+            First Name <span className="required-indicator">*</span>
+          </label>
           <input
             type="text"
             id="firstName"
@@ -388,11 +472,23 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
             onChange={handleChange}
             required
             placeholder="Enter your first name"
-            className={errors.firstName ? "error" : validationState.firstName ? "valid" : ""}
+            className={
+              errors.firstName
+                ? "error"
+                : validationState.firstName
+                ? "valid"
+                : ""
+            }
           />
           <div className="validation-guide">
             <small className="form-helper-text">
-              <i className={`fas ${validationState.firstName ? 'fa-check text-success' : 'fa-info-circle'}`}></i>
+              <i
+                className={`fas ${
+                  validationState.firstName
+                    ? "fa-check text-success"
+                    : "fa-info-circle"
+                }`}
+              ></i>
               Must be at least 2 characters, letters and spaces only
             </small>
           </div>
@@ -403,7 +499,9 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
 
         {/* Last Name */}
         <div className="form-group">
-          <label htmlFor="lastName">Last Name <span className="required-indicator">*</span></label>
+          <label htmlFor="lastName">
+            Last Name <span className="required-indicator">*</span>
+          </label>
           <input
             type="text"
             id="lastName"
@@ -412,11 +510,23 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
             onChange={handleChange}
             required
             placeholder="Enter your last name"
-            className={errors.lastName ? "error" : validationState.lastName ? "valid" : ""}
+            className={
+              errors.lastName
+                ? "error"
+                : validationState.lastName
+                ? "valid"
+                : ""
+            }
           />
           <div className="validation-guide">
             <small className="form-helper-text">
-              <i className={`fas ${validationState.lastName ? 'fa-check text-success' : 'fa-info-circle'}`}></i>
+              <i
+                className={`fas ${
+                  validationState.lastName
+                    ? "fa-check text-success"
+                    : "fa-info-circle"
+                }`}
+              ></i>
               Must be at least 2 characters, letters and spaces only
             </small>
           </div>
@@ -428,7 +538,9 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
 
       {/* Email */}
       <div className="form-group">
-        <label htmlFor="email">Email Address <span className="required-indicator">*</span></label>
+        <label htmlFor="email">
+          Email Address <span className="required-indicator">*</span>
+        </label>
         <input
           type="email"
           id="email"
@@ -437,11 +549,19 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
           onChange={handleChange}
           required
           placeholder="Enter your email"
-          className={errors.email ? "error" : validationState.email ? "valid" : ""}
+          className={
+            errors.email ? "error" : validationState.email ? "valid" : ""
+          }
         />
         <div className="validation-guide">
           <small className="form-helper-text">
-            <i className={`fas ${validationState.email ? 'fa-check text-success' : 'fa-info-circle'}`}></i>
+            <i
+              className={`fas ${
+                validationState.email
+                  ? "fa-check text-success"
+                  : "fa-info-circle"
+              }`}
+            ></i>
             Must be a valid email format (e.g., user@example.com)
           </small>
         </div>
@@ -459,11 +579,19 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
           onChange={handleChange}
           pattern="09[0-9]{9}"
           placeholder="e.g. 09123456789"
-          className={errors.phone ? "error" : validationState.phone ? "valid" : ""}
+          className={
+            errors.phone ? "error" : validationState.phone ? "valid" : ""
+          }
         />
         <div className="validation-guide">
           <small className="form-helper-text">
-            <i className={`fas ${validationState.phone ? 'fa-check text-success' : 'fa-info-circle'}`}></i>
+            <i
+              className={`fas ${
+                validationState.phone
+                  ? "fa-check text-success"
+                  : "fa-info-circle"
+              }`}
+            ></i>
             Must be exactly 11 digits starting with 09 (e.g., 09123456789)
           </small>
         </div>
@@ -487,12 +615,16 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
             </option>
           ))}
         </select>
-        {errors.gender && <span className="error-message">{errors.gender}</span>}
+        {errors.gender && (
+          <span className="error-message">{errors.gender}</span>
+        )}
       </div>
 
       {/* Role Selection */}
       <div className="form-group">
-        <label htmlFor="role">I am a <span className="required-indicator">*</span></label>
+        <label htmlFor="role">
+          I am a <span className="required-indicator">*</span>
+        </label>
         <select
           id="role"
           name="role"
@@ -508,6 +640,82 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
         </select>
       </div>
 
+      {/* Section Code - Only for Students */}
+      {isStudent && (
+        <div className="section-code-group">
+          <div className="form-group">
+            <label htmlFor="sectionCode">
+              Section Code <span className="required-indicator">*</span>
+            </label>
+            <div className="section-code-input-wrapper">
+              <input
+                type="text"
+                id="sectionCode"
+                name="sectionCode"
+                value={formData.sectionCode}
+                onChange={handleChange}
+                maxLength={6}
+                placeholder="Enter 6-character code"
+                className={
+                  errors.sectionCode
+                    ? "error"
+                    : validationState.sectionCode
+                    ? "valid"
+                    : ""
+                }
+                style={{ textTransform: "uppercase" }}
+              />
+              {verifyingSection && (
+                <span className="verifying-indicator">
+                  <i className="fas fa-spinner fa-spin"></i>
+                </span>
+              )}
+            </div>
+            <div className="validation-guide">
+              <small className="form-helper-text">
+                <i
+                  className={`fas ${
+                    validationState.sectionCode
+                      ? "fa-check text-success"
+                      : "fa-info-circle"
+                  }`}
+                ></i>
+                Ask your teacher or admin for your section code
+              </small>
+            </div>
+            {errors.sectionCode && (
+              <span className="error-message">{errors.sectionCode}</span>
+            )}
+            {sectionInfo && (
+              <div className="section-info-card">
+                <div className="section-info-header">
+                  <i className="fas fa-check-circle text-success"></i>
+                  <span>Section Verified</span>
+                </div>
+                <div className="section-info-details">
+                  <p>
+                    <strong>{sectionInfo.name}</strong>
+                  </p>
+                  {sectionInfo.gradeLevel && (
+                    <p className="grade-level">{sectionInfo.gradeLevel}</p>
+                  )}
+                  {sectionInfo.teacherName && (
+                    <p className="teacher-name">
+                      <i className="fas fa-user-tie"></i>{" "}
+                      {sectionInfo.teacherName}
+                    </p>
+                  )}
+                  <p className="student-count">
+                    <i className="fas fa-users"></i> {sectionInfo.studentCount}{" "}
+                    students enrolled
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Emergency Contact Section - Only for Students */}
       {isStudent && (
         <div className="emergency-contact-section">
@@ -515,14 +723,16 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
             Emergency Contact <span className="required-indicator">*</span>
           </h4>
           <p className="section-description">
-            This will be your primary emergency contact for health and safety purposes.
+            This will be your primary emergency contact for health and safety
+            purposes.
           </p>
-          
+
           <div className="form-row">
             {/* Emergency Contact Name */}
             <div className="form-group">
               <label htmlFor="emergencyContactName">
-                Emergency Contact Name <span className="required-indicator">*</span>
+                Emergency Contact Name{" "}
+                <span className="required-indicator">*</span>
               </label>
               <input
                 type="text"
@@ -532,16 +742,30 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
                 onChange={handleChange}
                 required
                 placeholder="Full name of emergency contact"
-                className={errors.emergencyContactName ? "error" : validationState.emergencyContactName ? "valid" : ""}
+                className={
+                  errors.emergencyContactName
+                    ? "error"
+                    : validationState.emergencyContactName
+                    ? "valid"
+                    : ""
+                }
               />
               <div className="validation-guide">
                 <small className="form-helper-text">
-                  <i className={`fas ${validationState.emergencyContactName ? 'fa-check text-success' : 'fa-info-circle'}`}></i>
+                  <i
+                    className={`fas ${
+                      validationState.emergencyContactName
+                        ? "fa-check text-success"
+                        : "fa-info-circle"
+                    }`}
+                  ></i>
                   Must be at least 2 characters, letters and spaces only
                 </small>
               </div>
               {errors.emergencyContactName && (
-                <span className="error-message">{errors.emergencyContactName}</span>
+                <span className="error-message">
+                  {errors.emergencyContactName}
+                </span>
               )}
             </div>
 
@@ -566,7 +790,9 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
                 ))}
               </select>
               {errors.emergencyContactRelationship && (
-                <span className="error-message">{errors.emergencyContactRelationship}</span>
+                <span className="error-message">
+                  {errors.emergencyContactRelationship}
+                </span>
               )}
             </div>
           </div>
@@ -574,7 +800,8 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
           {/* Emergency Contact Phone */}
           <div className="form-group">
             <label htmlFor="emergencyContactPhone">
-              Emergency Contact Phone <span className="required-indicator">*</span>
+              Emergency Contact Phone{" "}
+              <span className="required-indicator">*</span>
             </label>
             <input
               type="tel"
@@ -585,16 +812,30 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
               pattern="09[0-9]{9}"
               required
               placeholder="e.g. 09123456789"
-              className={errors.emergencyContactPhone ? "error" : validationState.emergencyContactPhone ? "valid" : ""}
+              className={
+                errors.emergencyContactPhone
+                  ? "error"
+                  : validationState.emergencyContactPhone
+                  ? "valid"
+                  : ""
+              }
             />
             <div className="validation-guide">
               <small className="form-helper-text">
-                <i className={`fas ${validationState.emergencyContactPhone ? 'fa-check text-success' : 'fa-info-circle'}`}></i>
+                <i
+                  className={`fas ${
+                    validationState.emergencyContactPhone
+                      ? "fa-check text-success"
+                      : "fa-info-circle"
+                  }`}
+                ></i>
                 Must be exactly 11 digits starting with 09 (e.g., 09123456789)
               </small>
             </div>
             {errors.emergencyContactPhone && (
-              <span className="error-message">{errors.emergencyContactPhone}</span>
+              <span className="error-message">
+                {errors.emergencyContactPhone}
+              </span>
             )}
           </div>
         </div>
@@ -628,7 +869,9 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
       <div className="form-row">
         {/* Password */}
         <div className="form-group">
-          <label htmlFor="password">Password <span className="required-indicator">*</span></label>
+          <label htmlFor="password">
+            Password <span className="required-indicator">*</span>
+          </label>
           <input
             type="password"
             id="password"
@@ -638,17 +881,46 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
             minLength="8"
             required
             placeholder="Create a password"
-            className={errors.password ? "error" : (validationState.password.length && validationState.password.complexity) ? "valid" : ""}
+            className={
+              errors.password
+                ? "error"
+                : validationState.password.length &&
+                  validationState.password.complexity
+                ? "valid"
+                : ""
+            }
           />
           <div className="password-requirements">
             <small className="form-helper-text">Password must contain:</small>
             <ul className="requirements-list">
-              <li className={validationState.password.length ? "requirement-met" : "requirement-pending"}>
-                <i className={`fas ${validationState.password.length ? 'fa-check' : 'fa-circle'}`}></i>
+              <li
+                className={
+                  validationState.password.length
+                    ? "requirement-met"
+                    : "requirement-pending"
+                }
+              >
+                <i
+                  className={`fas ${
+                    validationState.password.length ? "fa-check" : "fa-circle"
+                  }`}
+                ></i>
                 At least 8 characters
               </li>
-              <li className={validationState.password.complexity ? "requirement-met" : "requirement-pending"}>
-                <i className={`fas ${validationState.password.complexity ? 'fa-check' : 'fa-circle'}`}></i>
+              <li
+                className={
+                  validationState.password.complexity
+                    ? "requirement-met"
+                    : "requirement-pending"
+                }
+              >
+                <i
+                  className={`fas ${
+                    validationState.password.complexity
+                      ? "fa-check"
+                      : "fa-circle"
+                  }`}
+                ></i>
                 One uppercase letter, one lowercase letter, and one number
               </li>
             </ul>
@@ -660,7 +932,9 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
 
         {/* Confirm Password */}
         <div className="form-group">
-          <label htmlFor="confirmPassword">Confirm Password <span className="required-indicator">*</span></label>
+          <label htmlFor="confirmPassword">
+            Confirm Password <span className="required-indicator">*</span>
+          </label>
           <input
             type="password"
             id="confirmPassword"
@@ -669,7 +943,14 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
             onChange={handleChange}
             required
             placeholder="Confirm your password"
-            className={errors.passwordMatch ? "error" : (formData.confirmPassword && formData.password === formData.confirmPassword) ? "valid" : ""}
+            className={
+              errors.passwordMatch
+                ? "error"
+                : formData.confirmPassword &&
+                  formData.password === formData.confirmPassword
+                ? "valid"
+                : ""
+            }
             onBlur={() => {
               if (formData.password !== formData.confirmPassword) {
                 setErrors((prev) => ({
@@ -681,7 +962,14 @@ const RegistrationForm = ({ onSubmit, loading, errors, setErrors }) => {
           />
           <div className="validation-guide">
             <small className="form-helper-text">
-              <i className={`fas ${formData.confirmPassword && formData.password === formData.confirmPassword ? 'fa-check text-success' : 'fa-info-circle'}`}></i>
+              <i
+                className={`fas ${
+                  formData.confirmPassword &&
+                  formData.password === formData.confirmPassword
+                    ? "fa-check text-success"
+                    : "fa-info-circle"
+                }`}
+              ></i>
               Must match the password above
             </small>
           </div>

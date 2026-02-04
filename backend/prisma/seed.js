@@ -117,7 +117,7 @@ function getRandomRecentDate() {
 
   return new Date(
     pastMonth.getTime() +
-      Math.random() * (today.getTime() - pastMonth.getTime()),
+      Math.random() * (today.getTime() - pastMonth.getTime())
   );
 }
 
@@ -270,6 +270,7 @@ async function main() {
   await prisma.student.deleteMany();
   await prisma.user.deleteMany();
   await prisma.survey.deleteMany();
+  await prisma.section.deleteMany();
 
   // Create the daily survey
   console.log("📋 Creating survey...");
@@ -418,6 +419,44 @@ async function main() {
     update: {},
   });
 
+  // Create 4 sections
+  console.log("🏫 Creating sections...");
+  const sectionsData = [
+    {
+      name: "Grade 10 - Section A",
+      code: "G10SEC",
+      description: "Grade 10 Section A - Science and Technology",
+      gradeLevel: "Grade 10",
+    },
+    {
+      name: "Grade 10 - Section B",
+      code: "G10SEB",
+      description: "Grade 10 Section B - Arts and Design",
+      gradeLevel: "Grade 10",
+    },
+    {
+      name: "Grade 11 - Section A",
+      code: "G11SEC",
+      description: "Grade 11 Section A - STEM",
+      gradeLevel: "Grade 11",
+    },
+    {
+      name: "Grade 11 - Section B",
+      code: "G11SEB",
+      description: "Grade 11 Section B - ABM",
+      gradeLevel: "Grade 11",
+    },
+  ];
+
+  const sections = [];
+  for (const sectionData of sectionsData) {
+    const section = await prisma.section.create({
+      data: sectionData,
+    });
+    sections.push(section);
+    console.log(`🏫 Created section: ${section.name} (Code: ${section.code})`);
+  }
+
   // Create a sample admin user
   console.log("👨‍💼 Creating admin user...");
   const adminPass = genPassword(DEFAULT_PASSWORD);
@@ -469,10 +508,10 @@ async function main() {
     },
   });
   console.log(
-    `👨‍⚕️ Created counselor: ${counselor.firstName} ${counselor.lastName}`,
+    `👨‍⚕️ Created counselor: ${counselor.firstName} ${counselor.lastName}`
   );
 
-  // Create a sample teacher
+  // Create a sample teacher and assign to first section
   console.log("👨‍🏫 Creating teacher user...");
   const teacherPass = genPassword(DEFAULT_PASSWORD);
   const teacher = await prisma.user.upsert({
@@ -488,7 +527,9 @@ async function main() {
       gender: "MALE",
       avatar: getGravatar("teacher@kumustaka.com"),
       teacher: {
-        create: {},
+        create: {
+          sectionId: sections[0].id, // Assign to first section
+        },
       },
     },
     update: {},
@@ -496,7 +537,21 @@ async function main() {
       teacher: true,
     },
   });
-  console.log(`👨‍🏫 Created teacher: ${teacher.firstName} ${teacher.lastName}`);
+  console.log(
+    `👨‍🏫 Created teacher: ${teacher.firstName} ${teacher.lastName} (Section: ${sections[0].name})`
+  );
+
+  // Connect counselor to sections
+  console.log("🔗 Connecting counselor to sections...");
+  await prisma.counselor.update({
+    where: { id: counselor.counselor.id },
+    data: {
+      sections: {
+        connect: sections.map((s) => ({ id: s.id })),
+      },
+    },
+  });
+  console.log(`🔗 Counselor connected to all ${sections.length} sections`);
 
   // Create 7 student users with Filipino names
   console.log("👨‍🎓 Creating student users...");
@@ -509,6 +564,7 @@ async function main() {
       email: "juan.delacruz@student.kumustaka.com",
       phone: "09123478901",
       gender: "MALE",
+      sectionIndex: 0, // Grade 10 - Section A
     },
     {
       firstName: "Maria",
@@ -516,6 +572,7 @@ async function main() {
       email: "maria.santos@student.kumustaka.com",
       phone: "09234589012",
       gender: "FEMALE",
+      sectionIndex: 0, // Grade 10 - Section A
     },
     {
       firstName: "Pedro",
@@ -523,6 +580,7 @@ async function main() {
       email: "pedro.reyes@student.kumustaka.com",
       phone: "09345690123",
       gender: "MALE",
+      sectionIndex: 0, // Grade 10 - Section A
     },
     {
       firstName: "Ana",
@@ -530,6 +588,7 @@ async function main() {
       email: "ana.garcia@student.kumustaka.com",
       phone: "09456701234",
       gender: "FEMALE",
+      sectionIndex: 1, // Grade 10 - Section B
     },
     {
       firstName: "Carlo",
@@ -537,6 +596,7 @@ async function main() {
       email: "carlo.mendoza@student.kumustaka.com",
       phone: "09567812345",
       gender: "MALE",
+      sectionIndex: 1, // Grade 10 - Section B
     },
     {
       firstName: "Sophia",
@@ -544,6 +604,7 @@ async function main() {
       email: "sophia.lim@student.kumustaka.com",
       phone: "09678923456",
       gender: "FEMALE",
+      sectionIndex: 2, // Grade 11 - Section A
     },
     {
       firstName: "Miguel",
@@ -551,6 +612,7 @@ async function main() {
       email: "miguel.tan@student.kumustaka.com",
       phone: "09789034567",
       gender: "MALE",
+      sectionIndex: 2, // Grade 11 - Section A
     },
   ];
 
@@ -559,6 +621,7 @@ async function main() {
 
   for (const data of studentData) {
     const password = genPassword(DEFAULT_PASSWORD);
+    const assignedSection = sections[data.sectionIndex];
 
     const student = await prisma.user.upsert({
       where: { email: data.email },
@@ -573,7 +636,9 @@ async function main() {
         gender: data.gender,
         avatar: getGravatar(data.email),
         student: {
-          create: {},
+          create: {
+            sectionId: assignedSection.id,
+          },
         },
       },
       update: {},
@@ -583,7 +648,9 @@ async function main() {
     });
 
     students.push(student);
-    console.log(`👨‍🎓 Created student: ${student.firstName} ${student.lastName}`);
+    console.log(
+      `👨‍🎓 Created student: ${student.firstName} ${student.lastName} (Section: ${assignedSection.name})`
+    );
 
     // Add an initial assessment for this student
     console.log(`📝 Creating initial assessment for ${student.firstName}...`);
@@ -688,7 +755,7 @@ async function main() {
       const weekDate = new Date();
       weekDate.setDate(today.getDate() - week * 7);
       const weekNumber = Math.floor(
-        weekDate.getTime() / (7 * 24 * 60 * 60 * 1000),
+        weekDate.getTime() / (7 * 24 * 60 * 60 * 1000)
       );
       const year = weekDate.getFullYear();
 
@@ -820,7 +887,7 @@ async function main() {
       const commenter = students[Math.floor(Math.random() * students.length)];
       const commentDate = new Date(postDate);
       commentDate.setHours(
-        postDate.getHours() + Math.floor(Math.random() * 48),
+        postDate.getHours() + Math.floor(Math.random() * 48)
       ); // Comment within 48 hours
 
       await prisma.comment.create({

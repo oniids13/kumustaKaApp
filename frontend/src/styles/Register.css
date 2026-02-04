@@ -112,10 +112,17 @@
 }
 
 @keyframes shake {
-  0%, 20%, 40%, 60%, 80% {
+  0%,
+  20%,
+  40%,
+  60%,
+  80% {
     transform: translateX(0);
   }
-  10%, 30%, 50%, 70% {
+  10%,
+  30%,
+  50%,
+  70% {
     transform: translateX(-3px);
   }
   90% {
@@ -461,3 +468,86 @@
   border-top-color: #7f8c8d;
 }
 
+/* Section Code Styles */
+.section-code-group {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #e8f4f8 0%, #f0f9ff 100%);
+  border-radius: 12px;
+  border: 1px solid #bee3f8;
+}
+
+.section-code-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.section-code-input-wrapper input {
+  font-family: "Monaco", "Consolas", monospace;
+  font-size: 1.1rem;
+  letter-spacing: 0.2em;
+  text-align: center;
+}
+
+.verifying-indicator {
+  position: absolute;
+  right: 12px;
+  color: #5dade2;
+}
+
+.section-info-card {
+  margin-top: 12px;
+  padding: 12px 15px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #d4edda;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.section-info-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #28a745;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.section-info-details p {
+  margin: 4px 0;
+  font-size: 0.85rem;
+  color: #495057;
+}
+
+.section-info-details .grade-level {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.section-info-details .teacher-name,
+.section-info-details .student-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.section-info-details .teacher-name i,
+.section-info-details .student-count i {
+  color: #5dade2;
+  width: 14px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

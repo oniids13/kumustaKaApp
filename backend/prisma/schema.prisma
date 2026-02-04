@@ -39,6 +39,7 @@ model User {
 model Student {
   id                  String              @id @default(uuid())
   userId              String              @unique
+  sectionId           String?
   quizzes             Quiz[]
   attempts            QuizAttempt[]
   emergencyContacts   EmergencyContact[]
@@ -49,9 +50,11 @@ model Student {
   moodEntries         MoodEntry[]
   reactions           Reaction[]
   user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  section             Section?            @relation(fields: [sectionId], references: [id])
   surveys             SurveyResponse[]
   weeklyGoalSummaries WeeklyGoalSummary[]
 
+  @@index([sectionId])
   @@map("students")
 }
 
@@ -102,8 +105,10 @@ model WeeklyGoalSummary {
 model Teacher {
   id        String     @id @default(uuid())
   userId    String     @unique
+  sectionId String?    @unique
   reactions Reaction[]
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  section   Section?   @relation(fields: [sectionId], references: [id])
 
   @@map("teachers")
 }
@@ -114,6 +119,7 @@ model Counselor {
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   interventions Intervention[]
   reports       Report[]
+  sections      Section[]      @relation("CounselorSections")
 
   @@map("counselors")
 }
@@ -124,6 +130,22 @@ model Admin {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("admins")
+}
+
+model Section {
+  id          String      @id @default(uuid())
+  name        String
+  code        String      @unique
+  description String?
+  gradeLevel  String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  isActive    Boolean     @default(true)
+  teacher     Teacher?
+  students    Student[]
+  counselors  Counselor[] @relation("CounselorSections")
+
+  @@map("sections")
 }
 
 model Survey {
