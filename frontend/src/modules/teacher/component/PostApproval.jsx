@@ -20,7 +20,7 @@ const PostApproval = () => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        }
+        },
       );
       setUnpublishedPosts(response.data.unpublishedPosts);
       setLoading(false);
@@ -44,7 +44,7 @@ const PostApproval = () => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        }
+        },
       );
       message.success("Post approved successfully");
       fetchUnpublishedPosts();
@@ -64,7 +64,7 @@ const PostApproval = () => {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
-        }
+        },
       );
       message.success("Post deleted successfully");
       fetchUnpublishedPosts();

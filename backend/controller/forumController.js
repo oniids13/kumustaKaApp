@@ -252,6 +252,27 @@ const createCommentController = async (req, res) => {
     const { content } = req.body;
     const { postId } = req.params;
     const userId = req.user.id;
+    const role = req.user.role;
+
+    // Enforce section isolation: students/teachers can only comment on posts in their section
+    if (role === "STUDENT" || role === "TEACHER") {
+      const post = await prisma.forumPost.findUnique({
+        where: { id: postId },
+        select: { sectionId: true },
+      });
+
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      const userSectionId = await getUserSection(userId, role);
+
+      if (post.sectionId && userSectionId !== post.sectionId) {
+        return res.status(403).json({
+          message: "You can only comment on posts within your section",
+        });
+      }
+    }
 
     const newComment = await createComment(content, postId, userId);
     return res.status(201).json(newComment);

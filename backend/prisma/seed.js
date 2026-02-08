@@ -3,16 +3,14 @@ const prisma = new PrismaClient();
 const { genPassword } = require("../utils/passwordUtil");
 const { getGravatar } = require("../utils/avatar");
 const { faker } = require("@faker-js/faker");
-const crypto = require("crypto");
 
-// Use a fixed seed for consistent data generation
-faker.seed(123);
+faker.seed(42);
 
-// Default password for all seeded users
 const DEFAULT_PASSWORD = "Password123!";
 
-// Sample forum post content
-const forumPostTopics = [
+// ─── Forum post topics per section ───────────────────────────────────────────
+
+const sectionAForumTopics = [
   {
     title: "Dealing with exam anxiety",
     content:
@@ -33,14 +31,17 @@ const forumPostTopics = [
     content: "I can't seem to get proper sleep during finals. Any advice?",
   },
   {
-    title: "Making friends in a new school",
-    content:
-      "I just transferred here and finding it hard to connect. How did you make new friends?",
-  },
-  {
     title: "Coping with academic pressure",
     content:
       "The pressure to perform well is overwhelming. How do you cope with it?",
+  },
+];
+
+const sectionBForumTopics = [
+  {
+    title: "Making friends in a new school",
+    content:
+      "I just transferred here and finding it hard to connect. How did you make new friends?",
   },
   {
     title: "Healthy eating on a student budget",
@@ -58,12 +59,25 @@ const forumPostTopics = [
       "How do you handle situations with teachers who seem unfair or difficult?",
   },
   {
-    title: "Finding internship opportunities",
-    content: "Where do you look for internships related to our field?",
+    title: "Managing time for hobbies",
+    content:
+      "I feel like I have no time left for hobbies after school. How do you manage?",
   },
 ];
 
-// Sample journal entries
+const commentTemplates = [
+  "I completely agree with you!",
+  "Thanks for sharing this, it's really helpful.",
+  "I've been through something similar and what helped me was taking breaks.",
+  "Have you tried approaching it from a different angle?",
+  "I would suggest talking to a counselor about this.",
+  "This is such an important topic to discuss.",
+  "I struggled with this too, you're not alone.",
+  "Great point! I never thought about it that way.",
+  "This is something many students face, hang in there!",
+  "Let's organize a study group to tackle this together!",
+];
+
 const journalPrompts = [
   "Today I felt...",
   "I'm grateful for...",
@@ -77,7 +91,6 @@ const journalPrompts = [
   "Something that made me smile today...",
 ];
 
-// Sample goal titles
 const goalTitles = [
   "Complete reading assignment",
   "Study for math exam",
@@ -93,37 +106,18 @@ const goalTitles = [
   "Organize study materials",
 ];
 
-// Sample comments
-const commentTemplates = [
-  "I completely agree with you!",
-  "Thanks for sharing this, it's really helpful.",
-  "I've been through something similar and what helped me was...",
-  "Have you tried approaching it from a different angle?",
-  "I would suggest talking to a counselor about this.",
-  "This is such an important topic to discuss.",
-  "I struggled with this too, you're not alone.",
-  "Great point! I never thought about it that way.",
-  "This is something many students face.",
-  "Let's organize a study group to tackle this together!",
-];
+// ─── Helper functions ────────────────────────────────────────────────────────
 
-/**
- * Generate a random date within the past month
- */
 function getRandomRecentDate() {
   const today = new Date();
   const pastMonth = new Date(today);
   pastMonth.setMonth(today.getMonth() - 1);
-
   return new Date(
     pastMonth.getTime() +
-      Math.random() * (today.getTime() - pastMonth.getTime())
+      Math.random() * (today.getTime() - pastMonth.getTime()),
   );
 }
 
-/**
- * Generate a string date in PH format
- */
 function getPhDate(date = new Date()) {
   return date
     .toLocaleDateString("en-US", {
@@ -134,100 +128,126 @@ function getPhDate(date = new Date()) {
     .replace(/\//g, "-");
 }
 
-/**
- * Generate an array of dates for the past 30 days
- */
 function generatePastMonthDates() {
   const dates = [];
   const today = new Date();
-
   for (let i = 0; i < 30; i++) {
-    // Create a new date for each day with standardized time (midnight)
     const date = new Date();
     date.setDate(today.getDate() - i);
-    // Set hours, minutes, seconds, and milliseconds to 0 (start of day)
     date.setHours(0, 0, 0, 0);
     dates.push(date);
   }
-
   return dates;
 }
 
-/**
- * Generate random survey responses
- */
-function generateSurveyResponses(surveyId) {
-  // Generate random answers based on 12 questions and values from 1-5
+// ─── Student mental health profiles ──────────────────────────────────────────
+// Each student gets a "personality" that drives realistic, consistent data.
+// mentalHealthProfile: "healthy" | "mild" | "moderate" | "severe"
+
+function generateSurveyForProfile(profile) {
   const answers = [];
+  let rangeMin, rangeMax;
+
+  switch (profile) {
+    case "healthy":
+      rangeMin = 3;
+      rangeMax = 5;
+      break;
+    case "mild":
+      rangeMin = 2;
+      rangeMax = 4;
+      break;
+    case "moderate":
+      rangeMin = 1;
+      rangeMax = 3;
+      break;
+    case "severe":
+      rangeMin = 1;
+      rangeMax = 2;
+      break;
+    default:
+      rangeMin = 2;
+      rangeMax = 4;
+  }
 
   for (let i = 1; i <= 12; i++) {
-    answers.push({
-      questionId: i,
-      value: Math.floor(Math.random() * 5) + 1,
-    });
+    const value =
+      Math.floor(Math.random() * (rangeMax - rangeMin + 1)) + rangeMin;
+    answers.push({ questionId: i, value });
   }
 
-  // Calculate random score between 36-60 (higher is better)
-  const score = Math.floor(Math.random() * 25) + 36;
+  const score = answers.reduce((sum, a) => sum + a.value, 0);
+  const maxScore = 60;
+  const percentage = parseFloat((score / maxScore).toFixed(2));
 
-  // Calculate percentage (score / 60)
-  const percentage = parseFloat((score / 60).toFixed(2));
-
-  // Determine zone based on percentage
   let zone;
-  if (percentage >= 0.8) {
-    zone = "Green";
-  } else if (percentage >= 0.6) {
-    zone = "Yellow";
-  } else {
-    zone = "Red";
-  }
+  if (percentage >= 0.75) zone = "Green";
+  else if (percentage >= 0.55) zone = "Yellow";
+  else zone = "Red";
 
   return { answers, score, percentage, zone };
 }
 
-/**
- * Generate random assessment data
- */
-function generateInitialAssessment() {
-  // Generate random answers for the DASS-21 assessment
+function generateAssessmentForProfile(profile) {
+  let dRange, aRange, sRange;
+
+  switch (profile) {
+    case "healthy":
+      dRange = [0, 1];
+      aRange = [0, 1];
+      sRange = [0, 1];
+      break;
+    case "mild":
+      dRange = [1, 2];
+      aRange = [1, 2];
+      sRange = [1, 2];
+      break;
+    case "moderate":
+      dRange = [2, 3];
+      aRange = [2, 3];
+      sRange = [2, 3];
+      break;
+    case "severe":
+      dRange = [2, 3];
+      aRange = [2, 3];
+      sRange = [3, 3];
+      break;
+    default:
+      dRange = [0, 3];
+      aRange = [0, 3];
+      sRange = [0, 3];
+  }
+
   const answers = [];
-  // 7 Depression questions (D1-D7)
   let depressionScore = 0;
   for (let i = 1; i <= 7; i++) {
-    const value = Math.floor(Math.random() * 4); // 0-3 range
+    const value =
+      Math.floor(Math.random() * (dRange[1] - dRange[0] + 1)) + dRange[0];
     depressionScore += value;
     answers.push({ id: `D${i}`, value });
   }
-
-  // 7 Anxiety questions (A1-A7)
   let anxietyScore = 0;
   for (let i = 1; i <= 7; i++) {
-    const value = Math.floor(Math.random() * 4); // 0-3 range
+    const value =
+      Math.floor(Math.random() * (aRange[1] - aRange[0] + 1)) + aRange[0];
     anxietyScore += value;
     answers.push({ id: `A${i}`, value });
   }
-
-  // 7 Stress questions (S1-S7)
   let stressScore = 0;
   for (let i = 1; i <= 7; i++) {
-    const value = Math.floor(Math.random() * 4); // 0-3 range
+    const value =
+      Math.floor(Math.random() * (sRange[1] - sRange[0] + 1)) + sRange[0];
     stressScore += value;
     answers.push({ id: `S${i}`, value });
   }
 
-  // Multiply scores by 2 for DASS-21 scoring convention
   depressionScore *= 2;
   anxietyScore *= 2;
   stressScore *= 2;
-
   const totalScore = depressionScore + anxietyScore + stressScore;
 
   return {
-    assessmentData: {
-      title: "DASS-21",
-      dateCompleted: new Date(),
-    },
+    assessmentData: { title: "DASS-21", dateCompleted: new Date() },
     answers,
     depressionScore,
     anxietyScore,
@@ -236,18 +256,28 @@ function generateInitialAssessment() {
   };
 }
 
-/**
- * Main seeding function
- */
+function getMoodRangeForProfile(profile) {
+  switch (profile) {
+    case "healthy":
+      return [3, 5];
+    case "mild":
+      return [2, 4];
+    case "moderate":
+      return [1, 3];
+    case "severe":
+      return [1, 2];
+    default:
+      return [1, 5];
+  }
+}
+
+// ─── Main seed ───────────────────────────────────────────────────────────────
+
 async function main() {
-  console.log("🌱 Starting database seeding...");
+  console.log("🌱 Starting database seeding...\n");
 
-  // Clean database (if needed for testing)
-  // Uncomment these lines for a clean reset
-
+  // ─── Clean ────────────────────────────────────────────────────────────────
   console.log("🧹 Cleaning database...");
-
-  // Delete in proper order to respect foreign key constraints
   await prisma.message.deleteMany();
   await prisma.conversation.deleteMany();
   await prisma.report.deleteMany();
@@ -264,6 +294,7 @@ async function main() {
   await prisma.emergencyContact.deleteMany();
   await prisma.surveyResponse.deleteMany();
   await prisma.initialAssessment.deleteMany();
+  await prisma.passwordHistory.deleteMany();
   await prisma.admin.deleteMany();
   await prisma.counselor.deleteMany();
   await prisma.teacher.deleteMany();
@@ -272,8 +303,8 @@ async function main() {
   await prisma.survey.deleteMany();
   await prisma.section.deleteMany();
 
-  // Create the daily survey
-  console.log("📋 Creating survey...");
+  // ─── Survey ───────────────────────────────────────────────────────────────
+  console.log("📋 Creating daily survey...");
   const survey = await prisma.survey.upsert({
     where: { id: "daily-survey" },
     create: {
@@ -282,187 +313,50 @@ async function main() {
       description: "A 12-item self-report for daily mental health monitoring.",
       type: "DAILY",
       questions: [
-        {
-          id: 1,
-          question: "I felt calm and relaxed.",
-          options: [
-            { label: "Strongly Disagree", value: 1 },
-            { label: "Disagree", value: 2 },
-            { label: "Neutral", value: 3 },
-            { label: "Agree", value: 4 },
-            { label: "Strongly Agree", value: 5 },
-          ],
-        },
-        {
-          id: 2,
-          question: "I had trouble focusing on my schoolwork.",
-          options: [
-            { label: "Strongly Disagree", value: 5 },
-            { label: "Disagree", value: 4 },
-            { label: "Neutral", value: 3 },
-            { label: "Agree", value: 2 },
-            { label: "Strongly Agree", value: 1 },
-          ],
-        },
-        {
-          id: 3,
-          question: "I felt connected with my classmates or friends.",
-          options: [
-            { label: "Strongly Disagree", value: 1 },
-            { label: "Disagree", value: 2 },
-            { label: "Neutral", value: 3 },
-            { label: "Agree", value: 4 },
-            { label: "Strongly Agree", value: 5 },
-          ],
-        },
-        {
-          id: 4,
-          question: "I felt anxious or nervous.",
-          options: [
-            { label: "Strongly Disagree", value: 5 },
-            { label: "Disagree", value: 4 },
-            { label: "Neutral", value: 3 },
-            { label: "Agree", value: 2 },
-            { label: "Strongly Agree", value: 1 },
-          ],
-        },
-        {
-          id: 5,
-          question: "I enjoyed the things I did today.",
-          options: [
-            { label: "Strongly Disagree", value: 1 },
-            { label: "Disagree", value: 2 },
-            { label: "Neutral", value: 3 },
-            { label: "Agree", value: 4 },
-            { label: "Strongly Agree", value: 5 },
-          ],
-        },
-        {
-          id: 6,
-          question: "I felt overwhelmed or stressed.",
-          options: [
-            { label: "Strongly Disagree", value: 5 },
-            { label: "Disagree", value: 4 },
-            { label: "Neutral", value: 3 },
-            { label: "Agree", value: 2 },
-            { label: "Strongly Agree", value: 1 },
-          ],
-        },
-        {
-          id: 7,
-          question: "I had enough energy to do my tasks.",
-          options: [
-            { label: "Strongly Disagree", value: 1 },
-            { label: "Disagree", value: 2 },
-            { label: "Neutral", value: 3 },
-            { label: "Agree", value: 4 },
-            { label: "Strongly Agree", value: 5 },
-          ],
-        },
-        {
-          id: 8,
-          question: "I felt hopeful about my future.",
-          options: [
-            { label: "Strongly Disagree", value: 1 },
-            { label: "Disagree", value: 2 },
-            { label: "Neutral", value: 3 },
-            { label: "Agree", value: 4 },
-            { label: "Strongly Agree", value: 5 },
-          ],
-        },
-        {
-          id: 9,
-          question: "I had trouble sleeping or felt tired.",
-          options: [
-            { label: "Strongly Disagree", value: 5 },
-            { label: "Disagree", value: 4 },
-            { label: "Neutral", value: 3 },
-            { label: "Agree", value: 2 },
-            { label: "Strongly Agree", value: 1 },
-          ],
-        },
-        {
-          id: 10,
-          question: "I felt proud of something I did today.",
-          options: [
-            { label: "Strongly Disagree", value: 1 },
-            { label: "Disagree", value: 2 },
-            { label: "Neutral", value: 3 },
-            { label: "Agree", value: 4 },
-            { label: "Strongly Agree", value: 5 },
-          ],
-        },
-        {
-          id: 11,
-          question: "I felt sad or down.",
-          options: [
-            { label: "Strongly Disagree", value: 5 },
-            { label: "Disagree", value: 4 },
-            { label: "Neutral", value: 3 },
-            { label: "Agree", value: 2 },
-            { label: "Strongly Agree", value: 1 },
-          ],
-        },
-        {
-          id: 12,
-          question: "I was able to manage my emotions today.",
-          options: [
-            { label: "Strongly Disagree", value: 1 },
-            { label: "Disagree", value: 2 },
-            { label: "Neutral", value: 3 },
-            { label: "Agree", value: 4 },
-            { label: "Strongly Agree", value: 5 },
-          ],
-        },
+        { id: 1, question: "I felt calm and relaxed.", options: [{ label: "Strongly Disagree", value: 1 }, { label: "Disagree", value: 2 }, { label: "Neutral", value: 3 }, { label: "Agree", value: 4 }, { label: "Strongly Agree", value: 5 }] },
+        { id: 2, question: "I had trouble focusing on my schoolwork.", options: [{ label: "Strongly Disagree", value: 5 }, { label: "Disagree", value: 4 }, { label: "Neutral", value: 3 }, { label: "Agree", value: 2 }, { label: "Strongly Agree", value: 1 }] },
+        { id: 3, question: "I felt connected with my classmates or friends.", options: [{ label: "Strongly Disagree", value: 1 }, { label: "Disagree", value: 2 }, { label: "Neutral", value: 3 }, { label: "Agree", value: 4 }, { label: "Strongly Agree", value: 5 }] },
+        { id: 4, question: "I felt anxious or nervous.", options: [{ label: "Strongly Disagree", value: 5 }, { label: "Disagree", value: 4 }, { label: "Neutral", value: 3 }, { label: "Agree", value: 2 }, { label: "Strongly Agree", value: 1 }] },
+        { id: 5, question: "I enjoyed the things I did today.", options: [{ label: "Strongly Disagree", value: 1 }, { label: "Disagree", value: 2 }, { label: "Neutral", value: 3 }, { label: "Agree", value: 4 }, { label: "Strongly Agree", value: 5 }] },
+        { id: 6, question: "I felt overwhelmed or stressed.", options: [{ label: "Strongly Disagree", value: 5 }, { label: "Disagree", value: 4 }, { label: "Neutral", value: 3 }, { label: "Agree", value: 2 }, { label: "Strongly Agree", value: 1 }] },
+        { id: 7, question: "I had enough energy to do my tasks.", options: [{ label: "Strongly Disagree", value: 1 }, { label: "Disagree", value: 2 }, { label: "Neutral", value: 3 }, { label: "Agree", value: 4 }, { label: "Strongly Agree", value: 5 }] },
+        { id: 8, question: "I felt hopeful about my future.", options: [{ label: "Strongly Disagree", value: 1 }, { label: "Disagree", value: 2 }, { label: "Neutral", value: 3 }, { label: "Agree", value: 4 }, { label: "Strongly Agree", value: 5 }] },
+        { id: 9, question: "I had trouble sleeping or felt tired.", options: [{ label: "Strongly Disagree", value: 5 }, { label: "Disagree", value: 4 }, { label: "Neutral", value: 3 }, { label: "Agree", value: 2 }, { label: "Strongly Agree", value: 1 }] },
+        { id: 10, question: "I felt proud of something I did today.", options: [{ label: "Strongly Disagree", value: 1 }, { label: "Disagree", value: 2 }, { label: "Neutral", value: 3 }, { label: "Agree", value: 4 }, { label: "Strongly Agree", value: 5 }] },
+        { id: 11, question: "I felt sad or down.", options: [{ label: "Strongly Disagree", value: 5 }, { label: "Disagree", value: 4 }, { label: "Neutral", value: 3 }, { label: "Agree", value: 2 }, { label: "Strongly Agree", value: 1 }] },
+        { id: 12, question: "I was able to manage my emotions today.", options: [{ label: "Strongly Disagree", value: 1 }, { label: "Disagree", value: 2 }, { label: "Neutral", value: 3 }, { label: "Agree", value: 4 }, { label: "Strongly Agree", value: 5 }] },
       ],
     },
     update: {},
   });
 
-  // Create 4 sections
-  console.log("🏫 Creating sections...");
-  const sectionsData = [
-    {
-      name: "Grade 10 - Section A",
-      code: "G10SEC",
-      description: "Grade 10 Section A - Science and Technology",
+  // ─── Sections (2 only) ────────────────────────────────────────────────────
+  console.log("\n🏫 Creating 2 sections...");
+  const sectionA = await prisma.section.create({
+    data: {
+      name: "Grade 10 - Hope",
+      code: "G10HPE",
+      description: "Grade 10 Section Hope - Science and Technology",
       gradeLevel: "Grade 10",
     },
-    {
-      name: "Grade 10 - Section B",
-      code: "G10SEB",
-      description: "Grade 10 Section B - Arts and Design",
+  });
+  const sectionB = await prisma.section.create({
+    data: {
+      name: "Grade 10 - Faith",
+      code: "G10FTH",
+      description: "Grade 10 Section Faith - Humanities and Social Sciences",
       gradeLevel: "Grade 10",
     },
-    {
-      name: "Grade 11 - Section A",
-      code: "G11SEC",
-      description: "Grade 11 Section A - STEM",
-      gradeLevel: "Grade 11",
-    },
-    {
-      name: "Grade 11 - Section B",
-      code: "G11SEB",
-      description: "Grade 11 Section B - ABM",
-      gradeLevel: "Grade 11",
-    },
-  ];
+  });
+  const sections = [sectionA, sectionB];
+  console.log(`   ${sectionA.name} (Code: ${sectionA.code})`);
+  console.log(`   ${sectionB.name} (Code: ${sectionB.code})`);
 
-  const sections = [];
-  for (const sectionData of sectionsData) {
-    const section = await prisma.section.create({
-      data: sectionData,
-    });
-    sections.push(section);
-    console.log(`🏫 Created section: ${section.name} (Code: ${section.code})`);
-  }
-
-  // Create a sample admin user
-  console.log("👨‍💼 Creating admin user...");
+  // ─── Admin ────────────────────────────────────────────────────────────────
+  console.log("\n👨‍💼 Creating admin...");
   const adminPass = genPassword(DEFAULT_PASSWORD);
-  const admin = await prisma.user.upsert({
-    where: { email: "admin@kumustaka.com" },
-    create: {
+  const admin = await prisma.user.create({
+    data: {
       email: "admin@kumustaka.com",
       salt: adminPass.salt,
       hash: adminPass.hash,
@@ -472,192 +366,129 @@ async function main() {
       phone: "09123456789",
       gender: "MALE",
       avatar: getGravatar("admin@kumustaka.com"),
-      admin: {
-        create: {},
-      },
+      admin: { create: {} },
     },
-    update: {},
-    include: {
-      admin: true,
-    },
+    include: { admin: true },
   });
-  console.log(`👨‍💼 Created admin: ${admin.firstName} ${admin.lastName}`);
+  console.log(`   ${admin.firstName} ${admin.lastName}`);
 
-  // Create a sample counselor
-  console.log("👨‍⚕️ Creating counselor user...");
-  const counselorPass = genPassword(DEFAULT_PASSWORD);
-  const counselor = await prisma.user.upsert({
-    where: { email: "counselor@kumustaka.com" },
-    create: {
-      email: "counselor@kumustaka.com",
-      salt: counselorPass.salt,
-      hash: counselorPass.hash,
-      role: "COUNSELOR",
-      firstName: "Grace",
-      lastName: "Santos",
-      phone: "09987654321",
-      gender: "FEMALE",
-      avatar: getGravatar("counselor@kumustaka.com"),
-      counselor: {
-        create: {},
+  // ─── 2 Teachers (one per section) ─────────────────────────────────────────
+  console.log("\n👨‍🏫 Creating 2 teachers...");
+  const teachersData = [
+    { firstName: "Miguel", lastName: "Reyes", email: "miguel.reyes@kumustaka.com", phone: "09567891234", gender: "MALE", sectionId: sectionA.id },
+    { firstName: "Elena", lastName: "Cruz", email: "elena.cruz@kumustaka.com", phone: "09567891235", gender: "FEMALE", sectionId: sectionB.id },
+  ];
+  const teachers = [];
+  for (const td of teachersData) {
+    const pass = genPassword(DEFAULT_PASSWORD);
+    const t = await prisma.user.create({
+      data: {
+        email: td.email,
+        salt: pass.salt,
+        hash: pass.hash,
+        role: "TEACHER",
+        firstName: td.firstName,
+        lastName: td.lastName,
+        phone: td.phone,
+        gender: td.gender,
+        avatar: getGravatar(td.email),
+        teacher: { create: { sectionId: td.sectionId } },
       },
-    },
-    update: {},
-    include: {
-      counselor: true,
-    },
-  });
-  console.log(
-    `👨‍⚕️ Created counselor: ${counselor.firstName} ${counselor.lastName}`
-  );
+      include: { teacher: true },
+    });
+    teachers.push(t);
+    const sName = sections.find((s) => s.id === td.sectionId)?.name;
+    console.log(`   ${t.firstName} ${t.lastName} → ${sName}`);
+  }
 
-  // Create a sample teacher and assign to first section
-  console.log("👨‍🏫 Creating teacher user...");
-  const teacherPass = genPassword(DEFAULT_PASSWORD);
-  const teacher = await prisma.user.upsert({
-    where: { email: "teacher@kumustaka.com" },
-    create: {
-      email: "teacher@kumustaka.com",
-      salt: teacherPass.salt,
-      hash: teacherPass.hash,
-      role: "TEACHER",
-      firstName: "Miguel",
-      lastName: "Reyes",
-      phone: "09567891234",
-      gender: "MALE",
-      avatar: getGravatar("teacher@kumustaka.com"),
-      teacher: {
-        create: {
-          sectionId: sections[0].id, // Assign to first section
-        },
+  // ─── 2 Counselors (both connected to both sections) ───────────────────────
+  console.log("\n👨‍⚕️ Creating 2 counselors...");
+  const counselorsData = [
+    { firstName: "Grace", lastName: "Santos", email: "grace.santos@kumustaka.com", phone: "09987654321", gender: "FEMALE" },
+    { firstName: "Marco", lastName: "Villanueva", email: "marco.villanueva@kumustaka.com", phone: "09987654322", gender: "MALE" },
+  ];
+  const counselors = [];
+  for (const cd of counselorsData) {
+    const pass = genPassword(DEFAULT_PASSWORD);
+    const c = await prisma.user.create({
+      data: {
+        email: cd.email,
+        salt: pass.salt,
+        hash: pass.hash,
+        role: "COUNSELOR",
+        firstName: cd.firstName,
+        lastName: cd.lastName,
+        phone: cd.phone,
+        gender: cd.gender,
+        avatar: getGravatar(cd.email),
+        counselor: { create: {} },
       },
-    },
-    update: {},
-    include: {
-      teacher: true,
-    },
-  });
-  console.log(
-    `👨‍🏫 Created teacher: ${teacher.firstName} ${teacher.lastName} (Section: ${sections[0].name})`
-  );
+      include: { counselor: true },
+    });
+    // Connect to both sections
+    await prisma.counselor.update({
+      where: { id: c.counselor.id },
+      data: { sections: { connect: sections.map((s) => ({ id: s.id })) } },
+    });
+    counselors.push(c);
+    console.log(`   ${c.firstName} ${c.lastName} → both sections`);
+  }
 
-  // Connect counselor to sections
-  console.log("🔗 Connecting counselor to sections...");
-  await prisma.counselor.update({
-    where: { id: counselor.counselor.id },
-    data: {
-      sections: {
-        connect: sections.map((s) => ({ id: s.id })),
-      },
-    },
-  });
-  console.log(`🔗 Counselor connected to all ${sections.length} sections`);
+  // ─── 10 Students (5 per section) ──────────────────────────────────────────
+  // Profile key: healthy = Green zone, mild = Yellow, moderate = Yellow/Red boundary, severe = Red
+  console.log("\n👨‍🎓 Creating 10 students (5 per section)...");
 
-  // Create 7 student users with Filipino names
-  console.log("👨‍🎓 Creating student users...");
-  const students = [];
+  const studentDefs = [
+    // ── Section A: Grade 10 - Hope ──
+    { firstName: "Juan",    lastName: "Dela Cruz", email: "juan.delacruz@student.kumustaka.com",    phone: "09123478901", gender: "MALE",   sectionId: sectionA.id, profile: "healthy"  },
+    { firstName: "Maria",   lastName: "Santos",    email: "maria.santos@student.kumustaka.com",     phone: "09234589012", gender: "FEMALE", sectionId: sectionA.id, profile: "healthy"  },
+    { firstName: "Pedro",   lastName: "Reyes",     email: "pedro.reyes@student.kumustaka.com",      phone: "09345690123", gender: "MALE",   sectionId: sectionA.id, profile: "mild"     },
+    { firstName: "Ana",     lastName: "Garcia",    email: "ana.garcia@student.kumustaka.com",       phone: "09456701234", gender: "FEMALE", sectionId: sectionA.id, profile: "moderate" },
+    { firstName: "Carlo",   lastName: "Mendoza",   email: "carlo.mendoza@student.kumustaka.com",    phone: "09567812345", gender: "MALE",   sectionId: sectionA.id, profile: "severe"   },
 
-  const studentData = [
-    {
-      firstName: "Juan",
-      lastName: "Dela Cruz",
-      email: "juan.delacruz@student.kumustaka.com",
-      phone: "09123478901",
-      gender: "MALE",
-      sectionIndex: 0, // Grade 10 - Section A
-    },
-    {
-      firstName: "Maria",
-      lastName: "Santos",
-      email: "maria.santos@student.kumustaka.com",
-      phone: "09234589012",
-      gender: "FEMALE",
-      sectionIndex: 0, // Grade 10 - Section A
-    },
-    {
-      firstName: "Pedro",
-      lastName: "Reyes",
-      email: "pedro.reyes@student.kumustaka.com",
-      phone: "09345690123",
-      gender: "MALE",
-      sectionIndex: 0, // Grade 10 - Section A
-    },
-    {
-      firstName: "Ana",
-      lastName: "Garcia",
-      email: "ana.garcia@student.kumustaka.com",
-      phone: "09456701234",
-      gender: "FEMALE",
-      sectionIndex: 1, // Grade 10 - Section B
-    },
-    {
-      firstName: "Carlo",
-      lastName: "Mendoza",
-      email: "carlo.mendoza@student.kumustaka.com",
-      phone: "09567812345",
-      gender: "MALE",
-      sectionIndex: 1, // Grade 10 - Section B
-    },
-    {
-      firstName: "Sophia",
-      lastName: "Lim",
-      email: "sophia.lim@student.kumustaka.com",
-      phone: "09678923456",
-      gender: "FEMALE",
-      sectionIndex: 2, // Grade 11 - Section A
-    },
-    {
-      firstName: "Miguel",
-      lastName: "Tan",
-      email: "miguel.tan@student.kumustaka.com",
-      phone: "09789034567",
-      gender: "MALE",
-      sectionIndex: 2, // Grade 11 - Section A
-    },
+    // ── Section B: Grade 10 - Faith ──
+    { firstName: "Sophia",  lastName: "Lim",       email: "sophia.lim@student.kumustaka.com",       phone: "09678923456", gender: "FEMALE", sectionId: sectionB.id, profile: "healthy"  },
+    { firstName: "Miguel",  lastName: "Tan",       email: "miguel.tan@student.kumustaka.com",       phone: "09789034567", gender: "MALE",   sectionId: sectionB.id, profile: "mild"     },
+    { firstName: "Isabella",lastName: "Ramos",     email: "isabella.ramos@student.kumustaka.com",   phone: "09890145678", gender: "FEMALE", sectionId: sectionB.id, profile: "moderate" },
+    { firstName: "Rafael",  lastName: "Aquino",    email: "rafael.aquino@student.kumustaka.com",    phone: "09901256789", gender: "MALE",   sectionId: sectionB.id, profile: "severe"   },
+    { firstName: "Camille", lastName: "De Leon",   email: "camille.deleon@student.kumustaka.com",   phone: "09012367890", gender: "FEMALE", sectionId: sectionB.id, profile: "healthy"  },
   ];
 
-  // Generate dates for past month
+  const students = [];
+  const sectionStudents = { [sectionA.id]: [], [sectionB.id]: [] };
   const pastMonthDates = generatePastMonthDates();
 
-  for (const data of studentData) {
-    const password = genPassword(DEFAULT_PASSWORD);
-    const assignedSection = sections[data.sectionIndex];
-
-    const student = await prisma.user.upsert({
-      where: { email: data.email },
-      create: {
-        email: data.email,
-        salt: password.salt,
-        hash: password.hash,
+  for (const sd of studentDefs) {
+    const pass = genPassword(DEFAULT_PASSWORD);
+    const student = await prisma.user.create({
+      data: {
+        email: sd.email,
+        salt: pass.salt,
+        hash: pass.hash,
         role: "STUDENT",
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: data.phone,
-        gender: data.gender,
-        avatar: getGravatar(data.email),
-        student: {
-          create: {
-            sectionId: assignedSection.id,
-          },
-        },
+        firstName: sd.firstName,
+        lastName: sd.lastName,
+        phone: sd.phone,
+        gender: sd.gender,
+        avatar: getGravatar(sd.email),
+        student: { create: { sectionId: sd.sectionId } },
       },
-      update: {},
-      include: {
-        student: true,
-      },
+      include: { student: true },
     });
-
+    student._profile = sd.profile;
+    student._sectionId = sd.sectionId;
     students.push(student);
+    sectionStudents[sd.sectionId].push(student);
+
+    const sName = sections.find((s) => s.id === sd.sectionId)?.name;
     console.log(
-      `👨‍🎓 Created student: ${student.firstName} ${student.lastName} (Section: ${assignedSection.name})`
+      `   ${student.firstName} ${student.lastName} → ${sName} [${sd.profile}]`,
     );
 
-    // Add an initial assessment for this student
-    console.log(`📝 Creating initial assessment for ${student.firstName}...`);
-    const assessment = generateInitialAssessment();
-    await prisma.initialAssessment.upsert({
-      where: { studentId: student.student.id },
-      create: {
+    // ── Initial Assessment ──
+    const assessment = generateAssessmentForProfile(sd.profile);
+    await prisma.initialAssessment.create({
+      data: {
         studentId: student.student.id,
         assessmentData: assessment.assessmentData,
         anxietyScore: assessment.anxietyScore,
@@ -666,29 +497,14 @@ async function main() {
         totalScore: assessment.totalScore,
         answers: assessment.answers,
       },
-      update: {},
     });
 
-    // Add daily survey responses for the past month
-    console.log(`📊 Creating daily surveys for ${student.firstName}...`);
-
-    // First, get a student-specific list of dates to use for this student's entries
-    const studentSurveyDates = [];
+    // ── Daily surveys (past 30 days, ~80% coverage) ──
     for (const baseDate of pastMonthDates) {
-      // Skip some days randomly to simulate real usage (80% chance to include a day)
       if (Math.random() < 0.2) continue;
-
-      // Create a copy of the date to avoid modifying the original date object
       const surveyDate = new Date(baseDate);
-      surveyDate.setHours(9, 0, 0, 0); // Set to 9:00 AM
-      studentSurveyDates.push(surveyDate);
-    }
-
-    // Create one survey entry per date for this student
-    for (const surveyDate of studentSurveyDates) {
-      const phDateStr = getPhDate(surveyDate);
-      const surveyData = generateSurveyResponses(survey.id);
-
+      surveyDate.setHours(9, 0, 0, 0);
+      const surveyData = generateSurveyForProfile(sd.profile);
       await prisma.surveyResponse.create({
         data: {
           surveyId: survey.id,
@@ -697,121 +513,108 @@ async function main() {
           score: surveyData.score,
           percentage: surveyData.percentage,
           zone: surveyData.zone,
-          phDate: phDateStr,
+          phDate: getPhDate(surveyDate),
           createdAt: surveyDate,
         },
       });
     }
 
-    // Add mood entries for the past month (one per day)
-    console.log(`😊 Creating mood entries for ${student.firstName}...`);
-
-    // Create a student-specific list of dates for mood entries
-    const studentMoodDates = [];
+    // ── Mood entries (past 30 days, ~75% coverage) ──
+    const [moodMin, moodMax] = getMoodRangeForProfile(sd.profile);
     for (const baseDate of pastMonthDates) {
-      // Skip some days randomly to simulate real usage (75% chance to include a day)
       if (Math.random() < 0.25) continue;
-
-      // Create a copy of the date to avoid modifying the original date object
       const moodDate = new Date(baseDate);
-      moodDate.setHours(15, 0, 0, 0); // Set to 3:00 PM
-      studentMoodDates.push(moodDate);
-    }
-
-    // Create one mood entry per date for this student
-    for (const moodDate of studentMoodDates) {
+      moodDate.setHours(15, 0, 0, 0);
+      const moodLevel =
+        Math.floor(Math.random() * (moodMax - moodMin + 1)) + moodMin;
       await prisma.moodEntry.create({
         data: {
           studentId: student.student.id,
-          moodLevel: Math.floor(Math.random() * 5) + 1, // 1-5 range
+          moodLevel,
           notes: Math.random() < 0.7 ? faker.lorem.sentence() : null,
           createdAt: moodDate,
         },
       });
     }
 
-    // Add journals for the past month
-    console.log(`📓 Creating journals for ${student.firstName}...`);
+    // ── Journals (~8 entries) ──
     for (let i = 0; i < 8; i++) {
-      // Around 8 journals per student
       const journalDate = getRandomRecentDate();
-
       await prisma.journal.create({
         data: {
           studentId: student.student.id,
           content:
             faker.lorem.paragraphs(2) + "\n\n" + faker.lorem.paragraphs(1),
-          isPrivate: Math.random() < 0.7, // 70% are private
+          isPrivate: Math.random() < 0.7,
           createdAt: journalDate,
           updatedAt: journalDate,
         },
       });
     }
 
-    // Add goals for the past 4 weeks
-    console.log(`🎯 Creating goals for ${student.firstName}...`);
+    // ── Goals (past 4 weeks) ──
     const today = new Date();
     for (let week = 0; week < 4; week++) {
       const weekDate = new Date();
       weekDate.setDate(today.getDate() - week * 7);
       const weekNumber = Math.floor(
-        weekDate.getTime() / (7 * 24 * 60 * 60 * 1000)
+        weekDate.getTime() / (7 * 24 * 60 * 60 * 1000),
       );
       const year = weekDate.getFullYear();
-
-      // Create 3-5 goals per week
       const numGoals = Math.floor(Math.random() * 3) + 3;
       let completedGoals = 0;
+      const completionRate = sd.profile === "severe" ? 0.3 : sd.profile === "moderate" ? 0.5 : 0.7;
 
       for (let i = 0; i < numGoals; i++) {
-        const isCompleted = Math.random() < 0.7; // 70% completion rate
+        const isCompleted = Math.random() < completionRate;
         if (isCompleted) completedGoals++;
-
         await prisma.goal.create({
           data: {
             studentId: student.student.id,
             title: goalTitles[Math.floor(Math.random() * goalTitles.length)],
             description: faker.lorem.sentence(),
-            isCompleted: isCompleted,
-            weekNumber: weekNumber,
-            year: year,
+            isCompleted,
+            weekNumber,
+            year,
             createdAt: weekDate,
             updatedAt: weekDate,
           },
         });
       }
 
-      // Create weekly goal summary
       const percentage =
-        numGoals > 0 ? parseFloat((completedGoals / numGoals).toFixed(2)) : 0;
-      let status = "EMPTY";
-      if (numGoals > 0) {
-        status = completedGoals === numGoals ? "COMPLETED" : "INCOMPLETE";
-      }
+        numGoals > 0
+          ? parseFloat((completedGoals / numGoals).toFixed(2))
+          : 0;
+      const status =
+        numGoals === 0
+          ? "EMPTY"
+          : completedGoals === numGoals
+            ? "COMPLETED"
+            : "INCOMPLETE";
 
       await prisma.weeklyGoalSummary.upsert({
         where: {
           studentId_weekNumber_year: {
             studentId: student.student.id,
-            weekNumber: weekNumber,
-            year: year,
+            weekNumber,
+            year,
           },
         },
         create: {
           studentId: student.student.id,
-          weekNumber: weekNumber,
-          year: year,
+          weekNumber,
+          year,
           totalGoals: numGoals,
           completed: completedGoals,
-          percentage: percentage,
-          status: status,
+          percentage,
+          status,
         },
         update: {},
       });
     }
 
-    // Add emergency contacts
-    console.log(`📞 Creating emergency contacts for ${student.firstName}...`);
+    // ── Emergency contacts ──
     await prisma.emergencyContact.create({
       data: {
         studentId: student.student.id,
@@ -821,8 +624,6 @@ async function main() {
         isPrimary: true,
       },
     });
-
-    // Add a second emergency contact for some students
     if (Math.random() < 0.5) {
       await prisma.emergencyContact.create({
         data: {
@@ -836,85 +637,88 @@ async function main() {
     }
   }
 
-  // Create forum posts and comments
-  console.log("💬 Creating forum posts and comments...");
-  for (let i = 0; i < forumPostTopics.length; i++) {
-    const topic = forumPostTopics[i];
-    const randomStudent = students[Math.floor(Math.random() * students.length)];
-    const postDate = getRandomRecentDate();
+  // ─── Forum posts & comments (section-isolated) ────────────────────────────
+  console.log("\n💬 Creating forum posts & comments (section-isolated)...");
 
-    // Get the student's section ID
-    const studentWithSection = await prisma.student.findUnique({
-      where: { userId: randomStudent.id },
-      select: { sectionId: true },
-    });
+  const forumTopicsBySectionId = {
+    [sectionA.id]: sectionAForumTopics,
+    [sectionB.id]: sectionBForumTopics,
+  };
 
-    // Create the post with section
-    const post = await prisma.forumPost.create({
-      data: {
-        title: topic.title,
-        content:
-          topic.content +
-          "\n\n" +
-          faker.lorem.paragraphs(Math.floor(Math.random() * 2) + 1),
-        authorId: randomStudent.id,
-        sectionId: studentWithSection?.sectionId || null,
-        createdAt: postDate,
-        isPublished: true,
-        images: [],
-      },
-    });
+  for (const section of sections) {
+    const topics = forumTopicsBySectionId[section.id];
+    const sStudents = sectionStudents[section.id];
 
-    // Add reactions for some posts
-    for (const student of students) {
-      // 60% chance to add a reaction
-      if (Math.random() < 0.6) {
-        const reactionTypes = ["SPARK", "INSIGHTFUL", "HELPFUL"];
-        const randomType =
-          reactionTypes[Math.floor(Math.random() * reactionTypes.length)];
+    for (let i = 0; i < topics.length; i++) {
+      const topic = topics[i];
+      const author = sStudents[i % sStudents.length]; // Round-robin authors
+      const postDate = getRandomRecentDate();
 
-        try {
-          await prisma.reaction.create({
-            data: {
-              postId: post.id,
-              studentId: student.student.id,
-              type: randomType,
-            },
-          });
-        } catch (e) {
-          // Ignore unique constraint violations
-          console.log("Skipping duplicate reaction");
+      const post = await prisma.forumPost.create({
+        data: {
+          title: topic.title,
+          content:
+            topic.content +
+            "\n\n" +
+            faker.lorem.paragraphs(Math.floor(Math.random() * 2) + 1),
+          authorId: author.id,
+          sectionId: section.id,
+          createdAt: postDate,
+          isPublished: true,
+          images: [],
+        },
+      });
+
+      // Reactions — only from students in the same section
+      for (const s of sStudents) {
+        if (Math.random() < 0.6) {
+          try {
+            await prisma.reaction.create({
+              data: {
+                postId: post.id,
+                studentId: s.student.id,
+                type: "SPARK",
+              },
+            });
+          } catch {
+            // skip duplicate
+          }
         }
+      }
+
+      // Comments — only from students in the same section
+      const numComments = Math.floor(Math.random() * 4) + 2;
+      for (let j = 0; j < numComments; j++) {
+        const commenter =
+          sStudents[Math.floor(Math.random() * sStudents.length)];
+        const commentDate = new Date(postDate);
+        commentDate.setHours(
+          postDate.getHours() + Math.floor(Math.random() * 48),
+        );
+        await prisma.comment.create({
+          data: {
+            content:
+              commentTemplates[
+                Math.floor(Math.random() * commentTemplates.length)
+              ] +
+              " " +
+              faker.lorem.sentences(1),
+            postId: post.id,
+            authorId: commenter.id,
+            createdAt: commentDate,
+          },
+        });
       }
     }
 
-    // Add comments to the post
-    const numComments = Math.floor(Math.random() * 5) + 1;
-    for (let j = 0; j < numComments; j++) {
-      const commenter = students[Math.floor(Math.random() * students.length)];
-      const commentDate = new Date(postDate);
-      commentDate.setHours(
-        postDate.getHours() + Math.floor(Math.random() * 48)
-      ); // Comment within 48 hours
-
-      await prisma.comment.create({
-        data: {
-          content:
-            commentTemplates[
-              Math.floor(Math.random() * commentTemplates.length)
-            ] +
-            " " +
-            faker.lorem.sentences(1),
-          postId: post.id,
-          authorId: commenter.id,
-          createdAt: commentDate,
-        },
-      });
-    }
+    console.log(
+      `   ${section.name}: ${topics.length} posts with section-only comments`,
+    );
   }
 
-  // Create a conversation between students and counselor
-  console.log("💬 Creating conversations...");
+  // ─── Conversations ────────────────────────────────────────────────────────
+  console.log("\n💬 Creating conversations...");
+  const convoStudentsA = sectionStudents[sectionA.id].slice(0, 3);
   const conversation = await prisma.conversation.create({
     data: {
       title: "Mental Health Support Group",
@@ -922,52 +726,25 @@ async function main() {
       isGroup: true,
       participants: {
         connect: [
-          { id: counselor.id },
-          { id: students[0].id },
-          { id: students[1].id },
-          { id: students[2].id },
+          { id: counselors[0].id },
+          ...convoStudentsA.map((s) => ({ id: s.id })),
         ],
       },
     },
   });
 
-  // Fetch the conversation with participants to ensure we have them for the messages
-  const conversationWithParticipants = await prisma.conversation.findUnique({
+  const convoWithParticipants = await prisma.conversation.findUnique({
     where: { id: conversation.id },
     include: { participants: true },
   });
 
-  // Add messages to the conversation
   const messages = [
-    {
-      senderId: counselor.id,
-      content:
-        "Hello everyone! This is a safe space for us to discuss mental health concerns. Feel free to share or ask questions.",
-    },
-    {
-      senderId: students[0].id,
-      content:
-        "Thanks for creating this group. I've been feeling overwhelmed with schoolwork lately.",
-    },
-    {
-      senderId: students[1].id,
-      content: "Same here. The midterm exams are stressing me out.",
-    },
-    {
-      senderId: counselor.id,
-      content:
-        "It's normal to feel stressed during exam periods. Let's discuss some strategies to manage stress effectively.",
-    },
-    {
-      senderId: students[2].id,
-      content:
-        "I'd appreciate that. I've been having trouble sleeping because of anxiety about my grades.",
-    },
-    {
-      senderId: counselor.id,
-      content:
-        "Let's schedule individual sessions too so we can address your specific concerns in more depth.",
-    },
+    { senderId: counselors[0].id, content: "Hello everyone! This is a safe space for us to discuss mental health concerns. Feel free to share or ask questions." },
+    { senderId: convoStudentsA[0].id, content: "Thanks for creating this group. I've been feeling overwhelmed with schoolwork lately." },
+    { senderId: convoStudentsA[1].id, content: "Same here. The midterm exams are stressing me out." },
+    { senderId: counselors[0].id, content: "It's normal to feel stressed during exam periods. Let's discuss some strategies to manage stress effectively." },
+    { senderId: convoStudentsA[2].id, content: "I'd appreciate that. I've been having trouble sleeping because of anxiety about my grades." },
+    { senderId: counselors[0].id, content: "Let's schedule individual sessions too so we can address your specific concerns in more depth." },
   ];
 
   for (const msg of messages) {
@@ -979,7 +756,7 @@ async function main() {
         isRead: true,
         createdAt: getRandomRecentDate(),
         recipients: {
-          connect: conversationWithParticipants.participants
+          connect: convoWithParticipants.participants
             .filter((p) => p.id !== msg.senderId)
             .map((p) => ({ id: p.id })),
         },
@@ -987,21 +764,53 @@ async function main() {
     });
   }
 
-  // Create an intervention for one student
-  console.log("🚨 Creating intervention...");
-  await prisma.intervention.create({
-    data: {
-      counselorId: counselor.counselor.id,
-      studentId: students[0].student.id,
-      title: "Academic Stress Management",
-      description:
-        "Weekly sessions to develop stress management techniques and study skills",
-      status: "IN_PROGRESS",
-      createdAt: getRandomRecentDate(),
-    },
-  });
+  // ─── Interventions for red-zone students ──────────────────────────────────
+  console.log("\n🚨 Creating interventions for at-risk students...");
+  const severeStudents = students.filter((s) => s._profile === "severe");
+  const moderateStudents = students.filter((s) => s._profile === "moderate");
 
-  console.log("✅ Seeding completed successfully!");
+  for (const ss of severeStudents) {
+    await prisma.intervention.create({
+      data: {
+        counselorId: counselors[0].counselor.id,
+        studentId: ss.student.id,
+        title: "Crisis Support and Monitoring",
+        description:
+          "Bi-weekly individual counseling sessions focused on emotional regulation, coping strategies, and academic support. Student is showing signs of severe distress.",
+        status: "IN_PROGRESS",
+        createdAt: getRandomRecentDate(),
+      },
+    });
+    console.log(
+      `   Crisis intervention for ${ss.firstName} ${ss.lastName}`,
+    );
+  }
+
+  for (const ms of moderateStudents) {
+    await prisma.intervention.create({
+      data: {
+        counselorId: counselors[1].counselor.id,
+        studentId: ms.student.id,
+        title: "Academic Stress Management",
+        description:
+          "Weekly sessions to develop stress management techniques and improve study habits.",
+        status: "IN_PROGRESS",
+        createdAt: getRandomRecentDate(),
+      },
+    });
+    console.log(
+      `   Stress management for ${ms.firstName} ${ms.lastName}`,
+    );
+  }
+
+  // ─── Summary ──────────────────────────────────────────────────────────────
+  console.log("\n✅ Seeding completed!");
+  console.log(`   Sections:   ${sections.length}`);
+  console.log(`   Admin:      1`);
+  console.log(`   Teachers:   ${teachers.length}`);
+  console.log(`   Counselors: ${counselors.length}`);
+  console.log(`   Students:   ${students.length} (${students.filter((s) => s._profile === "severe").length} severe, ${students.filter((s) => s._profile === "moderate").length} moderate)`);
+  console.log(`\n   Default password for all accounts: ${DEFAULT_PASSWORD}`);
 }
 
 main()
