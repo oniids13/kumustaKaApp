@@ -8,6 +8,7 @@ const {
   getAcademicPerformanceController,
   getAllStudentsController,
   getDailySubmissionCountsController,
+  getSectionStudentsController,
 } = require("../controller/teacherController");
 
 const router = express.Router();
@@ -60,6 +61,13 @@ router.get(
   getAllStudentsController
 );
 
+// Section students
+router.get(
+  "/section-students",
+  passport.authenticate("jwt", { session: false }),
+  isTeacher,
+  getSectionStudentsController
+);
 // Report generation
 router.post(
   "/reports",

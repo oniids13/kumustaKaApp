@@ -664,6 +664,28 @@ const deleteForumPostController = async (req, res) => {
   }
 };
 
+/**
+ * Get students in teacher's section
+ */
+const getSectionStudentsController = async (req, res) => {
+  try {
+    if (req.user.role !== "TEACHER") {
+      return res.status(403).json({
+        error: "Access denied: Only teachers can access section students",
+      });
+    }
+
+    const students = await teacherQueries.getSectionStudents(req.user.id);
+
+    res.status(200).json({ students });
+  } catch (error) {
+    console.error("Error fetching section students:", error);
+    res.status(500).json({
+      error: "Failed to fetch section students",
+    });
+  }
+};
+
 module.exports = {
   getTrendsController,
   generateReportController,
@@ -673,4 +695,5 @@ module.exports = {
   getAllStudentsController,
   getDailySubmissionCountsController,
   deleteForumPostController,
+  getSectionStudentsController,
 };

@@ -7,6 +7,11 @@ const ProfileInformation = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Teacher section students (basic info only)
+  const [sectionStudents, setSectionStudents] = useState([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [expandedStudentId, setExpandedStudentId] = useState(null);
+
   const user = JSON.parse(localStorage.getItem("userData")) || {};
 
   useEffect(() => {
@@ -22,11 +27,34 @@ const ProfileInformation = () => {
         },
       });
       setProfile(response.data.profile);
+
+      if (response.data.profile?.role === "TEACHER") {
+        fetchSectionStudents();
+      }
     } catch (err) {
       console.error("Error fetching profile:", err);
       setError("Failed to load profile information");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSectionStudents = async () => {
+    try {
+      setLoadingStudents(true);
+      const response = await axios.get(
+        "http://localhost:3000/api/teacher/section-students",
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+      setSectionStudents(response.data.students || []);
+    } catch (err) {
+      console.error("Error fetching section students:", err);
+    } finally {
+      setLoadingStudents(false);
     }
   };
 
@@ -250,6 +278,101 @@ const ProfileInformation = () => {
     );
   };
 
+  const toggleStudentExpand = (studentId) => {
+    setExpandedStudentId((prev) => (prev === studentId ? null : studentId));
+  };
+
+  const renderSectionStudents = () => {
+    if (profile?.role !== "TEACHER") return null;
+
+    return (
+      <div className="profile-card section-students-card">
+        <div className="card-header">
+          <i className="fas fa-users"></i>
+          <h3>Students in Your Section ({sectionStudents.length})</h3>
+        </div>
+
+        {loadingStudents ? (
+          <div className="profile-loading" style={{ padding: "20px" }}>
+            <div className="spinner"></div>
+            <p>Loading students...</p>
+          </div>
+        ) : sectionStudents.length === 0 ? (
+          <div className="no-students-message">
+            <i className="fas fa-user-slash"></i>
+            <p>No students enrolled in your section yet.</p>
+          </div>
+        ) : (
+          <div className="students-list">
+            {sectionStudents.map((student) => (
+              <div key={student.id} className="student-list-item">
+                <div
+                  className="student-list-row"
+                  onClick={() => toggleStudentExpand(student.id)}
+                >
+                  <div className="student-name-cell">
+                    <img
+                      src={student.avatar || "/default-avatar.png"}
+                      alt={student.firstName}
+                      className="student-avatar-small"
+                    />
+                    <div>
+                      <div className="student-name">
+                        {student.firstName} {student.lastName}
+                      </div>
+                      <div className="student-email">{student.email}</div>
+                    </div>
+                  </div>
+                  <div className="student-row-right">
+                    <span className={`status-pill status-${(student.status || "active").toLowerCase()}`}>
+                      {student.status || "ACTIVE"}
+                    </span>
+                    <i className={`fas fa-chevron-${expandedStudentId === student.id ? "up" : "down"} expand-icon`}></i>
+                  </div>
+                </div>
+
+                {expandedStudentId === student.id && (
+                  <div className="student-expanded-details">
+                    <div className="student-detail-grid">
+                      <div className="student-detail-item">
+                        <span className="detail-label">
+                          <i className="fas fa-venus-mars"></i> Gender
+                        </span>
+                        <span className="detail-value">{getGenderLabel(student.gender)}</span>
+                      </div>
+                      <div className="student-detail-item">
+                        <span className="detail-label">
+                          <i className="fas fa-phone"></i> Phone
+                        </span>
+                        <span className="detail-value">{student.phone || "Not provided"}</span>
+                      </div>
+                      <div className="student-detail-item">
+                        <span className="detail-label">
+                          <i className="fas fa-envelope"></i> Email
+                        </span>
+                        <span className="detail-value">{student.email}</span>
+                      </div>
+                      {student.emergencyContact && (
+                        <div className="student-detail-item emergency">
+                          <span className="detail-label">
+                            <i className="fas fa-phone-alt"></i> Emergency Contact
+                          </span>
+                          <span className="detail-value">
+                            {student.emergencyContact.name} ({student.emergencyContact.relationship}) — {student.emergencyContact.phone}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="profile-info-container">
       {/* Basic Information */}
@@ -316,6 +439,9 @@ const ProfileInformation = () => {
 
       {/* Section Information */}
       {renderSection()}
+
+      {/* Section Students — basic info only (for teachers) */}
+      {renderSectionStudents()}
 
       {/* Emergency Contacts (for students) */}
       {renderEmergencyContacts()}

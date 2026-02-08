@@ -958,6 +958,67 @@ const processDailyMoodTrends = (moodEntries) => {
   );
 };
 
+/**
+ * Get students in the teacher's section (basic info only — no mental health data)
+ */
+const getSectionStudents = async (userId) => {
+  try {
+    const teacher = await prisma.teacher.findUnique({
+      where: { userId },
+      select: { sectionId: true },
+    });
+
+    if (!teacher || !teacher.sectionId) {
+      return [];
+    }
+
+    const students = await prisma.student.findMany({
+      where: { sectionId: teacher.sectionId },
+      select: {
+        id: true,
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            avatar: true,
+            gender: true,
+            status: true,
+          },
+        },
+        emergencyContacts: {
+          where: { isPrimary: true },
+          take: 1,
+          select: {
+            name: true,
+            phone: true,
+            relationship: true,
+          },
+        },
+      },
+      orderBy: {
+        user: { lastName: "asc" },
+      },
+    });
+
+    return students.map((student) => ({
+      id: student.id,
+      firstName: student.user.firstName,
+      lastName: student.user.lastName,
+      email: student.user.email,
+      phone: student.user.phone,
+      avatar: student.user.avatar,
+      gender: student.user.gender,
+      status: student.user.status,
+      emergencyContact: student.emergencyContacts[0] || null,
+    }));
+  } catch (error) {
+    console.error("Error fetching section students:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   getTeacherByUserId,
   getAllStudents,
@@ -968,4 +1029,5 @@ module.exports = {
   getAcademicPerformanceIndicators,
   getDailySubmissionCounts,
   deleteForumPost,
+  getSectionStudents,
 };
