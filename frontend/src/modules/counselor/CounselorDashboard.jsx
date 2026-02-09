@@ -60,7 +60,7 @@ const CounselorDashboard = () => {
   const handlePostCreated = () => setRefreshPosts((prev) => !prev);
 
   // Modules where the section filter should be visible
-  const showSectionFilter = ["dashboard", "analytics", "interventions", "forum"].includes(activeModule);
+  const showSectionFilter = ["dashboard", "analytics", "interventions", "forum", "reports"].includes(activeModule);
 
   const renderMainContent = () => {
     switch (activeModule) {
@@ -81,7 +81,7 @@ const CounselorDashboard = () => {
       case "interventions":
         return <InterventionPlans sectionId={selectedSection} />;
       case "reports":
-        return <Reports />;
+        return <Reports sectionId={selectedSection} />;
       case "messaging":
         return <MessagingContainer />;
       case "forum":

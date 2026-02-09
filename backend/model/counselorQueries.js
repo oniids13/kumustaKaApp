@@ -1587,6 +1587,471 @@ const getStudentProfile = async (studentId) => {
   }
 };
 
+/**
+ * Get comprehensive analytics dashboard data
+ */
+const getComprehensiveAnalytics = async (counselorUserId, sectionId, period) => {
+  try {
+    // Get counselor's sections
+    const counselor = await prisma.counselor.findFirst({
+      where: { userId: counselorUserId },
+      include: { sections: { select: { id: true, name: true, gradeLevel: true } } },
+    });
+
+    if (!counselor) throw new Error("Counselor not found");
+
+    // Determine which sections to analyze
+    let targetSections = counselor.sections;
+    if (sectionId) {
+      targetSections = targetSections.filter((s) => s.id === sectionId);
+    }
+    const sectionIds = targetSections.map((s) => s.id);
+
+    // Calculate date ranges based on period
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+    let periodStart;
+    switch (period) {
+      case "3months":
+        periodStart = new Date(now);
+        periodStart.setMonth(now.getMonth() - 3);
+        break;
+      case "6months":
+        periodStart = new Date(now);
+        periodStart.setMonth(now.getMonth() - 6);
+        break;
+      case "12months":
+        periodStart = new Date(now);
+        periodStart.setFullYear(now.getFullYear() - 1);
+        break;
+      default: // 1month
+        periodStart = new Date(now);
+        periodStart.setMonth(now.getMonth() - 1);
+    }
+    periodStart.setHours(0, 0, 0, 0);
+
+    const dateFilter = { createdAt: { gte: periodStart, lte: now } };
+
+    // Base where clause for students in target sections
+    const studentFilter = sectionIds.length > 0 ? { sectionId: { in: sectionIds } } : {};
+
+    // =====================
+    // 1. FETCH ALL RAW DATA
+    // =====================
+    const students = await prisma.student.findMany({
+      where: studentFilter,
+      select: {
+        id: true,
+        sectionId: true,
+        user: { select: { gender: true, firstName: true, lastName: true } },
+      },
+    });
+
+    const studentIds = students.map((s) => s.id);
+
+    const [surveyResponses, moodEntries, initialAssessments, interventions] = await Promise.all([
+      prisma.surveyResponse.findMany({
+        where: { studentId: { in: studentIds }, ...dateFilter },
+        select: { id: true, zone: true, score: true, percentage: true, createdAt: true, studentId: true },
+        orderBy: { createdAt: "asc" },
+      }),
+      prisma.moodEntry.findMany({
+        where: { studentId: { in: studentIds }, ...dateFilter },
+        select: { id: true, moodLevel: true, createdAt: true, studentId: true },
+        orderBy: { createdAt: "asc" },
+      }),
+      prisma.initialAssessment.findMany({
+        where: { studentId: { in: studentIds } },
+        select: { studentId: true, anxietyScore: true, depressionScore: true, stressScore: true, totalScore: true },
+      }),
+      prisma.intervention.findMany({
+        where: { counselorId: counselor.id, studentId: { in: studentIds } },
+        select: { id: true, status: true, studentId: true },
+      }),
+    ]);
+
+    // Build student lookup maps
+    const studentById = {};
+    students.forEach((s) => {
+      studentById[s.id] = s;
+    });
+
+    // =====================
+    // 2. GENDER ANALYTICS
+    // =====================
+    const genderGroups = {};
+    students.forEach((s) => {
+      const g = s.user.gender || "UNKNOWN";
+      if (!genderGroups[g]) genderGroups[g] = { studentIds: [], label: g };
+      genderGroups[g].studentIds.push(s.id);
+    });
+
+    const genderAnalytics = Object.entries(genderGroups).map(([gender, group]) => {
+      const gSurveys = surveyResponses.filter((sr) => group.studentIds.includes(sr.studentId));
+      const gMoods = moodEntries.filter((m) => group.studentIds.includes(m.studentId));
+      const gAssessments = initialAssessments.filter((a) => group.studentIds.includes(a.studentId));
+
+      const zones = { green: 0, yellow: 0, red: 0 };
+      gSurveys.forEach((sr) => {
+        const z = normalizeZoneName(sr.zone);
+        if (z && z.startsWith("Green")) zones.green++;
+        else if (z && z.startsWith("Yellow")) zones.yellow++;
+        else if (z && z.startsWith("Red")) zones.red++;
+      });
+
+      const totalSurveys = zones.green + zones.yellow + zones.red;
+      const avgMood = gMoods.length > 0
+        ? +(gMoods.reduce((sum, m) => sum + m.moodLevel, 0) / gMoods.length).toFixed(2)
+        : null;
+
+      const avgAnxiety = gAssessments.length > 0
+        ? +(gAssessments.reduce((s, a) => s + a.anxietyScore, 0) / gAssessments.length).toFixed(1)
+        : null;
+      const avgDepression = gAssessments.length > 0
+        ? +(gAssessments.reduce((s, a) => s + a.depressionScore, 0) / gAssessments.length).toFixed(1)
+        : null;
+      const avgStress = gAssessments.length > 0
+        ? +(gAssessments.reduce((s, a) => s + a.stressScore, 0) / gAssessments.length).toFixed(1)
+        : null;
+
+      return {
+        gender: gender === "PREFER_NOT_TO_SAY" ? "Prefer Not To Say" : gender.charAt(0) + gender.slice(1).toLowerCase(),
+        totalStudents: group.studentIds.length,
+        zones,
+        totalSurveys,
+        avgMood,
+        avgAnxiety,
+        avgDepression,
+        avgStress,
+        redZonePercentage: totalSurveys > 0 ? +((zones.red / totalSurveys) * 100).toFixed(1) : 0,
+      };
+    });
+
+    // =====================
+    // 3. SECTION COMPARISON
+    // =====================
+    const sectionAnalytics = targetSections.map((section) => {
+      const sStudents = students.filter((s) => s.sectionId === section.id);
+      const sStudentIds = sStudents.map((s) => s.id);
+      const sSurveys = surveyResponses.filter((sr) => sStudentIds.includes(sr.studentId));
+      const sMoods = moodEntries.filter((m) => sStudentIds.includes(m.studentId));
+      const sAssessments = initialAssessments.filter((a) => sStudentIds.includes(a.studentId));
+
+      const zones = { green: 0, yellow: 0, red: 0 };
+      sSurveys.forEach((sr) => {
+        const z = normalizeZoneName(sr.zone);
+        if (z && z.startsWith("Green")) zones.green++;
+        else if (z && z.startsWith("Yellow")) zones.yellow++;
+        else if (z && z.startsWith("Red")) zones.red++;
+      });
+      const totalSurveys = zones.green + zones.yellow + zones.red;
+      const avgMood = sMoods.length > 0
+        ? +(sMoods.reduce((sum, m) => sum + m.moodLevel, 0) / sMoods.length).toFixed(2)
+        : null;
+
+      // Participation rate: students who submitted at least one survey
+      const studentsWithSurveys = new Set(sSurveys.map((sr) => sr.studentId)).size;
+      const participationRate = sStudents.length > 0 ? +((studentsWithSurveys / sStudents.length) * 100).toFixed(1) : 0;
+
+      const avgAnxiety = sAssessments.length > 0
+        ? +(sAssessments.reduce((s, a) => s + a.anxietyScore, 0) / sAssessments.length).toFixed(1)
+        : null;
+      const avgDepression = sAssessments.length > 0
+        ? +(sAssessments.reduce((s, a) => s + a.depressionScore, 0) / sAssessments.length).toFixed(1)
+        : null;
+      const avgStress = sAssessments.length > 0
+        ? +(sAssessments.reduce((s, a) => s + a.stressScore, 0) / sAssessments.length).toFixed(1)
+        : null;
+
+      return {
+        sectionId: section.id,
+        sectionName: section.name,
+        gradeLevel: section.gradeLevel,
+        totalStudents: sStudents.length,
+        zones,
+        totalSurveys,
+        avgMood,
+        participationRate,
+        avgAnxiety,
+        avgDepression,
+        avgStress,
+      };
+    });
+
+    // =====================
+    // 4. MONTHLY TRENDS
+    // =====================
+    const monthlyMap = {};
+    surveyResponses.forEach((sr) => {
+      const key = `${sr.createdAt.getFullYear()}-${String(sr.createdAt.getMonth() + 1).padStart(2, "0")}`;
+      if (!monthlyMap[key]) monthlyMap[key] = { green: 0, yellow: 0, red: 0, moodSum: 0, moodCount: 0 };
+      const z = normalizeZoneName(sr.zone);
+      if (z && z.startsWith("Green")) monthlyMap[key].green++;
+      else if (z && z.startsWith("Yellow")) monthlyMap[key].yellow++;
+      else if (z && z.startsWith("Red")) monthlyMap[key].red++;
+    });
+    moodEntries.forEach((m) => {
+      const key = `${m.createdAt.getFullYear()}-${String(m.createdAt.getMonth() + 1).padStart(2, "0")}`;
+      if (!monthlyMap[key]) monthlyMap[key] = { green: 0, yellow: 0, red: 0, moodSum: 0, moodCount: 0 };
+      monthlyMap[key].moodSum += m.moodLevel;
+      monthlyMap[key].moodCount++;
+    });
+
+    const monthlyTrends = Object.entries(monthlyMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, data]) => ({
+        month,
+        monthLabel: new Date(month + "-01").toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+        ...data,
+        totalSurveys: data.green + data.yellow + data.red,
+        avgMood: data.moodCount > 0 ? +(data.moodSum / data.moodCount).toFixed(2) : null,
+        redPercentage: (data.green + data.yellow + data.red) > 0
+          ? +((data.red / (data.green + data.yellow + data.red)) * 100).toFixed(1) : 0,
+      }));
+
+    // =====================
+    // 5. QUARTERLY TRENDS
+    // =====================
+    const quarterlyMap = {};
+    surveyResponses.forEach((sr) => {
+      const q = Math.ceil((sr.createdAt.getMonth() + 1) / 3);
+      const key = `${sr.createdAt.getFullYear()}-Q${q}`;
+      if (!quarterlyMap[key]) quarterlyMap[key] = { green: 0, yellow: 0, red: 0, moodSum: 0, moodCount: 0 };
+      const z = normalizeZoneName(sr.zone);
+      if (z && z.startsWith("Green")) quarterlyMap[key].green++;
+      else if (z && z.startsWith("Yellow")) quarterlyMap[key].yellow++;
+      else if (z && z.startsWith("Red")) quarterlyMap[key].red++;
+    });
+    moodEntries.forEach((m) => {
+      const q = Math.ceil((m.createdAt.getMonth() + 1) / 3);
+      const key = `${m.createdAt.getFullYear()}-Q${q}`;
+      if (!quarterlyMap[key]) quarterlyMap[key] = { green: 0, yellow: 0, red: 0, moodSum: 0, moodCount: 0 };
+      quarterlyMap[key].moodSum += m.moodLevel;
+      quarterlyMap[key].moodCount++;
+    });
+
+    const quarterlyTrends = Object.entries(quarterlyMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([quarter, data]) => ({
+        quarter,
+        ...data,
+        totalSurveys: data.green + data.yellow + data.red,
+        avgMood: data.moodCount > 0 ? +(data.moodSum / data.moodCount).toFixed(2) : null,
+        redPercentage: (data.green + data.yellow + data.red) > 0
+          ? +((data.red / (data.green + data.yellow + data.red)) * 100).toFixed(1) : 0,
+      }));
+
+    // =====================
+    // 6. RISK INDICATORS
+    // =====================
+    // Get latest survey per student to determine current zone
+    const latestSurveyByStudent = {};
+    surveyResponses.forEach((sr) => {
+      if (!latestSurveyByStudent[sr.studentId] || sr.createdAt > latestSurveyByStudent[sr.studentId].createdAt) {
+        latestSurveyByStudent[sr.studentId] = sr;
+      }
+    });
+
+    let highRisk = 0, moderateRisk = 0, lowRisk = 0;
+    Object.values(latestSurveyByStudent).forEach((sr) => {
+      const z = normalizeZoneName(sr.zone);
+      if (z && z.startsWith("Red")) highRisk++;
+      else if (z && z.startsWith("Yellow")) moderateRisk++;
+      else lowRisk++;
+    });
+
+    // Students with declining mood (compare last 7 days avg vs previous 7 days avg)
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const fourteenDaysAgo = new Date(now);
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+    const decliningStudents = [];
+    studentIds.forEach((sid) => {
+      const recentMoods = moodEntries.filter((m) => m.studentId === sid && m.createdAt >= sevenDaysAgo);
+      const previousMoods = moodEntries.filter((m) => m.studentId === sid && m.createdAt >= fourteenDaysAgo && m.createdAt < sevenDaysAgo);
+
+      if (recentMoods.length >= 2 && previousMoods.length >= 2) {
+        const recentAvg = recentMoods.reduce((s, m) => s + m.moodLevel, 0) / recentMoods.length;
+        const prevAvg = previousMoods.reduce((s, m) => s + m.moodLevel, 0) / previousMoods.length;
+        if (recentAvg < prevAvg - 0.5) {
+          decliningStudents.push(sid);
+        }
+      }
+    });
+
+    // Students with low participation (no survey in last 14 days)
+    const twoWeeksAgo = new Date(now);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    const recentSurveyStudents = new Set(
+      surveyResponses.filter((sr) => sr.createdAt >= twoWeeksAgo).map((sr) => sr.studentId)
+    );
+    const lowParticipation = studentIds.filter((sid) => !recentSurveyStudents.has(sid));
+
+    const riskIndicators = {
+      highRisk,
+      moderateRisk,
+      lowRisk,
+      decliningMoodCount: decliningStudents.length,
+      lowParticipationCount: lowParticipation.length,
+      totalStudents: students.length,
+      activeInterventions: interventions.filter((i) => i.status !== "COMPLETED").length,
+      completedInterventions: interventions.filter((i) => i.status === "COMPLETED").length,
+    };
+
+    // =====================
+    // 7. OVERALL STATS
+    // =====================
+    const totalSurveyResponses = surveyResponses.length;
+    const totalMoodEntries = moodEntries.length;
+    const overallAvgMood = moodEntries.length > 0
+      ? +(moodEntries.reduce((s, m) => s + m.moodLevel, 0) / moodEntries.length).toFixed(2)
+      : null;
+    const overallAvgScore = surveyResponses.length > 0
+      ? +(surveyResponses.reduce((s, sr) => s + sr.percentage, 0) / surveyResponses.length).toFixed(1)
+      : null;
+    const overallParticipation = students.length > 0
+      ? +((new Set(surveyResponses.map((sr) => sr.studentId)).size / students.length) * 100).toFixed(1)
+      : 0;
+
+    // DASS-21 category averages from initial assessments
+    const assessmentStats = initialAssessments.length > 0 ? {
+      avgAnxiety: +(initialAssessments.reduce((s, a) => s + a.anxietyScore, 0) / initialAssessments.length).toFixed(1),
+      avgDepression: +(initialAssessments.reduce((s, a) => s + a.depressionScore, 0) / initialAssessments.length).toFixed(1),
+      avgStress: +(initialAssessments.reduce((s, a) => s + a.stressScore, 0) / initialAssessments.length).toFixed(1),
+      avgTotal: +(initialAssessments.reduce((s, a) => s + a.totalScore, 0) / initialAssessments.length).toFixed(1),
+    } : null;
+
+    // =====================
+    // 8. PRESCRIPTIVE INSIGHTS
+    // =====================
+    const insights = [];
+
+    // High risk alert
+    if (highRisk > 0) {
+      insights.push({
+        type: "critical",
+        severity: "high",
+        title: "Students in Red Zone",
+        description: `${highRisk} student(s) are currently in the Red Zone (Needs Attention). Immediate intervention is recommended.`,
+        recommendation: "Schedule individual counseling sessions with these students within the next 48 hours. Consider involving parents/guardians if the situation persists.",
+      });
+    }
+
+    // Declining mood trend
+    if (decliningStudents.length > 0) {
+      insights.push({
+        type: "warning",
+        severity: "medium",
+        title: "Declining Mood Trends Detected",
+        description: `${decliningStudents.length} student(s) show a significant decline in mood over the past week compared to the previous week.`,
+        recommendation: "Proactively reach out to these students for a wellness check. Consider adjusting their current support plans.",
+      });
+    }
+
+    // Low participation
+    if (lowParticipation.length > 0 && students.length > 0) {
+      const pct = ((lowParticipation.length / students.length) * 100).toFixed(0);
+      insights.push({
+        type: "info",
+        severity: "low",
+        title: "Low Survey Participation",
+        description: `${lowParticipation.length} student(s) (${pct}%) have not completed a survey in the past 2 weeks.`,
+        recommendation: "Send reminders to these students. Consider making surveys more accessible or shorter. Follow up personally with students who consistently skip surveys.",
+      });
+    }
+
+    // Gender disparity check
+    const maleStats = genderAnalytics.find((g) => g.gender === "Male");
+    const femaleStats = genderAnalytics.find((g) => g.gender === "Female");
+    if (maleStats && femaleStats && maleStats.avgMood && femaleStats.avgMood) {
+      const diff = Math.abs(maleStats.avgMood - femaleStats.avgMood);
+      if (diff >= 0.5) {
+        const lowerGender = maleStats.avgMood < femaleStats.avgMood ? "Male" : "Female";
+        insights.push({
+          type: "analysis",
+          severity: "medium",
+          title: "Gender-Based Mental Health Disparity",
+          description: `${lowerGender} students show notably lower average mood (${lowerGender === "Male" ? maleStats.avgMood : femaleStats.avgMood}/5) compared to ${lowerGender === "Male" ? "Female" : "Male"} students (${lowerGender === "Male" ? femaleStats.avgMood : maleStats.avgMood}/5).`,
+          recommendation: `Consider implementing gender-specific support programs. Investigate potential stressors affecting ${lowerGender} students and tailor intervention strategies accordingly.`,
+        });
+      }
+    }
+
+    // Section comparison insight
+    if (sectionAnalytics.length >= 2) {
+      const sorted = [...sectionAnalytics].sort((a, b) => (b.avgMood || 0) - (a.avgMood || 0));
+      const best = sorted[0];
+      const worst = sorted[sorted.length - 1];
+      if (best.avgMood && worst.avgMood && best.avgMood - worst.avgMood >= 0.3) {
+        insights.push({
+          type: "analysis",
+          severity: "medium",
+          title: "Cross-Section Performance Gap",
+          description: `"${best.sectionName}" has the highest average mood (${best.avgMood}/5) while "${worst.sectionName}" has the lowest (${worst.avgMood}/5).`,
+          recommendation: `Investigate factors contributing to the mood difference. Consider sharing best practices from "${best.sectionName}" with other sections. Allocate additional resources to "${worst.sectionName}".`,
+        });
+      }
+    }
+
+    // Monthly trend insight
+    if (monthlyTrends.length >= 2) {
+      const latest = monthlyTrends[monthlyTrends.length - 1];
+      const previous = monthlyTrends[monthlyTrends.length - 2];
+      if (latest.redPercentage > previous.redPercentage + 5) {
+        insights.push({
+          type: "warning",
+          severity: "high",
+          title: "Increasing Red Zone Trend",
+          description: `Red zone percentage increased from ${previous.redPercentage}% in ${previous.monthLabel} to ${latest.redPercentage}% in ${latest.monthLabel}.`,
+          recommendation: "This upward trend in at-risk students requires immediate attention. Consider school-wide mental health initiatives, stress management workshops, and increasing counseling availability.",
+        });
+      } else if (latest.redPercentage < previous.redPercentage - 5) {
+        insights.push({
+          type: "positive",
+          severity: "low",
+          title: "Improving Mental Health Trends",
+          description: `Red zone percentage decreased from ${previous.redPercentage}% in ${previous.monthLabel} to ${latest.redPercentage}% in ${latest.monthLabel}.`,
+          recommendation: "Current intervention strategies appear effective. Continue monitoring and maintain current support programs.",
+        });
+      }
+    }
+
+    // Positive overall
+    if (overallAvgMood && overallAvgMood >= 3.5 && highRisk === 0) {
+      insights.push({
+        type: "positive",
+        severity: "low",
+        title: "Overall Positive Mental Health Status",
+        description: `The overall average mood is ${overallAvgMood}/5 with no students currently in the Red Zone.`,
+        recommendation: "Maintain current supportive practices. Continue regular check-ins and preventive programs to sustain these positive outcomes.",
+      });
+    }
+
+    return {
+      genderAnalytics,
+      sectionAnalytics,
+      monthlyTrends,
+      quarterlyTrends,
+      riskIndicators,
+      overallStats: {
+        totalStudents: students.length,
+        totalSurveyResponses,
+        totalMoodEntries,
+        overallAvgMood,
+        overallAvgScore,
+        overallParticipation,
+        assessmentStats,
+      },
+      prescriptiveInsights: insights,
+      period: { start: periodStart.toISOString(), end: now.toISOString() },
+    };
+  } catch (error) {
+    console.error("Error generating comprehensive analytics:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   getCounselorByUserId,
   getCounselorSections,
@@ -1612,4 +2077,5 @@ module.exports = {
   getTimeframeTrends,
   getStudentById,
   getStudentProfile,
+  getComprehensiveAnalytics,
 };

@@ -18,6 +18,7 @@ const {
   getDailySubmissionCountsController,
   getTrendsController,
   getDailySubmissionsController,
+  getAnalyticsDashboardController,
 } = require("../controller/counselorController");
 
 const counselorRouter = Router();
@@ -149,6 +150,14 @@ counselorRouter.get(
   passport.authenticate("jwt", { session: false }),
   isCounselor,
   getTrendsController
+);
+
+// Comprehensive analytics dashboard
+counselorRouter.get(
+  "/analytics/dashboard",
+  passport.authenticate("jwt", { session: false }),
+  isCounselor,
+  getAnalyticsDashboardController
 );
 
 module.exports = counselorRouter;

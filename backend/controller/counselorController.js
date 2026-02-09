@@ -656,6 +656,24 @@ const getStudentProfileController = async (req, res) => {
   }
 };
 
+/**
+ * Get comprehensive analytics dashboard data
+ */
+const getAnalyticsDashboardController = async (req, res) => {
+  try {
+    const { sectionId, period } = req.query;
+    const data = await counselorQueries.getComprehensiveAnalytics(
+      req.user.id,
+      sectionId || null,
+      period || "1month"
+    );
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error fetching analytics dashboard:", error);
+    res.status(500).json({ error: "Failed to fetch analytics data" });
+  }
+};
+
 module.exports = {
   getMySectionsController,
   getStudentsController,
@@ -674,4 +692,5 @@ module.exports = {
   getDailySubmissionsController,
   getStudentController,
   getStudentProfileController,
+  getAnalyticsDashboardController,
 };
