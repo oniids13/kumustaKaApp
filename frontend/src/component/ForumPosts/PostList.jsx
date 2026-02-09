@@ -5,7 +5,7 @@ import EditPostForm from "./EditPostForm";
 import SparkButton from "../SparkButton";
 import { message } from "antd";
 
-const PostList = () => {
+const PostList = ({ sectionId }) => {
   const [posts, setPosts] = useState([]);
   const [editingPostId, setEditingPostId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,12 +19,18 @@ const PostList = () => {
     setLoading(true);
     setNoSectionAssigned(false);
     try {
+      const params = {};
+      if (sectionId) {
+        params.sectionId = sectionId;
+      }
+
       const response = await axios.get(
         "http://localhost:3000/api/forum/allPosts",
         {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
+          params,
         }
       );
 

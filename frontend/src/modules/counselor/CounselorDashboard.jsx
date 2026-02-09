@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
+import axios from "axios";
 import SidePanel from "./component/SidePanel";
 import StudentAnalytics from "./component/StudentAnalytics";
 import InterventionPlans from "./component/InterventionPlans";
@@ -23,6 +24,8 @@ const CounselorDashboard = () => {
   const user = JSON.parse(localStorage.getItem("userData"));
   const [activeModule, setActiveModule] = useState("dashboard");
   const [refreshPosts, setRefreshPosts] = useState(false);
+  const [sections, setSections] = useState([]);
+  const [selectedSection, setSelectedSection] = useState(null);
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const studentId = searchParams.get("studentId");
@@ -34,21 +37,49 @@ const CounselorDashboard = () => {
     }
   }, [location]);
 
+  // Fetch counselor's assigned sections on mount
+  useEffect(() => {
+    const fetchSections = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/counselor/my-sections",
+          {
+            headers: { Authorization: `Bearer ${user?.token}` },
+          }
+        );
+        if (response.data?.sections) {
+          setSections(response.data.sections);
+        }
+      } catch (err) {
+        console.error("Error fetching counselor sections:", err);
+      }
+    };
+    fetchSections();
+  }, []);
+
   const handlePostCreated = () => setRefreshPosts((prev) => !prev);
+
+  // Modules where the section filter should be visible
+  const showSectionFilter = ["dashboard", "analytics", "interventions", "forum"].includes(activeModule);
 
   const renderMainContent = () => {
     switch (activeModule) {
       case "dashboard":
         return (
           <>
-            <DailySubmissions />
-            <MentalHealthOverview />
+            <DailySubmissions sectionId={selectedSection} />
+            <MentalHealthOverview sectionId={selectedSection} />
           </>
         );
       case "analytics":
-        return <StudentAnalytics initialStudentId={studentId} />;
+        return (
+          <StudentAnalytics
+            initialStudentId={studentId}
+            sectionId={selectedSection}
+          />
+        );
       case "interventions":
-        return <InterventionPlans />;
+        return <InterventionPlans sectionId={selectedSection} />;
       case "reports":
         return <Reports />;
       case "messaging":
@@ -56,8 +87,11 @@ const CounselorDashboard = () => {
       case "forum":
         return (
           <>
-            <CreatePostForm onPostCreated={handlePostCreated} />
-            <PostList key={refreshPosts} />
+            <CreatePostForm
+              onPostCreated={handlePostCreated}
+              sectionId={selectedSection}
+            />
+            <PostList key={`${refreshPosts}-${selectedSection}`} sectionId={selectedSection} />
           </>
         );
       case "settings":
@@ -67,8 +101,8 @@ const CounselorDashboard = () => {
       default:
         return (
           <>
-            <DailySubmissions />
-            <MentalHealthOverview />
+            <DailySubmissions sectionId={selectedSection} />
+            <MentalHealthOverview sectionId={selectedSection} />
           </>
         );
     }
@@ -86,7 +120,32 @@ const CounselorDashboard = () => {
         </div>
 
         <div className="col-lg-9">
-          <div className="main-content-container">{renderMainContent()}</div>
+          <div className="main-content-container">
+            {showSectionFilter && sections.length > 0 && (
+              <div className="section-filter-bar">
+                <div className="section-filter-label">
+                  <i className="bi bi-funnel"></i> Filter by Section:
+                </div>
+                <select
+                  className="section-filter-select"
+                  value={selectedSection || ""}
+                  onChange={(e) =>
+                    setSelectedSection(e.target.value || null)
+                  }
+                >
+                  <option value="">All Sections</option>
+                  {sections.map((section) => (
+                    <option key={section.id} value={section.id}>
+                      {section.name}
+                      {section.gradeLevel ? ` (${section.gradeLevel})` : ""}
+                      {` - ${section.studentCount} students`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {renderMainContent()}
+          </div>
         </div>
       </div>
     </div>

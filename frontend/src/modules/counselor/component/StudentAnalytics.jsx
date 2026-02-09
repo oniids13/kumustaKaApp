@@ -53,7 +53,7 @@ const COLORS = [
   "#0088FE",
 ];
 
-const StudentAnalytics = ({ initialStudentId }) => {
+const StudentAnalytics = ({ initialStudentId, sectionId }) => {
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(
@@ -78,7 +78,7 @@ const StudentAnalytics = ({ initialStudentId }) => {
 
   useEffect(() => {
     fetchStudents();
-  }, []);
+  }, [sectionId]);
 
   useEffect(() => {
     if (selectedStudent) {
@@ -93,15 +93,29 @@ const StudentAnalytics = ({ initialStudentId }) => {
     }
   }, [initialStudentId]);
 
+  // Reset selected student when section changes
+  useEffect(() => {
+    setSelectedStudent(null);
+    setSurveyData([]);
+    setMoodData([]);
+    setSummary({ averageMood: null, surveyCompletion: 0, latestZone: null, redFlags: 0 });
+  }, [sectionId]);
+
   const fetchStudents = async () => {
     setLoading(true);
     try {
+      const params = {};
+      if (sectionId) {
+        params.sectionId = sectionId;
+      }
+
       const response = await axios.get(
         "http://localhost:3000/api/counselor/students",
         {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
+          params,
         }
       );
 

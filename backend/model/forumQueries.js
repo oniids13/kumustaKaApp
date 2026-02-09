@@ -64,10 +64,9 @@ const getAllPosts = async (
       isPublished: status,
     };
 
-    // For students, only show posts from their section
-    // For teachers, show posts from their section
-    // For counselors/admins, show all posts (sectionId will be null)
-    if (sectionId && (userRole === "STUDENT" || userRole === "TEACHER")) {
+    // For students and teachers, always filter by their section
+    // For counselors, filter by section if one is selected (otherwise show all)
+    if (sectionId && (userRole === "STUDENT" || userRole === "TEACHER" || userRole === "COUNSELOR")) {
       whereClause.sectionId = sectionId;
     }
 

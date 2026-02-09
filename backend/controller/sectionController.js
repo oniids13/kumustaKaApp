@@ -356,6 +356,73 @@ const verifySectionCodeController = async (req, res) => {
   }
 };
 
+/**
+ * Get all counselors (for admin assignment)
+ */
+const getAllCounselorsController = async (req, res) => {
+  try {
+    const counselors = await sectionQueries.getAllCounselors();
+    res.status(200).json({ counselors });
+  } catch (error) {
+    console.error("Error getting counselors:", error);
+    res.status(500).json({ message: "Failed to fetch counselors" });
+  }
+};
+
+/**
+ * Assign counselor to section (admin action)
+ */
+const assignCounselorController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { counselorId } = req.body;
+
+    if (!counselorId) {
+      return res.status(400).json({ message: "Counselor ID is required" });
+    }
+
+    const section = await sectionQueries.assignCounselorToSection(
+      id,
+      counselorId
+    );
+    res.status(200).json({
+      message: "Counselor assigned successfully",
+      section,
+    });
+  } catch (error) {
+    console.error("Error assigning counselor:", error);
+    res
+      .status(500)
+      .json({ message: error.message || "Failed to assign counselor" });
+  }
+};
+
+/**
+ * Remove counselor from section (admin action)
+ */
+const removeCounselorController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { counselorId } = req.body;
+
+    if (!counselorId) {
+      return res.status(400).json({ message: "Counselor ID is required" });
+    }
+
+    const section = await sectionQueries.removeCounselorFromSection(
+      id,
+      counselorId
+    );
+    res.status(200).json({
+      message: "Counselor removed successfully",
+      section,
+    });
+  } catch (error) {
+    console.error("Error removing counselor:", error);
+    res.status(500).json({ message: "Failed to remove counselor" });
+  }
+};
+
 module.exports = {
   getAllSectionsController,
   getSectionByIdController,
@@ -371,4 +438,7 @@ module.exports = {
   leaveSectionController,
   getAvailableTeachersController,
   verifySectionCodeController,
+  getAllCounselorsController,
+  assignCounselorController,
+  removeCounselorController,
 };

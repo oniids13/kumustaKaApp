@@ -50,7 +50,12 @@ const createForumPostController = async (req, res) => {
 
   try {
     // Get user's section for students and teachers
-    const sectionId = await getUserSection(userId, role);
+    let sectionId = await getUserSection(userId, role);
+
+    // For counselors, use sectionId from request body if provided
+    if (role === "COUNSELOR" && req.body.sectionId) {
+      sectionId = req.body.sectionId;
+    }
 
     // Students must be in a section to post
     if (role === "STUDENT" && !sectionId) {
@@ -107,7 +112,12 @@ const getAllForumPostsController = async (req, res) => {
 
   try {
     // Get user's section for filtering
-    const sectionId = await getUserSection(userId, role);
+    let sectionId = await getUserSection(userId, role);
+
+    // For counselors, allow filtering by section via query param
+    if (role === "COUNSELOR" && req.query.sectionId) {
+      sectionId = req.query.sectionId;
+    }
 
     // Students must be in a section to view posts
     if (role === "STUDENT" && !sectionId) {
@@ -118,12 +128,9 @@ const getAllForumPostsController = async (req, res) => {
       });
     }
 
-    // Get posts filtered by section for students and teachers
-    // Counselors and admins can see all posts
+    // Get posts filtered by section for students, teachers, and counselors (when selected)
     const publishedPosts = await getAllPosts(true, userId, sectionId, role);
     const unpublishedPosts = await getAllPosts(false, userId, sectionId, role);
-
-    const allPosts = publishedPosts.concat(unpublishedPosts);
 
     // Return empty arrays instead of 404 when no posts found
     return res.status(200).json({

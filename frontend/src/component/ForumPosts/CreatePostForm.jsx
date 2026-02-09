@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import TextEditor from "./TextEditor";
 import axios from "axios";
 
-const CreatePostForm = ({ onPostCreated }) => {
+const CreatePostForm = ({ onPostCreated, sectionId }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [images, setImages] = useState([]);
@@ -19,6 +19,9 @@ const CreatePostForm = ({ onPostCreated }) => {
       const formData = new FormData();
       formData.append("title", title);
       formData.append("content", content);
+      if (sectionId) {
+        formData.append("sectionId", sectionId);
+      }
       images.forEach((image) => formData.append("images", image));
 
       const response = await axios.post(

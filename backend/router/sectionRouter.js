@@ -26,6 +26,13 @@ router.get(
 );
 
 router.get(
+  "/available-counselors",
+  authenticate,
+  checkRole(["ADMIN"]),
+  sectionController.getAllCounselorsController
+);
+
+router.get(
   "/:id",
   authenticate,
   checkRole(["ADMIN", "COUNSELOR"]),
@@ -72,6 +79,21 @@ router.post(
   authenticate,
   checkRole(["ADMIN"]),
   sectionController.removeTeacherController
+);
+
+// Counselor assignment (admin)
+router.post(
+  "/:id/assign-counselor",
+  authenticate,
+  checkRole(["ADMIN"]),
+  sectionController.assignCounselorController
+);
+
+router.post(
+  "/:id/remove-counselor",
+  authenticate,
+  checkRole(["ADMIN"]),
+  sectionController.removeCounselorController
 );
 
 // Student routes

@@ -8,7 +8,20 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 /**
- * Get all students for counselor view
+ * Get counselor's assigned sections
+ */
+const getMySectionsController = async (req, res) => {
+  try {
+    const sections = await counselorQueries.getCounselorSections(req.user.id);
+    res.status(200).json({ sections });
+  } catch (error) {
+    console.error("Error fetching counselor sections:", error);
+    res.status(500).json({ error: "Failed to fetch sections" });
+  }
+};
+
+/**
+ * Get all students for counselor view (optionally filtered by section)
  */
 const getStudentsController = async (req, res) => {
   try {
@@ -21,8 +34,9 @@ const getStudentsController = async (req, res) => {
       });
     }
 
-    // Get all students
-    const formattedStudents = await counselorQueries.getAllStudents();
+    // Get students, optionally filtered by section
+    const { sectionId } = req.query;
+    const formattedStudents = await counselorQueries.getAllStudents(sectionId || undefined);
 
     res.status(200).json({ students: formattedStudents });
   } catch (error) {
@@ -495,7 +509,8 @@ const getStudentInitialAssessment = async (req, res) => {
  */
 const getDailySubmissionCountsController = async (req, res) => {
   try {
-    const counts = await counselorQueries.getDailySubmissionCounts();
+    const { sectionId } = req.query;
+    const counts = await counselorQueries.getDailySubmissionCounts(sectionId || undefined);
     res.status(200).json(counts);
   } catch (error) {
     console.error("Error getting daily submission counts:", error);
@@ -642,6 +657,7 @@ const getStudentProfileController = async (req, res) => {
 };
 
 module.exports = {
+  getMySectionsController,
   getStudentsController,
   getStudentSurveysController,
   getStudentMoodsController,

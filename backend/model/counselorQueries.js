@@ -32,11 +32,58 @@ const getCounselorByUserId = async (userId) => {
 };
 
 /**
- * Get all students for counselor view
+ * Get counselor's assigned sections
  */
-const getAllStudents = async () => {
+const getCounselorSections = async (userId) => {
   try {
+    const counselor = await prisma.counselor.findFirst({
+      where: { userId },
+      include: {
+        sections: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            gradeLevel: true,
+            isActive: true,
+            _count: {
+              select: { students: true },
+            },
+          },
+          orderBy: { name: "asc" },
+        },
+      },
+    });
+
+    if (!counselor) {
+      throw new Error("Counselor not found");
+    }
+
+    return counselor.sections.map((s) => ({
+      id: s.id,
+      name: s.name,
+      code: s.code,
+      gradeLevel: s.gradeLevel,
+      isActive: s.isActive,
+      studentCount: s._count.students,
+    }));
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Get all students for counselor view (optionally filtered by section)
+ */
+const getAllStudents = async (sectionId) => {
+  try {
+    const whereClause = {};
+    if (sectionId) {
+      whereClause.sectionId = sectionId;
+    }
+
     const students = await prisma.student.findMany({
+      where: whereClause,
       select: {
         id: true,
         user: {
@@ -913,9 +960,9 @@ const getStudentInitialAssessment = async (studentId) => {
 };
 
 /**
- * Get daily submission counts for mood entries and surveys
+ * Get daily submission counts for mood entries and surveys (optionally filtered by section)
  */
-const getDailySubmissionCounts = async () => {
+const getDailySubmissionCounts = async (sectionId) => {
   try {
     // Get today's date at midnight
     const today = new Date();
@@ -925,24 +972,30 @@ const getDailySubmissionCounts = async () => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
+    const dateFilter = {
+      createdAt: {
+        gte: today,
+        lt: tomorrow,
+      },
+    };
+
+    // Build where clause with optional section filter
+    const moodWhere = { ...dateFilter };
+    const surveyWhere = { ...dateFilter };
+
+    if (sectionId) {
+      moodWhere.student = { sectionId };
+      surveyWhere.student = { sectionId };
+    }
+
     // Get mood entry count for today
     const moodEntriesCount = await prisma.moodEntry.count({
-      where: {
-        createdAt: {
-          gte: today,
-          lt: tomorrow,
-        },
-      },
+      where: moodWhere,
     });
 
     // Get survey response count for today
     const surveyResponsesCount = await prisma.surveyResponse.count({
-      where: {
-        createdAt: {
-          gte: today,
-          lt: tomorrow,
-        },
-      },
+      where: surveyWhere,
     });
 
     return {
@@ -1536,6 +1589,7 @@ const getStudentProfile = async (studentId) => {
 
 module.exports = {
   getCounselorByUserId,
+  getCounselorSections,
   getAllStudents,
   getStudentSurveys,
   getStudentMoods,

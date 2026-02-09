@@ -3,7 +3,7 @@ import { Card, Row, Col, Statistic, Spin, Alert } from "antd";
 import { SmileOutlined, FormOutlined } from "@ant-design/icons";
 import axios from "axios";
 
-const DailySubmissions = () => {
+const DailySubmissions = ({ sectionId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submissions, setSubmissions] = useState(null);
@@ -25,9 +25,14 @@ const DailySubmissions = () => {
           "Content-Type": "application/json",
         };
 
+        const params = {};
+        if (sectionId) {
+          params.sectionId = sectionId;
+        }
+
         const response = await axios.get(
           "http://localhost:3000/api/counselor/daily-submissions",
-          { headers }
+          { headers, params }
         );
 
         if (response.data) {
@@ -42,7 +47,7 @@ const DailySubmissions = () => {
     };
 
     fetchDailySubmissions();
-  }, []);
+  }, [sectionId]);
 
   if (loading) {
     return (

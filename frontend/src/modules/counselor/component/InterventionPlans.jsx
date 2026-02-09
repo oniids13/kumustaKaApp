@@ -39,7 +39,7 @@ const statusColors = {
   COMPLETED: "green",
 };
 
-const InterventionPlans = () => {
+const InterventionPlans = ({ sectionId }) => {
   const [loading, setLoading] = useState(true);
   const [interventions, setInterventions] = useState([]);
   const [students, setStudents] = useState([]);
@@ -58,7 +58,7 @@ const InterventionPlans = () => {
   useEffect(() => {
     fetchInterventions();
     fetchStudents();
-  }, []);
+  }, [sectionId]);
 
   const fetchInterventions = async () => {
     setLoading(true);
@@ -89,12 +89,18 @@ const InterventionPlans = () => {
 
   const fetchStudents = async () => {
     try {
+      const params = {};
+      if (sectionId) {
+        params.sectionId = sectionId;
+      }
+
       const response = await axios.get(
         "http://localhost:3000/api/counselor/students",
         {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
+          params,
         }
       );
 

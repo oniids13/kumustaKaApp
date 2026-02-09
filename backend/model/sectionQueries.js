@@ -47,6 +47,18 @@ const getAllSections = async () => {
             },
           },
         },
+        counselors: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
+          },
+        },
         _count: {
           select: {
             students: true,
@@ -77,6 +89,13 @@ const getAllSections = async () => {
             email: section.teacher.user.email,
           }
         : null,
+      counselors: section.counselors.map((c) => ({
+        id: c.id,
+        userId: c.userId,
+        firstName: c.user.firstName,
+        lastName: c.user.lastName,
+        email: c.user.email,
+      })),
       studentCount: section._count.students,
       counselorCount: section._count.counselors,
     }));
@@ -503,6 +522,104 @@ const getAvailableTeachers = async () => {
   }
 };
 
+/**
+ * Get all counselors (with their current section assignments)
+ */
+const getAllCounselors = async () => {
+  try {
+    const counselors = await prisma.counselor.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        sections: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return counselors.map((c) => ({
+      id: c.id,
+      userId: c.userId,
+      firstName: c.user.firstName,
+      lastName: c.user.lastName,
+      email: c.user.email,
+      sectionCount: c.sections.length,
+      sections: c.sections,
+    }));
+  } catch (error) {
+    console.error("Error fetching counselors:", error);
+    throw error;
+  }
+};
+
+/**
+ * Assign counselor to section (admin action)
+ */
+const assignCounselorToSection = async (sectionId, counselorId) => {
+  try {
+    // Check if counselor is already assigned to this section
+    const section = await prisma.section.findUnique({
+      where: { id: sectionId },
+      include: {
+        counselors: { select: { id: true } },
+      },
+    });
+
+    if (!section) {
+      throw new Error("Section not found");
+    }
+
+    const alreadyAssigned = section.counselors.some((c) => c.id === counselorId);
+    if (alreadyAssigned) {
+      throw new Error("Counselor is already assigned to this section");
+    }
+
+    await prisma.section.update({
+      where: { id: sectionId },
+      data: {
+        counselors: {
+          connect: { id: counselorId },
+        },
+      },
+    });
+
+    return await getSectionById(sectionId);
+  } catch (error) {
+    console.error("Error assigning counselor to section:", error);
+    throw error;
+  }
+};
+
+/**
+ * Remove counselor from section (admin action)
+ */
+const removeCounselorFromSection = async (sectionId, counselorId) => {
+  try {
+    await prisma.section.update({
+      where: { id: sectionId },
+      data: {
+        counselors: {
+          disconnect: { id: counselorId },
+        },
+      },
+    });
+
+    return await getSectionById(sectionId);
+  } catch (error) {
+    console.error("Error removing counselor from section:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   generateSectionCode,
   getAllSections,
@@ -519,4 +636,7 @@ module.exports = {
   counselorJoinSectionWithCode,
   leaveSection,
   getAvailableTeachers,
+  getAllCounselors,
+  assignCounselorToSection,
+  removeCounselorFromSection,
 };

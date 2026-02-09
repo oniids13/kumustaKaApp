@@ -1,6 +1,7 @@
 const { Router } = require("express");
 const passport = require("passport");
 const {
+  getMySectionsController,
   getStudentsController,
   getStudentController,
   getStudentProfileController,
@@ -30,6 +31,14 @@ const isCounselor = (req, res, next) => {
     .status(403)
     .json({ message: "Access denied: Counselor role required" });
 };
+
+// Get counselor's assigned sections
+counselorRouter.get(
+  "/my-sections",
+  passport.authenticate("jwt", { session: false }),
+  isCounselor,
+  getMySectionsController
+);
 
 // Student data endpoints
 counselorRouter.get(

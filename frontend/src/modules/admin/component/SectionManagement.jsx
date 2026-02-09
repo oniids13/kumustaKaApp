@@ -20,6 +20,8 @@ import {
   Row,
   Col,
   Divider,
+  List,
+  Avatar,
 } from "antd";
 import {
   PlusOutlined,
@@ -31,11 +33,13 @@ import {
   UserOutlined,
   BookOutlined,
   EyeOutlined,
+  MedicineBoxOutlined,
+  CloseCircleOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import moment from "moment";
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
@@ -49,6 +53,7 @@ const SectionManagement = () => {
   const [selectedSection, setSelectedSection] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [availableTeachers, setAvailableTeachers] = useState([]);
+  const [allCounselors, setAllCounselors] = useState([]);
   const [error, setError] = useState(null);
   const [form] = Form.useForm();
 
@@ -57,17 +62,15 @@ const SectionManagement = () => {
   useEffect(() => {
     fetchSections();
     fetchAvailableTeachers();
+    fetchAllCounselors();
   }, []);
 
   const fetchSections = async () => {
     setLoading(true);
     try {
       const response = await axios.get("http://localhost:3000/api/sections", {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
+        headers: { Authorization: `Bearer ${user.token}` },
       });
-
       if (response.data && response.data.sections) {
         setSections(response.data.sections);
       }
@@ -83,18 +86,27 @@ const SectionManagement = () => {
     try {
       const response = await axios.get(
         "http://localhost:3000/api/sections/available-teachers",
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${user.token}` } }
       );
-
       if (response.data && response.data.teachers) {
         setAvailableTeachers(response.data.teachers);
       }
     } catch (err) {
       console.error("Error fetching available teachers:", err);
+    }
+  };
+
+  const fetchAllCounselors = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:3000/api/sections/available-counselors",
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+      if (response.data && response.data.counselors) {
+        setAllCounselors(response.data.counselors);
+      }
+    } catch (err) {
+      console.error("Error fetching counselors:", err);
     }
   };
 
@@ -123,11 +135,7 @@ const SectionManagement = () => {
     try {
       const response = await axios.get(
         `http://localhost:3000/api/sections/${record.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${user.token}` } }
       );
       setSelectedSection(response.data.section);
     } catch (err) {
@@ -142,9 +150,7 @@ const SectionManagement = () => {
   const handleDeleteSection = async (sectionId) => {
     try {
       await axios.delete(`http://localhost:3000/api/sections/${sectionId}`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
+        headers: { Authorization: `Bearer ${user.token}` },
       });
       message.success("Section deleted successfully");
       fetchSections();
@@ -159,11 +165,7 @@ const SectionManagement = () => {
       const response = await axios.post(
         `http://localhost:3000/api/sections/${sectionId}/regenerate-code`,
         {},
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${user.token}` } }
       );
       message.success(`New code: ${response.data.section.code}`);
       fetchSections();
@@ -204,7 +206,6 @@ const SectionManagement = () => {
             });
             message.success("Section created successfully");
           }
-
           fetchSections();
           setIsModalVisible(false);
           form.resetFields();
@@ -235,6 +236,10 @@ const SectionManagement = () => {
       message.success("Teacher assigned successfully");
       fetchSections();
       fetchAvailableTeachers();
+      // Refresh detail modal if open
+      if (selectedSection?.id === sectionId) {
+        handleViewSection({ id: sectionId });
+      }
     } catch (err) {
       console.error("Error assigning teacher:", err);
       message.error(err.response?.data?.message || "Failed to assign teacher");
@@ -246,19 +251,75 @@ const SectionManagement = () => {
       await axios.post(
         `http://localhost:3000/api/sections/${sectionId}/remove-teacher`,
         {},
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${user.token}` } }
       );
       message.success("Teacher removed successfully");
       fetchSections();
       fetchAvailableTeachers();
+      if (selectedSection?.id === sectionId) {
+        handleViewSection({ id: sectionId });
+      }
     } catch (err) {
       console.error("Error removing teacher:", err);
       message.error("Failed to remove teacher");
     }
+  };
+
+  const handleAssignCounselor = async (sectionId, counselorId) => {
+    try {
+      await axios.post(
+        `http://localhost:3000/api/sections/${sectionId}/assign-counselor`,
+        { counselorId },
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      message.success("Counselor assigned successfully");
+      fetchSections();
+      fetchAllCounselors();
+      if (selectedSection?.id === sectionId) {
+        handleViewSection({ id: sectionId });
+      }
+    } catch (err) {
+      console.error("Error assigning counselor:", err);
+      message.error(
+        err.response?.data?.message || "Failed to assign counselor"
+      );
+    }
+  };
+
+  const handleRemoveCounselor = async (sectionId, counselorId) => {
+    try {
+      await axios.post(
+        `http://localhost:3000/api/sections/${sectionId}/remove-counselor`,
+        { counselorId },
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      message.success("Counselor removed successfully");
+      fetchSections();
+      fetchAllCounselors();
+      if (selectedSection?.id === sectionId) {
+        handleViewSection({ id: sectionId });
+      }
+    } catch (err) {
+      console.error("Error removing counselor:", err);
+      message.error("Failed to remove counselor");
+    }
+  };
+
+  // Get counselors not already assigned to this section
+  const getAvailableCounselorsForSection = (sectionId) => {
+    const section = sections.find((s) => s.id === sectionId);
+    const assignedIds = (section?.counselors || []).map((c) => c.id);
+    return allCounselors.filter((c) => !assignedIds.includes(c.id));
   };
 
   const columns = [
@@ -315,6 +376,22 @@ const SectionManagement = () => {
         ),
     },
     {
+      title: "Counselor",
+      key: "counselor",
+      render: (_, record) =>
+        record.counselors?.length > 0 ? (
+          <Space direction="vertical" size={0}>
+            {record.counselors.map((c) => (
+              <Tag key={c.id} color="orange" style={{ marginBottom: 2 }}>
+                <MedicineBoxOutlined /> {c.firstName} {c.lastName}
+              </Tag>
+            ))}
+          </Space>
+        ) : (
+          <Text type="secondary">Not assigned</Text>
+        ),
+    },
+    {
       title: "Students",
       dataIndex: "studentCount",
       key: "studentCount",
@@ -337,12 +414,6 @@ const SectionManagement = () => {
           {isActive ? "Active" : "Inactive"}
         </Tag>
       ),
-    },
-    {
-      title: "Created",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (date) => moment(date).format("MMM DD, YYYY"),
     },
     {
       title: "Actions",
@@ -463,9 +534,10 @@ const SectionManagement = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="Sections with Teachers"
-              value={sections.filter((s) => s.teacher).length}
+              title="Sections with Counselors"
+              value={sections.filter((s) => s.counselors?.length > 0).length}
               suffix={`/ ${sections.length}`}
+              prefix={<MedicineBoxOutlined />}
             />
           </Card>
         </Col>
@@ -536,7 +608,7 @@ const SectionManagement = () => {
           setSelectedSection(null);
         }}
         footer={null}
-        width={800}
+        width={900}
       >
         {detailLoading ? (
           <div style={{ textAlign: "center", padding: "50px" }}>
@@ -545,7 +617,7 @@ const SectionManagement = () => {
         ) : selectedSection ? (
           <div>
             <Row gutter={16}>
-              <Col span={12}>
+              <Col span={8}>
                 <Card size="small" title="Section Information">
                   <p>
                     <strong>Name:</strong> {selectedSection.name}
@@ -572,7 +644,7 @@ const SectionManagement = () => {
                   </p>
                 </Card>
               </Col>
-              <Col span={12}>
+              <Col span={8}>
                 <Card size="small" title="Teacher Assignment">
                   {selectedSection.teacher ? (
                     <div>
@@ -588,10 +660,9 @@ const SectionManagement = () => {
                       </p>
                       <Popconfirm
                         title="Remove teacher from this section?"
-                        onConfirm={() => {
-                          handleRemoveTeacher(selectedSection.id);
-                          setIsDetailModalVisible(false);
-                        }}
+                        onConfirm={() =>
+                          handleRemoveTeacher(selectedSection.id)
+                        }
                       >
                         <Button danger size="small">
                           Remove Teacher
@@ -605,14 +676,13 @@ const SectionManagement = () => {
                         <div style={{ marginTop: "10px" }}>
                           <Select
                             placeholder="Select a teacher"
-                            style={{ width: "100%", marginBottom: "10px" }}
-                            onChange={(teacherId) => {
+                            style={{ width: "100%" }}
+                            onChange={(teacherId) =>
                               handleAssignTeacher(
                                 selectedSection.id,
                                 teacherId
-                              );
-                              setIsDetailModalVisible(false);
-                            }}
+                              )
+                            }
                           >
                             {availableTeachers.map((t) => (
                               <Option key={t.id} value={t.id}>
@@ -624,6 +694,88 @@ const SectionManagement = () => {
                       )}
                     </div>
                   )}
+                </Card>
+              </Col>
+              <Col span={8}>
+                <Card
+                  size="small"
+                  title={`Counselor Assignment (${selectedSection.counselors?.length || 0})`}
+                >
+                  {selectedSection.counselors?.length > 0 ? (
+                    <List
+                      size="small"
+                      dataSource={selectedSection.counselors}
+                      renderItem={(counselor) => (
+                        <List.Item
+                          actions={[
+                            <Popconfirm
+                              key="remove"
+                              title="Remove this counselor from the section?"
+                              onConfirm={() =>
+                                handleRemoveCounselor(
+                                  selectedSection.id,
+                                  counselor.id
+                                )
+                              }
+                            >
+                              <Button
+                                type="text"
+                                danger
+                                size="small"
+                                icon={<CloseCircleOutlined />}
+                              />
+                            </Popconfirm>,
+                          ]}
+                        >
+                          <List.Item.Meta
+                            avatar={
+                              <Avatar
+                                size="small"
+                                icon={<MedicineBoxOutlined />}
+                                style={{ backgroundColor: "#fa8c16" }}
+                              />
+                            }
+                            title={`${counselor.user.firstName} ${counselor.user.lastName}`}
+                            description={counselor.user.email}
+                          />
+                        </List.Item>
+                      )}
+                    />
+                  ) : (
+                    <Text type="secondary">No counselor assigned</Text>
+                  )}
+
+                  {/* Add counselor dropdown */}
+                  {(() => {
+                    const available = getAvailableCounselorsForSection(
+                      selectedSection.id
+                    );
+                    if (available.length === 0) return null;
+                    return (
+                      <div style={{ marginTop: "10px" }}>
+                        <Select
+                          placeholder="Assign a counselor"
+                          style={{ width: "100%" }}
+                          onChange={(counselorId) =>
+                            handleAssignCounselor(
+                              selectedSection.id,
+                              counselorId
+                            )
+                          }
+                          value={undefined}
+                        >
+                          {available.map((c) => (
+                            <Option key={c.id} value={c.id}>
+                              {c.firstName} {c.lastName}
+                              {c.sectionCount > 0
+                                ? ` (${c.sectionCount} section${c.sectionCount > 1 ? "s" : ""})`
+                                : ""}
+                            </Option>
+                          ))}
+                        </Select>
+                      </div>
+                    );
+                  })()}
                 </Card>
               </Col>
             </Row>

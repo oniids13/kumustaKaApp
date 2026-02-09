@@ -31,6 +31,51 @@
   overflow-anchor: none;
 }
 
+/* Section filter bar */
+.section-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #f0f5ff 0%, #e6f7ff 100%);
+  border: 1px solid #d6e4ff;
+  border-radius: 8px;
+}
+
+.section-filter-label {
+  font-weight: 600;
+  color: #1d39c4;
+  font-size: 14px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.section-filter-select {
+  flex: 1;
+  max-width: 400px;
+  padding: 8px 12px;
+  border: 1px solid #adc6ff;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  background-color: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.section-filter-select:focus {
+  outline: none;
+  border-color: #597ef7;
+  box-shadow: 0 0 0 2px rgba(89, 126, 247, 0.2);
+}
+
+.section-filter-select:hover {
+  border-color: #597ef7;
+}
+
 /* Analytics specific styles */
 .statistic-card {
   text-align: center;

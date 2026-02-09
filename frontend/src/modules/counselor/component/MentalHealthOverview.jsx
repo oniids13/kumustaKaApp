@@ -54,7 +54,7 @@ const useStyles = createStyles(() => ({
   },
 }));
 
-const MentalHealthOverview = () => {
+const MentalHealthOverview = ({ sectionId }) => {
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
   const [error, setError] = useState(null);
@@ -85,18 +85,24 @@ const MentalHealthOverview = () => {
   useEffect(() => {
     fetchStudentsWithData();
     fetchMoodData();
-  }, [periodFilter]);
+  }, [periodFilter, sectionId]);
 
   const fetchStudentsWithData = async () => {
     setLoading(true);
     try {
-      // Fetch all students
+      // Fetch students (optionally filtered by section)
+      const params = {};
+      if (sectionId) {
+        params.sectionId = sectionId;
+      }
+
       const studentsResponse = await axios.get(
         "http://localhost:3000/api/counselor/students",
         {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
+          params,
         }
       );
 
