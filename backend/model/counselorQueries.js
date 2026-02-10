@@ -1927,58 +1927,203 @@ const getComprehensiveAnalytics = async (counselorUserId, sectionId, period) => 
     // =====================
     const insights = [];
 
-    // High risk alert
+    // --- CRITICAL: Students currently in Red Zone ---
     if (highRisk > 0) {
+      const redStudentIds = Object.entries(latestSurveyByStudent)
+        .filter(([, sr]) => normalizeZoneName(sr.zone)?.startsWith("Red"))
+        .map(([sid]) => sid);
+      const redStudentNames = redStudentIds
+        .map((sid) => studentById[sid])
+        .filter(Boolean)
+        .map((s) => `${s.user.firstName} ${s.user.lastName}`)
+        .slice(0, 5);
+      const moreCount = redStudentIds.length > 5 ? ` and ${redStudentIds.length - 5} more` : "";
       insights.push({
         type: "critical",
         severity: "high",
-        title: "Students in Red Zone",
-        description: `${highRisk} student(s) are currently in the Red Zone (Needs Attention). Immediate intervention is recommended.`,
-        recommendation: "Schedule individual counseling sessions with these students within the next 48 hours. Consider involving parents/guardians if the situation persists.",
+        title: "Students Requiring Immediate Attention",
+        description: `${highRisk} student(s) are currently in the Red Zone: ${redStudentNames.join(", ")}${moreCount}. Their latest survey scores indicate they need immediate support.`,
+        recommendation: "Schedule individual counseling sessions with these students within 24-48 hours. Conduct a risk assessment, create or update intervention plans, and consider notifying parents/guardians. If any student shows signs of self-harm, escalate to crisis protocols immediately.",
       });
     }
 
-    // Declining mood trend
+    // --- CRITICAL: Students with persistently low mood (avg <= 2 over past 7 days) ---
+    const persistentlyLowMoodStudents = [];
+    studentIds.forEach((sid) => {
+      const recentMoods = moodEntries.filter((m) => m.studentId === sid && m.createdAt >= sevenDaysAgo);
+      if (recentMoods.length >= 3) {
+        const avg = recentMoods.reduce((s, m) => s + m.moodLevel, 0) / recentMoods.length;
+        if (avg <= 2.0) {
+          persistentlyLowMoodStudents.push({ sid, avg: avg.toFixed(1) });
+        }
+      }
+    });
+    if (persistentlyLowMoodStudents.length > 0) {
+      const names = persistentlyLowMoodStudents
+        .map((s) => studentById[s.sid])
+        .filter(Boolean)
+        .map((s) => `${s.user.firstName} ${s.user.lastName}`)
+        .slice(0, 5);
+      insights.push({
+        type: "critical",
+        severity: "high",
+        title: "Persistently Low Mood Detected",
+        description: `${persistentlyLowMoodStudents.length} student(s) have maintained an average mood of 2.0 or below over the past 7 days (${names.join(", ")}${persistentlyLowMoodStudents.length > 5 ? " and more" : ""}). This sustained pattern signals deeper emotional distress.`,
+        recommendation: "Conduct one-on-one wellness checks as a priority. Explore underlying causes such as academic pressure, family issues, or social difficulties. Develop personalized coping strategies and consider referral to a clinical psychologist if patterns persist beyond 2 weeks.",
+      });
+    }
+
+    // --- WARNING: Declining mood trends ---
     if (decliningStudents.length > 0) {
+      const names = decliningStudents
+        .map((sid) => studentById[sid])
+        .filter(Boolean)
+        .map((s) => `${s.user.firstName} ${s.user.lastName}`)
+        .slice(0, 5);
       insights.push({
         type: "warning",
         severity: "medium",
         title: "Declining Mood Trends Detected",
-        description: `${decliningStudents.length} student(s) show a significant decline in mood over the past week compared to the previous week.`,
-        recommendation: "Proactively reach out to these students for a wellness check. Consider adjusting their current support plans.",
+        description: `${decliningStudents.length} student(s) show a significant decline in mood over the past week compared to the previous week (${names.join(", ")}${decliningStudents.length > 5 ? " and more" : ""}). Early intervention can prevent further deterioration.`,
+        recommendation: "Proactively reach out to these students for a wellness check. Review their recent journal entries and survey responses for context. Consider adjusting their current support plans and scheduling follow-up sessions within the week.",
       });
     }
 
-    // Low participation
+    // --- WARNING: Students with high DASS-21 anxiety scores ---
+    if (initialAssessments.length > 0) {
+      const highAnxiety = initialAssessments.filter((a) => a.anxietyScore > 15);
+      const highDepression = initialAssessments.filter((a) => a.depressionScore > 14);
+      const highStress = initialAssessments.filter((a) => a.stressScore > 19);
+
+      if (highAnxiety.length > 0) {
+        const pct = ((highAnxiety.length / initialAssessments.length) * 100).toFixed(0);
+        const names = highAnxiety
+          .map((a) => studentById[a.studentId])
+          .filter(Boolean)
+          .map((s) => `${s.user.firstName} ${s.user.lastName}`)
+          .slice(0, 4);
+        insights.push({
+          type: "warning",
+          severity: "high",
+          title: "Elevated Anxiety Levels (DASS-21)",
+          description: `${highAnxiety.length} student(s) (${pct}%) scored in the severe anxiety range on their initial DASS-21 assessment (${names.join(", ")}${highAnxiety.length > 4 ? " and more" : ""}). Anxiety scores above 15 indicate clinically significant symptoms.`,
+          recommendation: "Implement anxiety-focused interventions: teach deep breathing and grounding techniques, provide psychoeducation on anxiety management, and consider Cognitive Behavioral Therapy (CBT) referrals. Assess if academic workload or social factors are contributing and coordinate with teachers to reduce pressure where appropriate.",
+        });
+      }
+
+      if (highDepression.length > 0) {
+        const pct = ((highDepression.length / initialAssessments.length) * 100).toFixed(0);
+        const names = highDepression
+          .map((a) => studentById[a.studentId])
+          .filter(Boolean)
+          .map((s) => `${s.user.firstName} ${s.user.lastName}`)
+          .slice(0, 4);
+        insights.push({
+          type: "critical",
+          severity: "high",
+          title: "Elevated Depression Levels (DASS-21)",
+          description: `${highDepression.length} student(s) (${pct}%) scored in the severe depression range on DASS-21 (${names.join(", ")}${highDepression.length > 4 ? " and more" : ""}). Depression scores above 14 warrant clinical attention.`,
+          recommendation: "Prioritize these students for regular counseling sessions. Monitor for signs of social withdrawal, academic decline, and changes in appetite/sleep. Coordinate with parents/guardians, and refer to a mental health professional for clinical evaluation if symptoms are chronic. Consider implementing a buddy system to reduce isolation.",
+        });
+      }
+
+      if (highStress.length > 0) {
+        const pct = ((highStress.length / initialAssessments.length) * 100).toFixed(0);
+        insights.push({
+          type: "warning",
+          severity: "medium",
+          title: "Elevated Stress Levels (DASS-21)",
+          description: `${highStress.length} student(s) (${pct}%) scored in the severe stress range on DASS-21 (score > 19). Chronic stress can impair academic performance and overall well-being.`,
+          recommendation: "Organize stress management workshops covering time management, relaxation techniques, and mindfulness. Identify key stressors (exams, family, peer relationships) through individual sessions. Coordinate with teachers to provide academic accommodations if needed.",
+        });
+      }
+    }
+
+    // --- ANALYSIS: Students in Yellow Zone trending towards Red ---
+    const yellowTrendingRed = [];
+    Object.entries(latestSurveyByStudent).forEach(([sid, latestSr]) => {
+      const z = normalizeZoneName(latestSr.zone);
+      if (z && z.startsWith("Yellow")) {
+        // Check if this student's recent surveys are worsening
+        const studentSurveys = surveyResponses
+          .filter((sr) => sr.studentId === sid)
+          .sort((a, b) => a.createdAt - b.createdAt);
+        if (studentSurveys.length >= 3) {
+          const lastThree = studentSurveys.slice(-3);
+          const declining = lastThree.every((sr, i) => i === 0 || sr.percentage <= studentSurveys[studentSurveys.length - 3 + i - 1].percentage);
+          if (declining && lastThree[lastThree.length - 1].percentage < 65) {
+            yellowTrendingRed.push(sid);
+          }
+        }
+      }
+    });
+    if (yellowTrendingRed.length > 0) {
+      const names = yellowTrendingRed
+        .map((sid) => studentById[sid])
+        .filter(Boolean)
+        .map((s) => `${s.user.firstName} ${s.user.lastName}`);
+      insights.push({
+        type: "warning",
+        severity: "high",
+        title: "Yellow Zone Students at Risk of Escalation",
+        description: `${yellowTrendingRed.length} student(s) currently in the Yellow Zone show a declining trend in survey scores across their last 3 responses (${names.slice(0, 4).join(", ")}${names.length > 4 ? " and more" : ""}). Without intervention, they may progress to the Red Zone.`,
+        recommendation: "Prioritize preventive counseling for these students. Schedule check-ins within the next 3 days. Assign peer mentors and incorporate wellness activities. Early intervention at this stage is the most effective way to prevent escalation to crisis level.",
+      });
+    }
+
+    // --- INFO: Low survey participation ---
     if (lowParticipation.length > 0 && students.length > 0) {
       const pct = ((lowParticipation.length / students.length) * 100).toFixed(0);
+      const names = lowParticipation
+        .map((sid) => studentById[sid])
+        .filter(Boolean)
+        .map((s) => `${s.user.firstName} ${s.user.lastName}`)
+        .slice(0, 5);
       insights.push({
         type: "info",
         severity: "low",
         title: "Low Survey Participation",
-        description: `${lowParticipation.length} student(s) (${pct}%) have not completed a survey in the past 2 weeks.`,
-        recommendation: "Send reminders to these students. Consider making surveys more accessible or shorter. Follow up personally with students who consistently skip surveys.",
+        description: `${lowParticipation.length} student(s) (${pct}%) have not completed a survey in the past 2 weeks (${names.join(", ")}${lowParticipation.length > 5 ? " and more" : ""}). Non-participation may itself be a warning sign of disengagement or avoidance.`,
+        recommendation: "Send personalized reminders. Schedule brief one-on-one check-ins to understand barriers to participation. Consider whether non-participation is linked to emotional withdrawal — students avoiding surveys may be avoiding confronting their own mental state. Make surveys more accessible and emphasize confidentiality.",
       });
     }
 
-    // Gender disparity check
+    // --- ANALYSIS: Gender-based disparity ---
     const maleStats = genderAnalytics.find((g) => g.gender === "Male");
     const femaleStats = genderAnalytics.find((g) => g.gender === "Female");
     if (maleStats && femaleStats && maleStats.avgMood && femaleStats.avgMood) {
       const diff = Math.abs(maleStats.avgMood - femaleStats.avgMood);
       if (diff >= 0.5) {
         const lowerGender = maleStats.avgMood < femaleStats.avgMood ? "Male" : "Female";
+        const lowerMood = lowerGender === "Male" ? maleStats.avgMood : femaleStats.avgMood;
+        const higherMood = lowerGender === "Male" ? femaleStats.avgMood : maleStats.avgMood;
+        const lowerRed = lowerGender === "Male" ? maleStats.redZonePercentage : femaleStats.redZonePercentage;
         insights.push({
           type: "analysis",
           severity: "medium",
           title: "Gender-Based Mental Health Disparity",
-          description: `${lowerGender} students show notably lower average mood (${lowerGender === "Male" ? maleStats.avgMood : femaleStats.avgMood}/5) compared to ${lowerGender === "Male" ? "Female" : "Male"} students (${lowerGender === "Male" ? femaleStats.avgMood : maleStats.avgMood}/5).`,
-          recommendation: `Consider implementing gender-specific support programs. Investigate potential stressors affecting ${lowerGender} students and tailor intervention strategies accordingly.`,
+          description: `${lowerGender} students show a notably lower average mood (${lowerMood}/5) compared to ${lowerGender === "Male" ? "Female" : "Male"} students (${higherMood}/5), with ${lowerRed}% of ${lowerGender} survey responses in the Red Zone.`,
+          recommendation: `Implement gender-sensitive support programs. For ${lowerGender} students: investigate common stressors through focus groups, create safe spaces for expression, and train teachers on recognizing gender-specific signs of distress. Consider ${lowerGender === "Male" ? "programs that normalize emotional expression and help-seeking behavior among boys" : "programs addressing self-esteem, body image, and social pressure among girls"}.`,
         });
+      }
+
+      // Gender-specific red zone disparity
+      if (maleStats.redZonePercentage > 0 && femaleStats.redZonePercentage > 0) {
+        const redDiff = Math.abs(maleStats.redZonePercentage - femaleStats.redZonePercentage);
+        if (redDiff >= 15) {
+          const higherRedGender = maleStats.redZonePercentage > femaleStats.redZonePercentage ? "Male" : "Female";
+          insights.push({
+            type: "warning",
+            severity: "medium",
+            title: `Higher Red Zone Rate Among ${higherRedGender} Students`,
+            description: `${higherRedGender} students have a ${higherRedGender === "Male" ? maleStats.redZonePercentage : femaleStats.redZonePercentage}% Red Zone rate versus ${higherRedGender === "Male" ? femaleStats.redZonePercentage : maleStats.redZonePercentage}% for ${higherRedGender === "Male" ? "Female" : "Male"} students — a ${redDiff.toFixed(0)}% gap.`,
+            recommendation: `Allocate proportionally more counseling resources toward ${higherRedGender} students. Investigate root causes through confidential surveys or interviews. Consider involving same-gender peer counselors who may be more relatable.`,
+          });
+        }
       }
     }
 
-    // Section comparison insight
+    // --- ANALYSIS: Cross-section comparison ---
     if (sectionAnalytics.length >= 2) {
       const sorted = [...sectionAnalytics].sort((a, b) => (b.avgMood || 0) - (a.avgMood || 0));
       const best = sorted[0];
@@ -1987,14 +2132,26 @@ const getComprehensiveAnalytics = async (counselorUserId, sectionId, period) => 
         insights.push({
           type: "analysis",
           severity: "medium",
-          title: "Cross-Section Performance Gap",
-          description: `"${best.sectionName}" has the highest average mood (${best.avgMood}/5) while "${worst.sectionName}" has the lowest (${worst.avgMood}/5).`,
-          recommendation: `Investigate factors contributing to the mood difference. Consider sharing best practices from "${best.sectionName}" with other sections. Allocate additional resources to "${worst.sectionName}".`,
+          title: "Cross-Section Mental Health Gap",
+          description: `"${best.sectionName}" has the highest average mood (${best.avgMood}/5, ${best.participationRate}% participation) while "${worst.sectionName}" has the lowest (${worst.avgMood}/5, ${worst.participationRate}% participation).`,
+          recommendation: `Conduct a comparative review of classroom environments, teaching approaches, and peer dynamics between sections. Collaborate with the teacher of "${worst.sectionName}" to identify stressors. Consider transferring successful wellness practices from "${best.sectionName}" and increasing counselor presence in the lower-performing section.`,
+        });
+      }
+
+      // Section-specific participation disparity
+      const lowPartSection = sectionAnalytics.find((s) => s.participationRate < 50 && s.totalStudents > 0);
+      if (lowPartSection) {
+        insights.push({
+          type: "warning",
+          severity: "medium",
+          title: `Low Engagement in "${lowPartSection.sectionName}"`,
+          description: `Only ${lowPartSection.participationRate}% of students in "${lowPartSection.sectionName}" have completed surveys this period. Low engagement makes it difficult to assess mental health status accurately.`,
+          recommendation: `Work with the section teacher to encourage participation. Consider integrating survey completion into homeroom activities. Investigate whether students feel unsafe or distrustful of the process — reinforce confidentiality and the purpose of wellness check-ins.`,
         });
       }
     }
 
-    // Monthly trend insight
+    // --- ANALYSIS: Monthly trend insights ---
     if (monthlyTrends.length >= 2) {
       const latest = monthlyTrends[monthlyTrends.length - 1];
       const previous = monthlyTrends[monthlyTrends.length - 2];
@@ -2003,28 +2160,128 @@ const getComprehensiveAnalytics = async (counselorUserId, sectionId, period) => 
           type: "warning",
           severity: "high",
           title: "Increasing Red Zone Trend",
-          description: `Red zone percentage increased from ${previous.redPercentage}% in ${previous.monthLabel} to ${latest.redPercentage}% in ${latest.monthLabel}.`,
-          recommendation: "This upward trend in at-risk students requires immediate attention. Consider school-wide mental health initiatives, stress management workshops, and increasing counseling availability.",
+          description: `Red zone percentage increased from ${previous.redPercentage}% in ${previous.monthLabel} to ${latest.redPercentage}% in ${latest.monthLabel}. This upward trend indicates growing mental health concerns across the student body.`,
+          recommendation: "Investigate potential triggers (upcoming exams, seasonal factors, school events). Implement school-wide mental health initiatives: stress management workshops, guided meditation sessions, and peer support programs. Increase counseling availability and consider teacher training on recognizing early warning signs.",
         });
       } else if (latest.redPercentage < previous.redPercentage - 5) {
         insights.push({
           type: "positive",
           severity: "low",
           title: "Improving Mental Health Trends",
-          description: `Red zone percentage decreased from ${previous.redPercentage}% in ${previous.monthLabel} to ${latest.redPercentage}% in ${latest.monthLabel}.`,
-          recommendation: "Current intervention strategies appear effective. Continue monitoring and maintain current support programs.",
+          description: `Red zone percentage decreased from ${previous.redPercentage}% in ${previous.monthLabel} to ${latest.redPercentage}% in ${latest.monthLabel}. Current strategies appear to be working.`,
+          recommendation: "Document what interventions were active during this improvement period. Continue monitoring and maintain current support programs. Share success metrics with school administration to advocate for sustained mental health funding.",
+        });
+      }
+
+      // Average mood trend direction
+      if (latest.avgMood && previous.avgMood) {
+        const moodChange = latest.avgMood - previous.avgMood;
+        if (moodChange <= -0.3) {
+          insights.push({
+            type: "warning",
+            severity: "medium",
+            title: "Overall Mood Decline This Month",
+            description: `Average mood dropped from ${previous.avgMood}/5 in ${previous.monthLabel} to ${latest.avgMood}/5 in ${latest.monthLabel} (${moodChange.toFixed(2)} decrease).`,
+            recommendation: "Assess whether external factors (academic calendar, holiday stress, school conflicts) are driving the decline. Consider organizing wellness activities, classroom-based mindfulness exercises, or a school mental health awareness week to boost morale.",
+          });
+        }
+      }
+    }
+
+    // --- ANALYSIS: Quarterly pattern (if enough data) ---
+    if (quarterlyTrends.length >= 2) {
+      const latestQ = quarterlyTrends[quarterlyTrends.length - 1];
+      const prevQ = quarterlyTrends[quarterlyTrends.length - 2];
+      if (latestQ.redPercentage > prevQ.redPercentage + 10) {
+        insights.push({
+          type: "warning",
+          severity: "high",
+          title: "Quarterly Red Zone Escalation",
+          description: `The Red Zone percentage jumped from ${prevQ.redPercentage}% in ${prevQ.quarter} to ${latestQ.redPercentage}% in ${latestQ.quarter}. This quarter-over-quarter increase suggests systemic issues rather than isolated cases.`,
+          recommendation: "Convene a meeting with school administration and teachers to address systemic factors. Review school policies, academic pressures, and social climate. Consider a school-wide mental health assessment and develop a comprehensive intervention plan with clear timelines and accountability.",
         });
       }
     }
 
-    // Positive overall
+    // --- INFO: Intervention coverage gap ---
+    const studentsWithIntervention = new Set(interventions.map((i) => i.studentId));
+    const highRiskWithoutIntervention = Object.entries(latestSurveyByStudent)
+      .filter(([sid, sr]) => normalizeZoneName(sr.zone)?.startsWith("Red") && !studentsWithIntervention.has(sid))
+      .map(([sid]) => sid);
+    if (highRiskWithoutIntervention.length > 0) {
+      const names = highRiskWithoutIntervention
+        .map((sid) => studentById[sid])
+        .filter(Boolean)
+        .map((s) => `${s.user.firstName} ${s.user.lastName}`);
+      insights.push({
+        type: "critical",
+        severity: "high",
+        title: "Red Zone Students Without Intervention Plans",
+        description: `${highRiskWithoutIntervention.length} student(s) in the Red Zone currently have no active intervention plan (${names.slice(0, 4).join(", ")}${names.length > 4 ? " and more" : ""}). These students are at risk without structured support.`,
+        recommendation: "Create intervention plans for these students immediately. Include specific goals, scheduled counseling sessions, coping strategy instruction, and follow-up checkpoints. Assign each student a counselor point-of-contact and set a 2-week review date.",
+      });
+    }
+
+    // --- INFO: Intervention effectiveness ---
+    const completedCount = interventions.filter((i) => i.status === "COMPLETED").length;
+    const activeCount = interventions.filter((i) => i.status !== "COMPLETED").length;
+    if (completedCount > 0 && activeCount > 0) {
+      insights.push({
+        type: "info",
+        severity: "low",
+        title: "Intervention Progress Overview",
+        description: `${completedCount} intervention(s) have been completed and ${activeCount} remain active. ${students.length > 0 ? `${((studentsWithIntervention.size / students.length) * 100).toFixed(0)}% of students have been covered by at least one intervention.` : ""}`,
+        recommendation: "Review completed interventions for effectiveness — did those students show mood or zone improvement? Use findings to refine active intervention strategies. Ensure active interventions have clear milestones and are reviewed at least bi-weekly.",
+      });
+    }
+
+    // --- INFO: Students with consistently high mood but low survey scores ---
+    const moodSurveyMismatch = [];
+    studentIds.forEach((sid) => {
+      const sMoods = moodEntries.filter((m) => m.studentId === sid);
+      const sSurveys = surveyResponses.filter((sr) => sr.studentId === sid);
+      if (sMoods.length >= 3 && sSurveys.length >= 2) {
+        const avgMoodLevel = sMoods.reduce((s, m) => s + m.moodLevel, 0) / sMoods.length;
+        const avgSurveyPct = sSurveys.reduce((s, sr) => s + sr.percentage, 0) / sSurveys.length;
+        // High self-reported mood but low structured survey score
+        if (avgMoodLevel >= 3.5 && avgSurveyPct < 60) {
+          moodSurveyMismatch.push(sid);
+        }
+      }
+    });
+    if (moodSurveyMismatch.length > 0) {
+      const names = moodSurveyMismatch
+        .map((sid) => studentById[sid])
+        .filter(Boolean)
+        .map((s) => `${s.user.firstName} ${s.user.lastName}`);
+      insights.push({
+        type: "analysis",
+        severity: "medium",
+        title: "Mood-Survey Score Mismatch",
+        description: `${moodSurveyMismatch.length} student(s) report high daily mood (3.5+/5) but score below 60% on structured surveys (${names.slice(0, 4).join(", ")}${names.length > 4 ? " and more" : ""}). This discrepancy may indicate masking behavior or a disconnect between perceived and actual well-being.`,
+        recommendation: "These students may be underreporting struggles in casual mood check-ins while revealing deeper issues in structured assessments. Schedule private, in-depth conversations to explore this gap. Help them develop emotional awareness and honest self-reflection. Consider that social desirability bias may influence their mood entries.",
+      });
+    }
+
+    // --- POSITIVE: Overall positive status ---
     if (overallAvgMood && overallAvgMood >= 3.5 && highRisk === 0) {
       insights.push({
         type: "positive",
         severity: "low",
         title: "Overall Positive Mental Health Status",
-        description: `The overall average mood is ${overallAvgMood}/5 with no students currently in the Red Zone.`,
-        recommendation: "Maintain current supportive practices. Continue regular check-ins and preventive programs to sustain these positive outcomes.",
+        description: `The overall average mood is ${overallAvgMood}/5 with no students currently in the Red Zone. ${overallParticipation >= 80 ? "Survey participation is strong at " + overallParticipation + "%." : ""}`,
+        recommendation: "Maintain current supportive practices. Continue regular check-ins and preventive programs to sustain these positive outcomes. Use this stable period to build resilience programs, train peer supporters, and establish stronger early-warning systems for future challenges.",
+      });
+    }
+
+    // --- POSITIVE: High participation ---
+    if (overallParticipation >= 85) {
+      insights.push({
+        type: "positive",
+        severity: "low",
+        title: "Excellent Student Engagement",
+        description: `${overallParticipation}% of students have completed at least one survey during this period. High engagement means the data is reliable and representative.`,
+        recommendation: "Acknowledge and thank students for their participation. High engagement reflects trust in the counseling process — continue fostering this through transparency about how data is used to improve student welfare.",
       });
     }
 
