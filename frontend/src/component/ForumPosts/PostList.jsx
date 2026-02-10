@@ -4,6 +4,7 @@ import CommentSection from "./CommentSection";
 import EditPostForm from "./EditPostForm";
 import SparkButton from "../SparkButton";
 import { message } from "antd";
+import "./ForumPosts.css";
 
 const PostList = ({ sectionId }) => {
   const [posts, setPosts] = useState([]);
@@ -265,10 +266,10 @@ const PostList = ({ sectionId }) => {
                         </small>
                         {post.section && (
                           <span
-                            className="badge bg-purple"
+                            className="badge"
                             style={{
                               fontSize: "10px",
-                              backgroundColor: "#9b59b6",
+                              backgroundColor: "var(--kk-primary, #5B8C5A)",
                             }}
                           >
                             {post.section.name}

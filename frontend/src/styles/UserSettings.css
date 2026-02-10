@@ -1,49 +1,57 @@
+/* ==============================
+   USER SETTINGS — KUMUSTAKA v2
+   ============================== */
+
 .user-settings-container {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin: 2rem auto;
+  background-color: var(--kk-bg-card);
+  border-radius: var(--kk-radius-lg);
+  margin: 0 auto;
   max-width: 800px;
-  padding: 2rem;
+  padding: 1.5rem;
 }
 
 .user-settings-header {
-  border-bottom: 1px solid #eee;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--kk-border-light);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.85rem;
 }
 
 .user-settings-header h2 {
-  color: #333;
-  font-size: 1.8rem;
+  font-family: var(--kk-font-heading);
+  font-weight: 700;
+  font-size: 1.35rem;
+  color: var(--kk-text);
   margin: 0;
 }
 
 .user-settings-tabs {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--kk-border-light);
 }
 
 .settings-tab {
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  color: #666;
+  color: var(--kk-text-muted);
   cursor: pointer;
-  font-size: 1rem;
+  font-family: var(--kk-font-heading);
+  font-size: 0.9rem;
   font-weight: 600;
-  padding: 0.5rem 1rem;
-  transition: all 0.2s;
+  padding: 0.55rem 1rem;
+  transition: all var(--kk-transition);
+  margin-bottom: -1px;
 }
 
 .settings-tab.active {
-  border-bottom: 2px solid #4a6fa5;
-  color: #4a6fa5;
+  border-bottom: 2px solid var(--kk-primary);
+  color: var(--kk-primary-dark);
 }
 
-.settings-tab:hover {
-  color: #4a6fa5;
+.settings-tab:hover:not(.active) {
+  color: var(--kk-text);
 }
 
 .settings-content {
@@ -51,9 +59,9 @@
 }
 
 .profile-info {
-  background-color: #f9f9f9;
-  border-radius: 6px;
-  color: #666;
-  padding: 2rem;
+  background-color: var(--kk-bg-hover);
+  border-radius: var(--kk-radius-sm);
+  color: var(--kk-text-muted);
+  padding: 1.5rem;
   text-align: center;
 }

@@ -1,0 +1,103 @@
+/* ==============================
+   FORUM POSTS — KUMUSTAKA v2
+   ============================== */
+
+.create-post-form {
+  background: var(--kk-bg-card, #fff);
+  border: 1px solid var(--kk-border, #DDE4DD);
+  border-radius: var(--kk-radius-md, 12px);
+  padding: 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.create-post-form h3 {
+  font-family: var(--kk-font-heading, 'Nunito', sans-serif);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--kk-text, #1A2E1A);
+  margin-bottom: 0.85rem;
+}
+
+.create-post-form .form-control {
+  border: 1.5px solid var(--kk-border, #DDE4DD);
+  border-radius: var(--kk-radius-sm, 8px);
+  padding: 0.55rem 0.75rem;
+  font-family: var(--kk-font-body, 'Inter', sans-serif);
+  font-size: 0.9rem;
+  color: var(--kk-text);
+  transition: border-color 0.2s ease;
+}
+
+.create-post-form .form-control:focus {
+  border-color: var(--kk-primary, #5B8C5A);
+  box-shadow: 0 0 0 3px rgba(91, 140, 90, 0.1);
+}
+
+.create-post-form .image-upload {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Post cards */
+.post-list .card {
+  border: 1px solid var(--kk-border, #DDE4DD);
+  border-radius: var(--kk-radius-md, 12px);
+  overflow: hidden;
+  box-shadow: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.post-list .card:hover {
+  box-shadow: var(--kk-shadow-sm, 0 1px 4px rgba(0,0,0,0.06));
+}
+
+.post-list .card-header {
+  background: var(--kk-bg-card, #fff) !important;
+  border-bottom: 1px solid var(--kk-border-light, #EDF0ED);
+  padding: 0.85rem 1rem;
+}
+
+.post-list .card-header h6 {
+  font-family: var(--kk-font-heading);
+  font-weight: 700;
+  color: var(--kk-text);
+}
+
+.post-list .card-body {
+  padding: 1rem;
+}
+
+.post-list .card-title {
+  font-family: var(--kk-font-heading);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--kk-text);
+  margin-bottom: 0.5rem;
+}
+
+.post-list .card-text {
+  color: var(--kk-text-secondary, #5F6B5F);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.post-list .card-footer {
+  background: var(--kk-bg-card, #fff) !important;
+  border-top: 1px solid var(--kk-border-light, #EDF0ED);
+  padding: 0.75rem 1rem;
+}
+
+.post-list .btn-danger {
+  background-color: var(--kk-accent, #E07A5F);
+  border-color: var(--kk-accent, #E07A5F);
+}
+
+.post-list .btn-danger:hover {
+  background-color: var(--kk-accent-dark, #C4603F);
+  border-color: var(--kk-accent-dark, #C4603F);
+}
+
+.post-list .badge.bg-success {
+  background-color: var(--kk-primary, #5B8C5A) !important;
+}

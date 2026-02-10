@@ -1,154 +1,239 @@
-/* Mood Entry Form Styles */
-.mood-entry-form {
-  background-color: #fefefe;
-  border-radius: 12px;
-  padding: 1.5rem 1rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
+/* ==============================
+   SIDE PANEL — KUMUSTAKA v2
+   ============================== */
+
+/* ===== PROFILE CARD ===== */
+.profile-card {
+  background: var(--kk-bg-card, #FFFFFF) !important;
+  border: 1px solid var(--kk-border, #DDE4DD) !important;
+  border-radius: var(--kk-radius-lg, 16px) !important;
+  text-align: center;
+  box-shadow: var(--kk-shadow-xs) !important;
+  transition: box-shadow var(--kk-transition) !important;
 }
 
-/* Title */
-.mood-entry-title {
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
-  color: #222;
+.profile-card:hover {
+  box-shadow: var(--kk-shadow-sm) !important;
+}
+
+.profile-card p.text-muted {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--kk-text-muted) !important;
   font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.profile-card img {
+  width: 64px;
+  height: 64px;
+  border: 3px solid var(--kk-primary-lighter, #E8F0E8);
+  object-fit: cover;
+}
+
+.profile-card h4 {
+  font-family: var(--kk-font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--kk-text);
+  margin-bottom: 0.15rem;
+}
+
+.profile-card > p:last-of-type {
+  font-size: 0.82rem;
+  color: var(--kk-text-secondary);
+}
+
+/* ===== MOOD ENTRY FORM ===== */
+.mood-entry-form {
+  background: var(--kk-bg-card, #FFFFFF);
+  border: 1px solid var(--kk-border);
+  border-radius: var(--kk-radius-lg, 16px);
+  padding: 1.15rem;
+  margin-bottom: 0;
+  box-shadow: var(--kk-shadow-xs);
+}
+
+.mood-entry-form h2 {
+  font-family: var(--kk-font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--kk-text);
+  margin-bottom: 0.75rem;
+}
+
+.mood-entry-title {
+  font-family: var(--kk-font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--kk-text-secondary);
+  margin-bottom: 0.6rem;
   text-align: center;
 }
 
-/* Mood Options Grid */
+/* Mood buttons */
 .mood-options {
   display: flex;
-  justify-content: space-between;
-  gap: 0.3rem;
-  margin-bottom: 1rem;
-  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
 }
 
-/* Individual Mood Option Button */
 .mood-option {
-  background-color: #ffffff;
+  background: var(--kk-bg-hover, #F0F4F0);
   border: 2px solid transparent;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  border-radius: var(--kk-radius-sm);
   cursor: pointer;
-  padding: 0.35rem;
-  flex: 1;
-  font-size: 1rem;
-  aspect-ratio: 1 / 1;
+  padding: 0.3rem;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease-in-out;
-  max-width: 40px;
+  transition: all var(--kk-transition);
 }
 
 .mood-option:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Selected Mood Button */
-.mood-option.selected {
-  border-color: #4a6baf;
-  background-color: #e9f0ff;
   transform: scale(1.1);
+  background: var(--kk-primary-lighter, #E8F0E8);
 }
 
-.mood-icon {
-  font-size: 1.8rem;
+.mood-option.selected {
+  border-color: var(--kk-primary);
+  background: var(--kk-primary-lighter, #E8F0E8);
+  transform: scale(1.15);
+  box-shadow: 0 0 0 3px rgba(var(--kk-primary-rgb), 0.15);
 }
 
-/* Mood Emoji Style */
-.mood-emoji {
-  font-size: 1rem;
-  display: block;
-}
+.mood-icon { font-size: 1.6rem; }
+.mood-emoji { font-size: 1.1rem; display: block; }
 
-/* Notes Input */
+/* Notes */
 .mood-notes {
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  padding: 0.55rem 0.7rem;
+  border: 1.5px solid var(--kk-border);
+  border-radius: var(--kk-radius-sm);
   resize: none;
-  min-height: 70px;
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
+  min-height: 56px;
+  font-family: var(--kk-font-body);
+  font-size: 0.82rem;
+  color: var(--kk-text);
+  background: var(--kk-bg-card);
+  transition: border-color var(--kk-transition);
 }
 
-/* Submit Button */
+.mood-notes:focus {
+  outline: none;
+  border-color: var(--kk-primary);
+  box-shadow: 0 0 0 3px rgba(var(--kk-primary-rgb), 0.1);
+}
+
+.mood-notes::placeholder { color: var(--kk-text-light); }
+
+/* Submit button */
 .submit-mood-btn {
   width: 100%;
-  background-color: #4a6baf;
-  color: white;
+  background: var(--kk-primary);
+  color: #fff;
   border: none;
-  padding: 0.6rem;
-  border-radius: 6px;
-  margin-top: 1rem;
-  font-size: 0.95rem;
+  padding: 0.5rem;
+  border-radius: var(--kk-radius-sm);
+  margin-top: 0.6rem;
+  font-family: var(--kk-font-heading);
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
+  transition: all var(--kk-transition);
 }
 
-.submit-mood-btn:hover {
-  background-color: #3a5688;
+.submit-mood-btn:hover { background: var(--kk-primary-dark); }
+.submit-mood-btn:disabled { background: var(--kk-text-light); cursor: not-allowed; }
+
+/* Already submitted state */
+.already-submitted {
+  background: var(--kk-primary-lighter, #E8F0E8) !important;
+  border: 1px solid rgba(var(--kk-primary-rgb), 0.2) !important;
+  color: var(--kk-primary-dark) !important;
 }
 
-.submit-mood-btn:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
+/* ===== NAVIGATION BUTTONS ===== */
+.navigation-buttons {
+  margin-top: 0.75rem;
+  background: var(--kk-bg-card, #FFFFFF);
+  border: 1px solid var(--kk-border);
+  border-radius: var(--kk-radius-lg, 16px);
+  padding: 0.5rem;
+  box-shadow: var(--kk-shadow-xs);
 }
 
-/* Responsive Fixes */
-@media (max-width: 500px) {
-  .mood-options {
-    gap: 0.2rem;
-  }
-
-  .mood-option {
-    padding: 0.3rem;
-    font-size: 0.9rem;
-    max-width: 34px;
-    border-width: 1px;
-    border-radius: 6px;
-  }
-
-  .mood-emoji {
-    font-size: 0.9rem;
-  }
-
-  .mood-icon {
-    font-size: 1.2rem;
-  }
-
-  .mood-entry-form {
-    padding: 1.2rem 0.8rem;
-  }
-}
-
-/* Extra small screens */
-@media (max-width: 350px) {
-  .mood-options {
-    gap: 0.15rem;
-  }
-
-  .mood-option {
-    max-width: 28px;
-    padding: 0.25rem;
-  }
-
-  .mood-emoji {
-    font-size: 0.8rem;
-  }
-}
-
-.notification-badge {
-  margin-left: 5px;
-  font-size: 0.7rem;
+.nav-button {
   position: relative;
-  top: -1px;
+  width: 100%;
+  border-radius: var(--kk-radius-sm);
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 2px;
+  text-align: left;
+  font-family: var(--kk-font-body);
+  font-weight: 500;
+  font-size: 0.85rem;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--kk-text-secondary);
+  cursor: pointer;
+  transition: all var(--kk-transition);
+}
+
+.nav-button svg,
+.nav-button i {
+  font-size: 1rem;
+  width: 18px;
+  flex-shrink: 0;
+  color: var(--kk-text-muted);
+  transition: color var(--kk-transition);
+}
+
+/* Hover */
+.nav-button:not(.active):hover {
+  background: var(--kk-bg-hover, #F0F4F0);
+  color: var(--kk-text);
+}
+
+.nav-button:not(.active):hover svg,
+.nav-button:not(.active):hover i {
+  color: var(--kk-primary);
+}
+
+/* Active state — left accent bar + tinted background */
+.nav-button.active {
+  background: var(--kk-primary-lighter, #E8F0E8);
+  color: var(--kk-primary-dark, #3E6B3D);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--kk-primary);
+}
+
+.nav-button.active svg,
+.nav-button.active i {
+  color: var(--kk-primary-dark, #3E6B3D);
+}
+
+/* Notification badge */
+.notification-badge {
+  margin-left: auto;
+  font-size: 0.65rem;
+  padding: 0.2em 0.55em;
+  background-color: var(--kk-accent) !important;
+  border: none;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 500px) {
+  .mood-options { gap: 0.25rem; }
+  .mood-option { width: 34px; height: 34px; border-radius: 6px; }
+  .mood-emoji { font-size: 0.95rem; }
+  .mood-icon { font-size: 1.3rem; }
 }

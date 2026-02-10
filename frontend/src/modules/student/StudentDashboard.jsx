@@ -247,13 +247,19 @@ const StudentDashboard = () => {
         backdrop="static"
       >
         <Modal.Header closeButton>
-          <Modal.Title>✨ Daily Motivation</Modal.Title>
+          <Modal.Title>
+            <i className="bi bi-stars"></i> Daily Motivation
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {quote ? (
             <>
-              <p className="fs-5 fst-italic">"{quote.q}"</p>
-              <p className="text-end fw-bold">- {quote.a}</p>
+              <p className="fs-5 fst-italic" style={{ lineHeight: 1.6 }}>
+                "{quote.q}"
+              </p>
+              <p className="text-end fw-bold" style={{ color: "var(--kk-primary-dark, #4A7050)" }}>
+                — {quote.a}
+              </p>
             </>
           ) : (
             <div className="text-center">
@@ -278,7 +284,9 @@ const StudentDashboard = () => {
         centered
       >
         <Modal.Header>
-          <Modal.Title>Welcome to Your Mental Health Journey</Modal.Title>
+          <Modal.Title>
+            <i className="bi bi-heart-pulse"></i> Welcome to Your Wellness Journey
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>

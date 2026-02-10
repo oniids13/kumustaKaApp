@@ -1,87 +1,97 @@
-/* resources.css */
+/* ==============================
+   RESOURCES — v2
+   ============================== */
 
-/* Container Styles */
-.resources-container {
-  padding: 2rem 0;
-}
+.resources-container { padding: 1.25rem; }
 
-/* Header Styles */
-.resources-header {
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 2rem;
-  color: #2c3e50;
+.resources-container h2 {
+  font-family: var(--kk-font-heading);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--kk-text);
+  text-align: center;
+  margin-bottom: 1.25rem;
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-/* Loading Spinner */
-.loading-spinner {
-  height: 300px;
+.resources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
 }
 
-/* Resource Grid Layout */
-.resource-grid {
-  margin-top: 1rem;
-}
-
-/* Card Styles */
 .resource-card {
-  border: 1px solid #dee2e6;
-  border-radius: 0.5rem;
-  transition: all 0.3s ease;
-  height: 100%;
+  background: var(--kk-bg-card);
+  border: 1px solid var(--kk-border);
+  border-radius: var(--kk-radius-md);
+  padding: 1.25rem;
+  transition: all var(--kk-transition);
+  display: flex;
+  flex-direction: column;
 }
 
 .resource-card:hover {
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-  transform: translateY(-5px);
+  transform: translateY(-3px);
+  box-shadow: var(--kk-shadow-md);
+  border-color: var(--kk-primary-light);
 }
 
-/* Resource Type Indicator */
 .resource-type {
-  margin-bottom: 1rem;
-}
-
-.resource-type-label {
-  font-size: 0.8rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--kk-primary-lighter);
+  color: var(--kk-primary-dark);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
   text-transform: uppercase;
-  color: #6c757d;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+  width: fit-content;
 }
 
-/* Text Styles */
 .resource-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  color: #343a40;
+  font-family: var(--kk-font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--kk-text);
+  margin-bottom: 0.4rem;
 }
 
 .resource-description {
-  color: #6c757d;
-  margin-bottom: 1.5rem;
+  color: var(--kk-text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
   flex-grow: 1;
 }
 
-/* Link Button */
 .resource-link {
-  width: 100%;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--kk-primary);
+  color: #fff;
+  text-decoration: none;
+  padding: 0.45rem 1rem;
+  border-radius: var(--kk-radius-sm);
+  font-weight: 600;
+  font-size: 0.82rem;
+  width: fit-content;
+  transition: background var(--kk-transition);
 }
 
-/* Custom Icon Colors */
-.text-purple {
-  color: #6f42c1;
-}
+.resource-link:hover { background: var(--kk-primary-dark); color: #fff; }
 
-/* Responsive Adjustments */
+.text-purple { color: var(--kk-primary-dark); }
+
+/* Responsive */
 @media (max-width: 768px) {
-  .resources-header {
-    font-size: 1.75rem;
-  }
-
-  .resource-title {
-    font-size: 1.1rem;
-  }
+  .resources-container { padding: 0.75rem; }
+  .resources-grid { grid-template-columns: 1fr; }
 }

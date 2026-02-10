@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import TextEditor from "./TextEditor";
 import axios from "axios";
+import "./ForumPosts.css";
 
 const CreatePostForm = ({ onPostCreated, sectionId }) => {
   const [title, setTitle] = useState("");
