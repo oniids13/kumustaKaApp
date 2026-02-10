@@ -1,10 +1,14 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import { useEffect, useState } from "react";
 
+const PUBLIC_PATHS = ["/", "/login", "/register"];
+
 const MainContent = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const isPublicPage = PUBLIC_PATHS.includes(location.pathname);
     const [token, setToken] = useState(() => {
         const userData = JSON.parse(localStorage.getItem("userData")) || {};
         return userData.token || null;
@@ -48,9 +52,9 @@ const MainContent = () => {
 
     return (
         <>
-            <Header token={token} setToken={setToken} />
+            {!isPublicPage && <Header token={token} setToken={setToken} />}
             <Outlet context={{ token, setToken }} />
-            <Footer />
+            {!isPublicPage && <Footer />}
         </>
     );
 };
