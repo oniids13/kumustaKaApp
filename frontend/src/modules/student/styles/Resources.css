@@ -24,8 +24,8 @@
 }
 
 .resource-card {
-  background: var(--kk-bg-card);
-  border: 1px solid var(--kk-border);
+  background: #E4EDE4;
+  border: 1px solid rgba(91, 140, 90, 0.25);
   border-radius: var(--kk-radius-md);
   padding: 1.25rem;
   transition: all var(--kk-transition);
@@ -36,7 +36,8 @@
 .resource-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--kk-shadow-md);
-  border-color: var(--kk-primary-light);
+  background: #E0E9E0;
+  border-color: var(--kk-primary);
 }
 
 .resource-type {

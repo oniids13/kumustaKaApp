@@ -224,18 +224,20 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="student-dashboard container">
-      <div className="row">
-        <div className="col-lg-3 side-panel-container">
-          <SidePanel
-            user={user}
-            activeModule={activeModule}
-            setActiveModule={setActiveModule}
-          />
-        </div>
+    <div className="student-dashboard">
+      <div className="container">
+        <div className="row">
+          <div className="col-lg-3 side-panel-container">
+            <SidePanel
+              user={user}
+              activeModule={activeModule}
+              setActiveModule={setActiveModule}
+            />
+          </div>
 
-        <div className="col-lg-9">
-          <div className="main-content-container">{renderMainContent()}</div>
+          <div className="col-lg-9">
+            <div className="main-content-container">{renderMainContent()}</div>
+          </div>
         </div>
       </div>
 

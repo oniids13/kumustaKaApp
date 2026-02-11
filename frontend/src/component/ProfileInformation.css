@@ -55,12 +55,12 @@
 
 /* Profile Cards */
 .profile-card {
-  background: var(--kk-bg-card);
+  background: #E8F0E8;
   border-radius: var(--kk-radius-md);
   padding: 1.35rem;
   margin-bottom: 1rem;
   box-shadow: var(--kk-shadow-xs);
-  border: 1px solid var(--kk-border);
+  border: 1px solid rgba(91, 140, 90, 0.25);
 }
 
 .card-header {
@@ -146,8 +146,9 @@
 
 .info-item {
   padding: 10px 12px;
-  background: var(--kk-bg-hover, #F0F4F0);
+  background: #E4EDE4;
   border-radius: var(--kk-radius-sm);
+  border: 1px solid rgba(91, 140, 90, 0.15);
 }
 
 .info-label {

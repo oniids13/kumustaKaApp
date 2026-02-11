@@ -236,7 +236,7 @@ const PostList = ({ sectionId }) => {
           return (
             <div key={post.id} className="card mb-4">
               <div className="card-header bg-white">
-                <div className="d-flex align-items-center justify-content-between">
+                <div className="d-flex align-items-center justify-content-between w-100">
                   <div className="d-flex align-items-center">
                     <img
                       src={author.avatar}
@@ -280,7 +280,7 @@ const PostList = ({ sectionId }) => {
                   </div>
 
                   {canDeletePost && !editingPostId && (
-                    <div className="d-flex gap-3">
+                    <div className="d-flex gap-2">
                       {user.userId === post.authorId && (
                         <button
                           onClick={() => setEditingPostId(post.id)}

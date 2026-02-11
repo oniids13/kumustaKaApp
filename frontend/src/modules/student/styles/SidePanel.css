@@ -4,16 +4,17 @@
 
 /* ===== PROFILE CARD ===== */
 .profile-card {
-  background: var(--kk-bg-card, #FFFFFF) !important;
-  border: 1px solid var(--kk-border, #DDE4DD) !important;
+  background: #E4EDE4 !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
   border-radius: var(--kk-radius-lg, 16px) !important;
   text-align: center;
-  box-shadow: var(--kk-shadow-xs) !important;
-  transition: box-shadow var(--kk-transition) !important;
+  box-shadow: 0 4px 20px rgba(58, 90, 58, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+  transition: all var(--kk-transition) !important;
 }
 
 .profile-card:hover {
-  box-shadow: var(--kk-shadow-sm) !important;
+  box-shadow: 0 6px 28px rgba(58, 90, 58, 0.14) !important;
+  background: #E9F0E9 !important;
 }
 
 .profile-card p.text-muted {
@@ -47,12 +48,12 @@
 
 /* ===== MOOD ENTRY FORM ===== */
 .mood-entry-form {
-  background: var(--kk-bg-card, #FFFFFF);
-  border: 1px solid var(--kk-border);
+  background: #E4EDE4 !important;
+  border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: var(--kk-radius-lg, 16px);
   padding: 1.15rem;
   margin-bottom: 0;
-  box-shadow: var(--kk-shadow-xs);
+  box-shadow: 0 4px 20px rgba(58, 90, 58, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .mood-entry-form h2 {
@@ -81,7 +82,7 @@
 }
 
 .mood-option {
-  background: var(--kk-bg-hover, #F0F4F0);
+  background: rgba(255, 255, 255, 0.45);
   border: 2px solid transparent;
   border-radius: var(--kk-radius-sm);
   cursor: pointer;
@@ -96,12 +97,12 @@
 
 .mood-option:hover {
   transform: scale(1.1);
-  background: var(--kk-primary-lighter, #E8F0E8);
+  background: rgba(255, 255, 255, 0.65);
 }
 
 .mood-option.selected {
   border-color: var(--kk-primary);
-  background: var(--kk-primary-lighter, #E8F0E8);
+  background: rgba(91, 140, 90, 0.15);
   transform: scale(1.15);
   box-shadow: 0 0 0 3px rgba(var(--kk-primary-rgb), 0.15);
 }
@@ -113,14 +114,14 @@
 .mood-notes {
   width: 100%;
   padding: 0.55rem 0.7rem;
-  border: 1.5px solid var(--kk-border);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
   border-radius: var(--kk-radius-sm);
   resize: none;
   min-height: 56px;
   font-family: var(--kk-font-body);
   font-size: 0.82rem;
   color: var(--kk-text);
-  background: var(--kk-bg-card);
+  background: rgba(255, 255, 255, 0.4);
   transition: border-color var(--kk-transition);
 }
 
@@ -161,11 +162,11 @@
 /* ===== NAVIGATION BUTTONS ===== */
 .navigation-buttons {
   margin-top: 0.75rem;
-  background: var(--kk-bg-card, #FFFFFF);
-  border: 1px solid var(--kk-border);
+  background: #E4EDE4 !important;
+  border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: var(--kk-radius-lg, 16px);
   padding: 0.5rem;
-  box-shadow: var(--kk-shadow-xs);
+  box-shadow: 0 4px 20px rgba(58, 90, 58, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .nav-button {
@@ -199,7 +200,7 @@
 
 /* Hover */
 .nav-button:not(.active):hover {
-  background: var(--kk-bg-hover, #F0F4F0);
+  background: rgba(255, 255, 255, 0.5);
   color: var(--kk-text);
 }
 
@@ -208,9 +209,9 @@
   color: var(--kk-primary);
 }
 
-/* Active state — left accent bar + tinted background */
+/* Active state — left accent bar + highlighted background */
 .nav-button.active {
-  background: var(--kk-primary-lighter, #E8F0E8);
+  background: rgba(91, 140, 90, 0.18);
   color: var(--kk-primary-dark, #3E6B3D);
   font-weight: 600;
   box-shadow: inset 3px 0 0 var(--kk-primary);

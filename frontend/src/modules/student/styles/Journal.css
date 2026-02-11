@@ -35,10 +35,10 @@ html { scroll-behavior: smooth; }
 /* Editor section */
 .journal-editor-section {
   margin-bottom: 1.75rem;
-  background: var(--kk-bg-card);
+  background: #E8F0E8;
   border-radius: var(--kk-radius-md);
   padding: 1.25rem;
-  border: 1px solid var(--kk-border);
+  border: 1px solid rgba(91, 140, 90, 0.25);
 }
 
 /* Notes grid */
@@ -53,9 +53,9 @@ html { scroll-behavior: smooth; }
   grid-column: 1 / -1;
   text-align: center;
   padding: 2.5rem;
-  background: var(--kk-bg-card);
+  background: #E8F0E8;
   border-radius: var(--kk-radius-md);
-  border: 1px solid var(--kk-border);
+  border: 1px solid rgba(91, 140, 90, 0.25);
 }
 
 .empty-state h4 { font-family: var(--kk-font-heading); font-weight: 700; margin-bottom: 0.4rem; }
@@ -63,11 +63,11 @@ html { scroll-behavior: smooth; }
 
 /* Note cards */
 .journal-note-card {
-  background: var(--kk-bg-card);
+  background: #E4EDE4;
   border-radius: var(--kk-radius-md);
   padding: 1.15rem;
-  border: 1px solid var(--kk-border);
-  border-left: 4px solid var(--kk-primary-light);
+  border: 1px solid rgba(91, 140, 90, 0.25);
+  border-left: 4px solid var(--kk-primary);
   transition: all var(--kk-transition);
   cursor: pointer;
 }
@@ -75,12 +75,13 @@ html { scroll-behavior: smooth; }
 .journal-note-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--kk-shadow-md);
-  border-left-color: var(--kk-primary);
+  background: #E0E9E0;
+  border-left-color: var(--kk-primary-dark);
 }
 
 .journal-note-card.selected {
   border-left-color: var(--kk-accent);
-  background: #FFFBF9;
+  background: #E8E8E0;
 }
 
 .note-date { color: var(--kk-text-muted); font-size: 0.78rem; margin-bottom: 0.4rem; }
@@ -88,29 +89,29 @@ html { scroll-behavior: smooth; }
 
 /* Detail view */
 .journal-detail-view {
-  background: var(--kk-bg-card);
+  background: #E8F0E8;
   border-radius: var(--kk-radius-md);
   padding: 1.5rem;
-  border: 1px solid var(--kk-border);
+  border: 1px solid rgba(91, 140, 90, 0.25);
   margin-top: 1.25rem;
 }
 
 .journal-detail-content {
   padding: 1rem;
-  border: 1px solid var(--kk-border-light);
+  border: 1px solid rgba(91, 140, 90, 0.2);
   border-radius: var(--kk-radius-sm);
   margin-bottom: 1.25rem;
-  background: var(--kk-bg-hover);
+  background: #E4EDE4;
 }
 
 .journal-detail-actions { display: flex; gap: 0.6rem; }
 
 /* Editor */
 .text-editor-container {
-  border: 1.5px solid var(--kk-border);
+  border: 1.5px solid rgba(91, 140, 90, 0.3);
   border-radius: var(--kk-radius-md);
   overflow: hidden;
-  background: var(--kk-bg-card);
+  background: #FAF6F0;
   scroll-margin-top: 20px;
 }
 
@@ -118,8 +119,8 @@ html { scroll-behavior: smooth; }
   display: flex;
   gap: 4px;
   padding: 8px 10px;
-  background: var(--kk-bg-hover);
-  border-bottom: 1px solid var(--kk-border);
+  background: #E4EDE4;
+  border-bottom: 1px solid rgba(91, 140, 90, 0.2);
   flex-wrap: wrap;
 }
 
@@ -146,10 +147,10 @@ html { scroll-behavior: smooth; }
 .editor-toolbar button.underline { text-decoration: underline; }
 .editor-toolbar .divider { width: 1px; background: var(--kk-border); margin: 0 4px; }
 
-.editor-content { padding: 14px; min-height: 180px; }
+.editor-content { padding: 14px; min-height: 180px; background: #FAF6F0; }
 
 /* ProseMirror */
-.ProseMirror { min-height: 180px; padding: 8px; outline: none; }
+.ProseMirror { min-height: 180px; padding: 8px; outline: none; background: transparent; }
 .ProseMirror p { margin-bottom: 0.8em; line-height: 1.6; color: var(--kk-text); }
 .ProseMirror ul, .ProseMirror ol { padding-left: 2em; margin-bottom: 0.8em; }
 .ProseMirror ul { list-style-type: disc; }
@@ -163,8 +164,8 @@ html { scroll-behavior: smooth; }
   display: flex;
   gap: 8px;
   padding: 10px 12px;
-  background: var(--kk-bg-hover);
-  border-top: 1px solid var(--kk-border);
+  background: #E4EDE4;
+  border-top: 1px solid rgba(91, 140, 90, 0.2);
 }
 
 .save-btn {
@@ -193,13 +194,13 @@ html { scroll-behavior: smooth; }
 
 /* Journal Modal */
 .journal-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
-.journal-modal-content { background: var(--kk-bg-card); border-radius: var(--kk-radius-lg); width: 100%; max-width: 800px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: var(--kk-shadow-lg); position: relative; }
+.journal-modal-content { background: #E8F0E8; border-radius: var(--kk-radius-lg); border: 1px solid rgba(91, 140, 90, 0.25); width: 100%; max-width: 800px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: var(--kk-shadow-lg); position: relative; }
 .journal-modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--kk-text-muted); transition: color var(--kk-transition); }
 .journal-modal-close:hover { color: var(--kk-accent); }
-.journal-modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--kk-border); }
+.journal-modal-header { padding: 1.25rem 1.5rem; background: #E0E9E0; border-bottom: 1px solid rgba(91, 140, 90, 0.2); }
 .journal-modal-header h3 { font-family: var(--kk-font-heading); font-weight: 700; color: var(--kk-text); margin: 0; }
-.journal-modal-body { padding: 1.25rem 1.5rem; overflow-y: auto; flex-grow: 1; }
-.journal-modal-footer { padding: 0.85rem 1.5rem; border-top: 1px solid var(--kk-border); display: flex; justify-content: flex-end; }
+.journal-modal-body { padding: 1.25rem 1.5rem; overflow-y: auto; flex-grow: 1; background: #E8F0E8; }
+.journal-modal-footer { padding: 0.85rem 1.5rem; border-top: 1px solid rgba(91, 140, 90, 0.2); display: flex; justify-content: flex-end; background: #E4EDE4; }
 
 /* Responsive */
 @media (max-width: 768px) {

@@ -89,13 +89,22 @@ footer {
   position: relative;
   bottom: 0;
   width: 100%;
-  background: var(--kk-bg-card);
+  background: linear-gradient(135deg, var(--kk-primary-dark, #3E6B3D) 0%, var(--kk-primary, #5B8C5A) 100%);
   text-align: center;
   padding: 0.85rem 0;
   font-size: 0.82rem;
-  color: var(--kk-text-muted);
-  border-top: 1px solid var(--kk-border);
+  color: rgba(255, 255, 255, 0.9);
+  border-top: none;
   margin-top: auto;
+  box-shadow: 0 -2px 12px rgba(58, 90, 58, 0.15);
+}
+
+footer h6 {
+  margin: 0;
+  font-family: var(--kk-font-heading);
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.95);
 }
 
 /* ========== GLOBAL BUTTON OVERRIDES ========== */

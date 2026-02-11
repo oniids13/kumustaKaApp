@@ -3,12 +3,12 @@
    ============================== */
 .kk-header {
   width: 100%;
-  background: var(--kk-bg-card, #FFFFFF);
-  border-bottom: 1px solid var(--kk-border, #DDE4DD);
+  background: linear-gradient(135deg, var(--kk-primary, #5B8C5A) 0%, var(--kk-primary-dark, #3E6B3D) 100%);
+  border-bottom: none;
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 12px rgba(58, 90, 58, 0.2);
 }
 
 .kk-header-inner {
@@ -33,14 +33,17 @@
   height: 36px;
   border-radius: 50%;
   object-fit: contain;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2px;
 }
 
 .kk-header-name {
   font-family: var(--kk-font-heading, 'Nunito', sans-serif);
   font-size: 1.25rem;
   font-weight: 800;
-  color: var(--kk-primary, #5B8C5A);
+  color: #fff;
   letter-spacing: -0.3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* Actions area */
@@ -50,13 +53,22 @@
   gap: 1rem;
 }
 
-/* Logout button override */
+/* Logout button — light variant for dark header */
 .kk-header-actions .logout-btn {
   font-size: 0.82rem;
   padding: 0.4rem 1rem;
   border-radius: var(--kk-radius-full, 50px);
   font-weight: 600;
   border-width: 1.5px;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: #fff !important;
+}
+
+.kk-header-actions .logout-btn:hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: var(--kk-primary-dark) !important;
+  border-color: #fff !important;
 }
 
 /* Responsive */

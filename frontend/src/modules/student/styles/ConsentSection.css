@@ -27,8 +27,8 @@
 }
 
 .consent-text-display {
-  background: var(--kk-bg-card);
-  border: 1px solid var(--kk-border);
+  background: #E8F0E8;
+  border: 1px solid rgba(91, 140, 90, 0.25);
   border-radius: var(--kk-radius-md);
   padding: 1.5rem;
   max-height: 400px;
@@ -70,10 +70,11 @@
 .consent-info-footer {
   margin-top: 1rem;
   padding: 0.75rem 1rem;
-  background: var(--kk-bg-hover);
+  background: #E4EDE4;
   border-radius: var(--kk-radius-sm);
   font-size: 0.82rem;
   color: var(--kk-text-muted);
+  border: 1px solid rgba(91, 140, 90, 0.2);
 }
 
 @keyframes kkSlideIn {

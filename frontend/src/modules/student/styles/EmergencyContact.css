@@ -47,8 +47,8 @@
 
 /* Form */
 .ec-form-container {
-  background: var(--kk-bg-card);
-  border: 1px solid var(--kk-border);
+  background: #E8F0E8;
+  border: 1px solid rgba(91, 140, 90, 0.25);
   border-radius: var(--kk-radius-md);
   padding: 1.25rem;
   margin-bottom: 1.25rem;
@@ -154,8 +154,8 @@
   grid-column: 1 / -1;
   text-align: center;
   padding: 3rem;
-  background: var(--kk-bg-card);
-  border: 1px solid var(--kk-border);
+  background: #E8F0E8;
+  border: 1px solid rgba(91, 140, 90, 0.25);
   border-radius: var(--kk-radius-md);
 }
 
@@ -168,8 +168,8 @@
 
 /* Contact card */
 .ec-card {
-  background: var(--kk-bg-card);
-  border: 1px solid var(--kk-border);
+  background: #E4EDE4;
+  border: 1px solid rgba(91, 140, 90, 0.25);
   border-radius: var(--kk-radius-md);
   padding: 1.15rem;
   transition: all var(--kk-transition);

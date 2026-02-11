@@ -5,7 +5,25 @@
 .student-dashboard {
   min-height: calc(100vh - 60px);
   padding: 1.25rem 0;
-  background-color: var(--kk-bg, #F4F6F4);
+  background: linear-gradient(150deg, #A8C5A0 0%, #8DB88A 25%, #7BAD78 50%, #9AC096 75%, #B5D1B0 100%);
+  position: relative;
+}
+
+/* Decorative overlay for depth & texture */
+.student-dashboard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 15% 10%, rgba(255, 255, 255, 0.25) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgba(58, 90, 58, 0.12) 0%, transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.student-dashboard > .container {
+  position: relative;
+  z-index: 1;
 }
 
 /* Sidebar column */
@@ -21,13 +39,14 @@
 /* Scrollbar for sidebar */
 .side-panel-container::-webkit-scrollbar { width: 4px; }
 .side-panel-container::-webkit-scrollbar-track { background: transparent; }
-.side-panel-container::-webkit-scrollbar-thumb { background: var(--kk-border); border-radius: 4px; }
+.side-panel-container::-webkit-scrollbar-thumb { background: rgba(91, 140, 90, 0.25); border-radius: 4px; }
 
 /* Main content area */
 .main-content-container {
-  background-color: var(--kk-bg-card, #FFFFFF);
+  background: #EBF2EB !important;
   border-radius: var(--kk-radius-lg, 16px);
-  border: 1px solid var(--kk-border, #DDE4DD);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 8px 32px rgba(58, 90, 58, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   padding: 1.75rem;
   min-height: 82vh;
   max-height: calc(100vh - 84px);
@@ -39,7 +58,38 @@
 
 .main-content-container::-webkit-scrollbar { width: 5px; }
 .main-content-container::-webkit-scrollbar-track { background: transparent; }
-.main-content-container::-webkit-scrollbar-thumb { background: var(--kk-border); border-radius: 4px; }
+.main-content-container::-webkit-scrollbar-thumb { background: rgba(91, 140, 90, 0.25); border-radius: 4px; }
+
+/* Quiz and other card-based content in student main area */
+.main-content-container .card {
+  background: #E8F0E8 !important;
+  border: 1px solid rgba(91, 140, 90, 0.25) !important;
+}
+
+.main-content-container .list-group-item {
+  background: #E4EDE4 !important;
+  border-color: rgba(91, 140, 90, 0.2) !important;
+}
+
+.main-content-container .list-group-item:hover {
+  background: #E0E9E0 !important;
+}
+
+.main-content-container .list-group-item.active {
+  background: var(--kk-primary) !important;
+  border-color: var(--kk-primary) !important;
+}
+
+.main-content-container .alert-success {
+  background: #D8E8D8 !important;
+  border-color: rgba(91, 140, 90, 0.3) !important;
+  color: var(--kk-primary-dark) !important;
+}
+
+.main-content-container .alert-danger {
+  background: #FFF0ED !important;
+  border-color: rgba(224, 122, 95, 0.3) !important;
+}
 
 /* ==================
    BRANDED MODALS

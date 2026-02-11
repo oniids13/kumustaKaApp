@@ -3,12 +3,13 @@
    ============================== */
 
 .mood-tracker-container {
-  background: var(--kk-bg-card);
+  background: #E8F0E8;
   border-radius: var(--kk-radius-lg);
   padding: 0;
   margin-bottom: 24px;
-  border: 1px solid var(--kk-border);
+  border: 1px solid rgba(91, 140, 90, 0.25);
   overflow: hidden;
+  box-shadow: 0 2px 12px rgba(58, 90, 58, 0.08);
 }
 
 .mood-tracker-container .card-header {
@@ -100,7 +101,7 @@
 
 /* Chart */
 .mood-chart {
-  background: var(--kk-bg-hover);
+  background: #E4EDE4;
   border-radius: var(--kk-radius-md);
   padding: 1rem;
   margin-bottom: 1.25rem;
@@ -108,7 +109,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 1px solid var(--kk-border-light);
+  border: 1px solid rgba(91, 140, 90, 0.2);
 }
 
 .chart-visualization { width: 100%; height: 380px; display: block; }
@@ -125,10 +126,10 @@
 }
 
 .mood-day-card {
-  background: var(--kk-bg-hover);
+  background: #E4EDE4;
   border-radius: var(--kk-radius-sm);
   padding: 10px 6px;
-  border: 1px solid var(--kk-border-light);
+  border: 1px solid rgba(91, 140, 90, 0.2);
   transition: transform var(--kk-transition);
 }
 
@@ -156,10 +157,10 @@
 }
 
 .note-card {
-  background: var(--kk-bg-hover);
+  background: #E0E9E0;
   border-radius: var(--kk-radius-sm);
   padding: 12px;
-  border: 1px solid var(--kk-border-light);
+  border: 1px solid rgba(91, 140, 90, 0.2);
   transition: all var(--kk-transition);
 }
 

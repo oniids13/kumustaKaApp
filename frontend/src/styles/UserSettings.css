@@ -3,11 +3,13 @@
    ============================== */
 
 .user-settings-container {
-  background-color: var(--kk-bg-card);
+  background: #E8F0E8;
+  border: 1px solid rgba(91, 140, 90, 0.25);
   border-radius: var(--kk-radius-lg);
   margin: 0 auto;
   max-width: 800px;
   padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(58, 90, 58, 0.08);
 }
 
 .user-settings-header {
@@ -59,9 +61,10 @@
 }
 
 .profile-info {
-  background-color: var(--kk-bg-hover);
+  background: #E4EDE4;
   border-radius: var(--kk-radius-sm);
   color: var(--kk-text-muted);
   padding: 1.5rem;
   text-align: center;
+  border: 1px solid rgba(91, 140, 90, 0.2);
 }
