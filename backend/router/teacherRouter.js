@@ -9,6 +9,7 @@ const {
   getAllStudentsController,
   getDailySubmissionCountsController,
   getSectionStudentsController,
+  getAnalyticsDashboardController,
 } = require("../controller/teacherController");
 
 const router = express.Router();
@@ -24,6 +25,12 @@ const isTeacher = (req, res, next) => {
 };
 
 // Dashboard data
+router.get(
+  "/analytics/dashboard",
+  passport.authenticate("jwt", { session: false }),
+  isTeacher,
+  getAnalyticsDashboardController
+);
 router.get(
   "/trends",
   passport.authenticate("jwt", { session: false }),

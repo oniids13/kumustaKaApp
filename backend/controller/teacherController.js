@@ -3,6 +3,30 @@ const PDFDocument = require("pdfkit");
 const { createObjectCsvStringifier } = require("csv-writer");
 
 /**
+ * Get classroom analytics dashboard (descriptive + prescriptive)
+ */
+const getAnalyticsDashboardController = async (req, res) => {
+  try {
+    if (req.user.role !== "TEACHER") {
+      return res.status(403).json({ error: "Access denied: Only teachers can access analytics" });
+    }
+
+    const teacher = await teacherQueries.getTeacherByUserId(req.user.id);
+    if (!teacher) {
+      return res.status(404).json({ error: "Teacher profile not found" });
+    }
+
+    const period = req.query.period || "3months";
+    const analyticsData = await teacherQueries.getClassroomAnalytics(req.user.id, period);
+
+    res.status(200).json(analyticsData);
+  } catch (error) {
+    console.error("Error fetching analytics dashboard:", error);
+    res.status(500).json({ error: "Failed to fetch analytics data" });
+  }
+};
+
+/**
  * Get classroom mental health trends
  */
 const getTrendsController = async (req, res) => {
@@ -29,9 +53,11 @@ const getTrendsController = async (req, res) => {
       endDate: req.query.endDate,
     };
 
+    const sectionId = teacher.sectionId || null;
     const trendsData = await teacherQueries.getMentalHealthTrends(
       queryParams,
-      teacher.id
+      teacher.id,
+      sectionId
     );
 
     res.status(200).json(trendsData);
@@ -75,7 +101,8 @@ const generateReportController = async (req, res) => {
 
     const reportData = await teacherQueries.generateMentalHealthReport(
       reportParams,
-      teacher.id
+      teacher.id,
+      req.user.id
     );
 
     // Generate different output formats based on request
@@ -281,9 +308,56 @@ const generatePdfReport = (reportData, res) => {
     );
     doc.moveDown(2);
 
-    // Add recommendations section
+    // Add Descriptive Analysis section (if available)
+    if (reportData.descriptiveAnalysis) {
+      doc.addPage();
+      doc.fontSize(18).text("Descriptive Analysis", { underline: true });
+      doc.moveDown();
+      doc.fontSize(12).text(
+        `This analysis is based on real student data from ${reportData.descriptiveAnalysis.sectionName || "your class"}.`,
+        { align: "left" }
+      );
+      doc.moveDown(0.5);
+
+      const { riskIndicators, overallStats } = reportData.descriptiveAnalysis;
+      doc.fontSize(14).text("Risk Assessment Overview", { underline: true });
+      doc.moveDown(0.3);
+      doc.text(`Total Students: ${riskIndicators?.totalStudents || 0}`);
+      doc.text(`High Risk (Red Zone): ${riskIndicators?.highRisk || 0}`);
+      doc.text(`Moderate Risk (Yellow Zone): ${riskIndicators?.moderateRisk || 0}`);
+      doc.text(`Low Risk (Green Zone): ${riskIndicators?.lowRisk || 0}`);
+      doc.text(`Students with Declining Mood: ${riskIndicators?.decliningMoodCount || 0}`);
+      doc.text(`Low Participation (no survey in 2 weeks): ${riskIndicators?.lowParticipationCount || 0}`);
+      doc.moveDown(0.5);
+
+      if (overallStats) {
+        doc.fontSize(14).text("Overall Statistics", { underline: true });
+        doc.moveDown(0.3);
+        doc.text(`Average Mood: ${overallStats.overallAvgMood ?? "N/A"}/5`);
+        doc.text(`Average Survey Score: ${overallStats.overallAvgScore ?? "N/A"}%`);
+        doc.text(`Participation Rate: ${overallStats.overallParticipation ?? 0}%`);
+        doc.moveDown();
+      }
+    }
+
+    // Add Prescriptive Insights & Recommendations section
+    const prescriptiveInsights = reportData.prescriptiveInsights || [];
     const recommendations = reportData.summary?.recommendedActions || [];
-    if (recommendations.length > 0) {
+
+    if (prescriptiveInsights.length > 0) {
+      doc.addPage();
+      doc.fontSize(18).text("Prescriptive Insights & Recommendations", { underline: true });
+      doc.moveDown();
+
+      prescriptiveInsights.forEach((insight, index) => {
+        doc.fontSize(12).fillColor("black").text(`${index + 1}. ${insight.title}`, { continued: false });
+        doc.fontSize(10).fillColor("gray").text(`[${insight.severity?.toUpperCase() || "INFO"}]`);
+        doc.fontSize(11).fillColor("black").text(insight.description);
+        doc.moveDown(0.3);
+        doc.fontSize(11).fillColor("#1890ff").text(`Recommendation: ${insight.recommendation}`);
+        doc.moveDown(1);
+      });
+    } else if (recommendations.length > 0) {
       doc.fontSize(14).text("Recommended Actions", { underline: true });
       doc.moveDown(0.5);
 
@@ -687,6 +761,7 @@ const getSectionStudentsController = async (req, res) => {
 };
 
 module.exports = {
+  getAnalyticsDashboardController,
   getTrendsController,
   generateReportController,
   getStudentForumActivityController,
