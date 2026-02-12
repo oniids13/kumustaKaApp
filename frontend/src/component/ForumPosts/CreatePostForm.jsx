@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import TextEditor from "./TextEditor";
 import axios from "axios";
+import { message } from "antd";
 import "./ForumPosts.css";
 
 const CreatePostForm = ({ onPostCreated, sectionId }) => {
@@ -41,9 +42,9 @@ const CreatePostForm = ({ onPostCreated, sectionId }) => {
       setContent("");
       setImages([]);
       if (user.role === "STUDENT") {
-        alert("Your post is pending for approval.");
+        message.info("Your post is pending for approval.");
       } else {
-        alert("Post created successfully.");
+        message.success("Post created successfully.");
       }
     } catch (error) {
       console.error("Error creating post:", error);
@@ -51,7 +52,7 @@ const CreatePostForm = ({ onPostCreated, sectionId }) => {
         error.response?.data?.message ||
         error.response?.data?.error ||
         "Failed to create post";
-      alert(errorMessage);
+      message.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

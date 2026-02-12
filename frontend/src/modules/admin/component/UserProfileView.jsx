@@ -39,6 +39,7 @@ const UserProfileView = ({ visible, onClose, userProfile, loading }) => {
         footer={null}
         width={800}
         loading={loading}
+        className="admin-modal"
       >
         <Empty description="No user data available" />
       </Modal>
@@ -358,6 +359,7 @@ const UserProfileView = ({ visible, onClose, userProfile, loading }) => {
       width={1000}
       style={{ top: 20 }}
       bodyStyle={{ maxHeight: "70vh", overflowY: "auto" }}
+      className="admin-modal"
     >
       {renderBasicInfo()}
 

@@ -177,7 +177,7 @@ const PostList = ({ sectionId }) => {
       );
     } catch (error) {
       console.error("Reaction error:", error);
-      alert(error.response?.data?.message || "Failed to update reaction");
+      message.error(error.response?.data?.message || "Failed to update reaction");
     } finally {
       setReactingPostId(null);
     }

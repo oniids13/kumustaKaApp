@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaArrowLeft } from "react-icons/fa";
+import { message } from "antd";
 import "../styles/Register.css";
 
 const RegisterPage = () => {
@@ -39,7 +40,7 @@ const RegisterPage = () => {
         navigate("/login");
       } else {
         console.error("Unexpected response:", response);
-        alert("Registration failed. Please try again.");
+        message.error("Registration failed. Please try again.");
       }
     } catch (err) {
       console.error("Registration error:", err.response?.data || err.message);
@@ -52,7 +53,7 @@ const RegisterPage = () => {
         });
         setErrors(backendErrors);
       } else {
-        alert(
+        message.error(
           err.response?.data?.message ||
             "Registration failed. Please check your inputs."
         );

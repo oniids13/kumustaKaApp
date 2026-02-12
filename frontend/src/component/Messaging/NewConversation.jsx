@@ -133,6 +133,7 @@ const NewConversation = ({ onConversationCreated }) => {
         onCancel={handleCancel}
         confirmLoading={creating}
         okText="Create"
+        className="new-conversation-modal"
       >
         {error && (
           <Alert message={error} type="error" style={{ marginBottom: 16 }} />

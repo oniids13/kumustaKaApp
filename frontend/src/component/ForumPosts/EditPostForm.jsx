@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import TextEditor from "./TextEditor";
 import axios from "axios";
+import { message } from "antd";
 
 const EditPostForm = ({ post, onUpdate, onCancel }) => {
   const [title, setTitle] = useState(post.title);
@@ -40,7 +41,7 @@ const EditPostForm = ({ post, onUpdate, onCancel }) => {
       onUpdate(response.data);
     } catch (error) {
       console.error("Error updating post:", error);
-      alert("Failed to update post. Please try again.");
+      message.error("Failed to update post. Please try again.");
     }
   };
 

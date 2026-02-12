@@ -3,6 +3,49 @@
   padding: 20px 0;
 }
 
+/* Admin Module — Brand Colors for Buttons & Modals */
+.admin-dashboard .ant-btn-primary {
+  background: var(--kk-primary, #5B8C5A) !important;
+  border-color: var(--kk-primary, #5B8C5A) !important;
+}
+.admin-dashboard .ant-btn-primary:hover {
+  background: var(--kk-primary-dark, #3E6B3D) !important;
+  border-color: var(--kk-primary-dark, #3E6B3D) !important;
+}
+.admin-dashboard .ant-btn-primary:active,
+.admin-dashboard .ant-btn-primary:focus {
+  background: var(--kk-primary-dark, #3E6B3D) !important;
+  border-color: var(--kk-primary-dark, #3E6B3D) !important;
+}
+
+/* Admin Modals — Brand Button Colors */
+.admin-modal .ant-modal-footer .ant-btn-primary {
+  background: var(--kk-primary, #5B8C5A) !important;
+  border-color: var(--kk-primary, #5B8C5A) !important;
+}
+.admin-modal .ant-modal-footer .ant-btn-primary:hover {
+  background: var(--kk-primary-dark, #3E6B3D) !important;
+  border-color: var(--kk-primary-dark, #3E6B3D) !important;
+}
+.admin-modal .ant-modal-footer .ant-btn-default {
+  border-color: var(--kk-border);
+  color: var(--kk-text);
+}
+.admin-modal .ant-modal-footer .ant-btn-default:hover {
+  border-color: var(--kk-primary);
+  color: var(--kk-primary);
+}
+
+/* Admin Popconfirm — Brand Button Colors */
+.admin-popconfirm .ant-btn-primary {
+  background: var(--kk-primary, #5B8C5A) !important;
+  border-color: var(--kk-primary, #5B8C5A) !important;
+}
+.admin-popconfirm .ant-btn-primary:hover {
+  background: var(--kk-primary-dark, #3E6B3D) !important;
+  border-color: var(--kk-primary-dark, #3E6B3D) !important;
+}
+
 .side-panel-container {
   padding: 15px;
   background-color: #f8f9fa;

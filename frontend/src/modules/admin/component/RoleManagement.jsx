@@ -323,6 +323,7 @@ const RoleManagement = () => {
             okText="Yes"
             cancelText="No"
             disabled={record.name === "ADMIN"}
+            overlayClassName="admin-popconfirm"
           >
             <Button
               type="primary"
@@ -391,11 +392,12 @@ const RoleManagement = () => {
 
       <Modal
         title={isEditMode ? "Edit Role" : "Create New Role"}
-        visible={isModalVisible}
+        open={isModalVisible}
         onOk={handleModalOk}
         onCancel={handleModalCancel}
         width={700}
         destroyOnClose
+        className="admin-modal"
       >
         <Form form={form} layout="vertical" name="roleForm">
           <Form.Item

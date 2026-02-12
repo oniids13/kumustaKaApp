@@ -433,6 +433,7 @@ const SectionManagement = () => {
               onConfirm={() => handleRegenerateCode(record.id)}
               okText="Yes"
               cancelText="No"
+              overlayClassName="admin-popconfirm"
             >
               <Button type="text" icon={<ReloadOutlined />} />
             </Popconfirm>
@@ -448,6 +449,7 @@ const SectionManagement = () => {
             <Popconfirm
               title="Are you sure you want to delete this section?"
               description="All students will be unassigned from this section."
+              overlayClassName="admin-popconfirm"
               onConfirm={() => handleDeleteSection(record.id)}
               okText="Yes"
               cancelText="No"
@@ -559,6 +561,7 @@ const SectionManagement = () => {
         onOk={handleModalOk}
         onCancel={() => setIsModalVisible(false)}
         width={600}
+        className="admin-modal"
       >
         <Form form={form} layout="vertical" name="sectionForm">
           <Form.Item
@@ -609,6 +612,7 @@ const SectionManagement = () => {
         }}
         footer={null}
         width={900}
+        className="admin-modal"
       >
         {detailLoading ? (
           <div style={{ textAlign: "center", padding: "50px" }}>
@@ -663,6 +667,7 @@ const SectionManagement = () => {
                         onConfirm={() =>
                           handleRemoveTeacher(selectedSection.id)
                         }
+                        overlayClassName="admin-popconfirm"
                       >
                         <Button danger size="small">
                           Remove Teacher
@@ -717,6 +722,7 @@ const SectionManagement = () => {
                                   counselor.id
                                 )
                               }
+                              overlayClassName="admin-popconfirm"
                             >
                               <Button
                                 type="text"

@@ -477,6 +477,7 @@ const UserManagement = () => {
               onConfirm={() => handleDeleteUser(record.id)}
               okText="Yes"
               cancelText="No"
+              overlayClassName="admin-popconfirm"
             >
               <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
@@ -554,6 +555,7 @@ const UserManagement = () => {
         onCancel={handleModalCancel}
         width={600}
         destroyOnHidden={true}
+        className="admin-modal"
       >
         <Form form={form} layout="vertical" name="userForm">
           <Form.Item

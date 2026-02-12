@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Card, Form, Button, Spinner, Alert } from "react-bootstrap";
 import axios from "axios";
+import { message } from "antd";
 
 function DailySurveyPage() {
   const navigate = useNavigate();
@@ -68,8 +69,11 @@ function DailySurveyPage() {
           headers: { Authorization: `Bearer ${user.token}` },
         }
       );
-      alert("Survey submitted successfully!");
-      navigate("/student", { state: { surveyCompleted: true } });
+      message.success("Survey submitted successfully!");
+      setTimeout(
+        () => navigate("/student", { state: { surveyCompleted: true } }),
+        800
+      );
     } catch (error) {
       setError(error.response?.data?.error || "Submission failed");
     } finally {

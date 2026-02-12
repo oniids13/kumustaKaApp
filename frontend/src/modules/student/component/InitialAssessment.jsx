@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Form, ProgressBar, Alert, Spinner, Button } from "react-bootstrap";
+import { message } from "antd";
 import "../styles/InitialAssessment.css";
 
 const InitialAssessmentPage = () => {
@@ -107,8 +108,8 @@ const InitialAssessmentPage = () => {
         { headers: { Authorization: `Bearer ${user.token}` } },
       );
 
-      alert("Assessment submitted successfully!");
-      navigate("/student");
+      message.success("Assessment submitted successfully!");
+      setTimeout(() => navigate("/student"), 800);
     } catch (err) {
       console.error("Error submitting assessment:", err);
       setError("Submission failed. Please try again.");

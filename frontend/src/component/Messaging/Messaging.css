@@ -287,6 +287,45 @@
   color: var(--kk-text-muted);
 }
 
+/* New Message Button — Brand Colors */
+.new-conversation-btn {
+  background: var(--kk-primary, #5B8C5A) !important;
+  border-color: var(--kk-primary, #5B8C5A) !important;
+  color: #fff !important;
+  font-family: var(--kk-font-heading) !important;
+  font-weight: 600 !important;
+  border-radius: var(--kk-radius-sm) !important;
+}
+.new-conversation-btn:hover {
+  background: var(--kk-primary-dark, #3E6B3D) !important;
+  border-color: var(--kk-primary-dark, #3E6B3D) !important;
+  color: #fff !important;
+}
+.new-conversation-btn:active,
+.new-conversation-btn:focus {
+  background: var(--kk-primary-dark, #3E6B3D) !important;
+  border-color: var(--kk-primary-dark, #3E6B3D) !important;
+  color: #fff !important;
+}
+
+/* New Conversation Modal — Brand Button Colors */
+.new-conversation-modal .ant-modal-footer .ant-btn-primary {
+  background: var(--kk-primary, #5B8C5A) !important;
+  border-color: var(--kk-primary, #5B8C5A) !important;
+}
+.new-conversation-modal .ant-modal-footer .ant-btn-primary:hover {
+  background: var(--kk-primary-dark, #3E6B3D) !important;
+  border-color: var(--kk-primary-dark, #3E6B3D) !important;
+}
+.new-conversation-modal .ant-modal-footer .ant-btn-default {
+  border-color: var(--kk-border);
+  color: var(--kk-text);
+}
+.new-conversation-modal .ant-modal-footer .ant-btn-default:hover {
+  border-color: var(--kk-primary);
+  color: var(--kk-primary);
+}
+
 /* New Conversation Form */
 .form-item {
   margin-bottom: 14px;

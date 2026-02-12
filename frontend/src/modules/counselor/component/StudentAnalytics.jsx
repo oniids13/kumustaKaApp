@@ -14,6 +14,7 @@ import {
   Statistic,
   Radio,
   Space,
+  message,
 } from "antd";
 import {
   LineChart,
@@ -263,7 +264,7 @@ const StudentAnalytics = ({ initialStudentId, sectionId }) => {
       setSelectedStudentProfile(response.data.studentProfile);
     } catch (err) {
       console.error("Error fetching student profile:", err);
-      alert(`Failed to fetch student profile: ${err.message}`);
+      message.error(`Failed to fetch student profile: ${err.message}`);
       setIsProfileModalVisible(false);
     } finally {
       setProfileLoading(false);

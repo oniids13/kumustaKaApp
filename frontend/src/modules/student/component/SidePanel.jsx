@@ -18,6 +18,7 @@ import "../styles/SidePanel.css";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Badge } from "react-bootstrap";
+import { message } from "antd";
 import {
   setupNotificationChecks,
   refreshNotifications,
@@ -166,7 +167,7 @@ const SidePanel = ({ user, activeModule, setActiveModule }) => {
         saveMoodSubmissionToStorage();
         setHasSubmittedToday(true);
 
-        alert("Mood recorded successfully!");
+        message.success("Mood recorded successfully!");
       } else {
         throw new Error(response.data.message || "Failed to record mood");
       }
