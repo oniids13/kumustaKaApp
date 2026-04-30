@@ -22,11 +22,20 @@ const { validateRequestParams } = require("./middleware/securityMiddleware");
 dotenv.config();
 
 const app = express();
+const isProduction = process.env.NODE_ENV === "production";
+const frontendOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
+const corsOptions = {
+  origin: frontendOrigin,
+  credentials: true,
+};
 
 // Set up middleware
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
-app.use(cors());
+if (isProduction) {
+  app.set("trust proxy", 1);
+}
+app.use(cors(corsOptions));
 app.use(morgan("dev"));
 
 // Security middlewares
@@ -34,7 +43,6 @@ app.use(helmet()); // Set various HTTP headers for security
 app.use(validateRequestParams); // Custom request validation and sanitization includes XSS protection
 
 // Configure more permissive rate limiting for development
-const isProduction = process.env.NODE_ENV === "production";
 
 // Default limiter for all routes
 const defaultLimiter = rateLimit({
@@ -77,13 +85,6 @@ const passwordRouter = require("./router/passwordRouter");
 const healthRouter = require("./router/healthRouter");
 const sectionRouter = require("./router/sectionRouter");
 
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-  })
-);
-
 async function initializeApp() {
   try {
     await ensureDailySurveyExists();
@@ -113,6 +114,10 @@ app.use("/api/communication/conversations", readLimiter);
 app.use(defaultLimiter);
 
 // Routes
+app.get("/", (req, res) => {
+  res.status(200).send("KumustaKa backend is running");
+});
+
 app.use("/api/user", userRouter);
 app.use("/api", loginRouter);
 app.use("/api/forum", forumPostRouter);

@@ -5,6 +5,8 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "prisma generate && prisma migrate deploy",
+    "postinstall": "prisma generate",
     "start": "node app.js",
     "dev": "nodemon app.js",
     "seed": "npx prisma db seed"
@@ -18,6 +20,9 @@
   ],
   "author": "Jose Dino Abaya",
   "license": "ISC",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "@prisma/client": "^6.8.2",
     "bcryptjs": "^3.0.2",
